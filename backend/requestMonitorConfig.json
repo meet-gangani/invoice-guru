@@ -1,5 +1,5 @@
 {
-  "title": "Emoonsgames",
+  "title": "INVOICE_GURU",
   "path": "/status",
   "socketPath": "/socket.io",
   "websocket": "existingSocketIoInstance",
