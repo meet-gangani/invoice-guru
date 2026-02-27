@@ -1,0 +1,3 @@
+@echo off
+echo Starting Admin Dashboard...
+bun i && bun start
