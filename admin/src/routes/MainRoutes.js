@@ -17,6 +17,7 @@ const Blog = Loadable(lazy(() => import('views/blogs/blog')))
 const AdsSetup = Loadable(lazy(() => import('views/AdsSetUps/AdsSetup')))
 
 const Privacy = Loadable(lazy(() => import('views/privacy/Privacy')))
+const ScometDocument = Loadable(lazy(() => import('views/templates/ScometDocument')))
 const TermsAndCondition = Loadable(lazy(() => import('views/termsOfService/TermsOfService')))
 const CookiePolicy = Loadable(lazy(() => import('views/cookiePolicy/CookiePolicy')))
 
@@ -75,6 +76,10 @@ const MainRoutes = {
     {
       path: 'privacy',
       element: <Privacy/>
+    },
+    {
+      path: 'scomet-document',
+      element: <ScometDocument/>
     },
     {
       path: 'terms-of-service',

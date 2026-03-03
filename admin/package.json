@@ -19,6 +19,7 @@
     "@mui/styles": "^5.15.2",
     "@mui/system": "^5.8.6",
     "@mui/utils": "^5.8.6",
+    "@react-pdf/renderer": "^4.3.2",
     "@tabler/icons": "^1.72.0",
     "apexcharts": "^3.35.3",
     "axios": "^1.6.3",
