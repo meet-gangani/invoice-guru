@@ -42,10 +42,10 @@ const Dashboard = () => {
         <Grid item xs={12}>
           <Grid container spacing={gridSpacing}>
             <Grid item lg={4} md={6} sm={6} xs={12}>
-              <GamesCard isLoading={isLoading} gamesCount={gamesCount}/>
+              <GamesCard isLoading={isLoading} count={gamesCount}/>
             </Grid>
             <Grid item lg={4} md={6} sm={6} xs={12}>
-              <CategoriesCard isLoading={isLoading} categoriesCount={categoriesCount}/>
+              <CategoriesCard isLoading={isLoading} count={categoriesCount}/>
             </Grid>
             {/*<Grid item lg={4} md={12} sm={12} xs={12}>*/}
             {/*  <Grid container spacing={gridSpacing}>*/}

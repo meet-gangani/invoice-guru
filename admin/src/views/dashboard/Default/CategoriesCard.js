@@ -56,7 +56,7 @@ const CardWrapper = styled(MainCard)(({ theme }) => ({
 
 // ==============================|| DASHBOARD - TOTAL ORDER LINE CHART CARD ||============================== //
 
-const CategoriesCard = ({ isLoading, categoriesCount }) => {
+const CategoriesCard = ({ isLoading, count }) => {
   const theme = useTheme()
   const navigate = useNavigate();
 
@@ -91,7 +91,7 @@ const CategoriesCard = ({ isLoading, categoriesCount }) => {
                 <Grid container alignItems="center">
                   <Grid item>
                     <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>
-                      {categoriesCount}
+                      {count}
                     </Typography>
                   </Grid>
                 </Grid>
@@ -104,7 +104,7 @@ const CategoriesCard = ({ isLoading, categoriesCount }) => {
                     color: theme.palette.primary[200]
                   }}
                 >
-                  Categories
+                  Total Invoice
                 </Typography>
               </Grid>
             </Grid>

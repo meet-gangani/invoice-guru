@@ -50,7 +50,7 @@ const CardWrapper = styled(MainCard)(({ theme }) => ({
 
 // ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
 
-const GamesCard = ({ isLoading, gamesCount }) => {
+const GamesCard = ({ isLoading, count }) => {
   const theme = useTheme()
   const navigate = useNavigate();
 
@@ -83,7 +83,7 @@ const GamesCard = ({ isLoading, gamesCount }) => {
                 <Grid container alignItems="center">
                   <Grid item>
                     <Typography sx={{ fontSize: '2.125rem', fontWeight: 500, mr: 1, mt: 1.75, mb: 0.75 }}>
-                      {gamesCount}
+                      {count}
                     </Typography>
                   </Grid>
                 </Grid>
@@ -96,7 +96,7 @@ const GamesCard = ({ isLoading, gamesCount }) => {
                     color: theme.palette.secondary[200]
                   }}
                 >
-                  Games
+                  Today Invoice
                 </Typography>
               </Grid>
             </Grid>

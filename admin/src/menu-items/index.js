@@ -1,4 +1,4 @@
-import { IconClipboardTypography, IconDashboard, IconDeviceGamepad2, IconGoGame, IconShieldLock, IconTags, IconTrendingUp, IconWorld, IconArticle,IconAd } from '@tabler/icons'
+import { IconFileInvoice, IconDashboard, IconTemplate, IconBuilding, IconTruckDelivery, IconBuildingStore, IconPackages, IconChecklist, IconBuildingBank } from '@tabler/icons'
 
 const QuickView = {
   id: 'quickView',
@@ -15,21 +15,13 @@ const QuickView = {
       breadcrumbs: false
     },
     {
-      id: 'trending',
-      title: 'Trending',
+      id: 'invoice',
+      title: 'Invoices',
       type: 'item',
-      url: '/trending',
-      icon: IconTrendingUp,
+      url: '/invoice',
+      icon: IconFileInvoice,
       breadcrumbs: false
     },
-    {
-      id: 'feature',
-      title: 'Feature',
-      type: 'item',
-      url: '/feature',
-      icon: IconGoGame,
-      breadcrumbs: false
-    }
   ]
 }
 
@@ -40,73 +32,62 @@ const pages = {
   type: 'group',
   children: [
     {
-      id: 'games',
-      title: 'Games',
+      id: 'packaging',
+      title: 'Packaging',
       type: 'item',
-      url: '/games',
-      icon: IconDeviceGamepad2,
+      url: '/packaging',
+      icon: IconPackages,
       breadcrumbs: false
     },
     {
-      id: 'categories',
-      title: 'Categories',
+      id: 'delivery',
+      title: 'Delivery',
       type: 'item',
-      url: '/categories',
-      icon: IconTags,
+      url: '/delivery',
+      icon: IconTruckDelivery,
       breadcrumbs: false
     },
     {
-      id: 'blogs',
-      title: 'Blogs',
+      id: 'performa',
+      title: 'Performa',
       type: 'item',
-      url: '/blogs',
-      icon: IconArticle,
+      url: '/performa',
+      icon: IconBuildingBank,
       breadcrumbs: false
     },
     {
-      id: 'adsSetup',
-      title: 'Ads SetUp',
+      id: 'scomet',
+      title: 'Scomet Declaration',
       type: 'item',
-      url: '/ads-setup',
-      icon: IconAd,
+      url: '/scomet-document',
+      icon: IconTemplate,
+      // icon: IconChecklist,
       breadcrumbs: false
-    }
+    },
   ]
 }
 
-const website = {
+const Website = {
   id: 'website',
   type: 'group',
   children: [
     {
-      id: 'privacy',
-      title: 'Privacy Policy',
+      id: 'company',
+      title: 'Company',
       type: 'item',
-      url: '/privacy',
-      icon: IconShieldLock,
+      url: '/company',
+      icon: IconBuilding,
       breadcrumbs: false
     },
-    {
-      id: 'terms-of-service',
-      title: 'Terms Of Service',
-      type: 'item',
-      url: '/terms-of-service',
-      icon: IconClipboardTypography,
-      breadcrumbs: false
-    },
-    {
-      id: 'cookie-policy',
-      title: 'Cookie Policy',
-      type: 'item',
-      url: '/cookie-policy',
-      icon: IconWorld,
-      breadcrumbs: false
-    }
   ]
 }
 
 const menuItems = {
-  items: [ QuickView, pages, website ]
+  items: [
+    QuickView,
+    pages,
+    Website
+  ]
 }
 
 export default menuItems
