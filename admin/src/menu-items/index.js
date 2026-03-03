@@ -63,7 +63,7 @@ const pages = {
       icon: IconTemplate,
       // icon: IconChecklist,
       breadcrumbs: false
-    },
+    }
   ]
 }
 

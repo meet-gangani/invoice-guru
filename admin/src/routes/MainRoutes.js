@@ -12,6 +12,8 @@ const Invoices = Loadable(lazy(() => import('views/invoices/List')))
 const Invoice = Loadable(lazy(() => import('views/invoices/invoice')))
 
 const ScometDocument = Loadable(lazy(() => import('views/templates/ScometDocument')))
+const PackingListDocument = Loadable(lazy(() => import('views/templates/PackingListDocument')))
+const PerformaInvoiceDocument = Loadable(lazy(() => import('views/templates/PerformaInvoiceDocument')))
 
 const MainRoutes = {
   path: '/',
@@ -44,6 +46,14 @@ const MainRoutes = {
     {
       path: 'scomet-document',
       element: <ScometDocument/>
+    },
+    {
+      path: 'packaging',
+      element: <PackingListDocument/>
+    },
+    {
+      path: 'performa',
+      element: <PerformaInvoiceDocument/>
     }
   ]
 }

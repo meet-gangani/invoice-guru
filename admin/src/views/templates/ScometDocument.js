@@ -97,6 +97,12 @@ const styles = StyleSheet.create({
 })
 
 const ScometPdf = ({ data }) => {
+  const formatDate = (value) => {
+    if (!value) return ''
+    const [yyyy, mm, dd] = value.split('-')
+    if (!yyyy || !mm || !dd) return value
+    return `${dd}-${mm}-${yyyy}`
+  }
   const tableHeaders = data.tableHeaders.filter((h) => h.trim() !== '')
   const visibleColumns = tableHeaders.length || 4
   const columnWidth = `${100 / visibleColumns}%`
@@ -114,7 +120,7 @@ const ScometPdf = ({ data }) => {
         </View>
         <View style={styles.blueLine} />
 
-        <Text style={styles.dateText}>Date: {data.date || '__________'}</Text>
+        <Text style={styles.dateText}>Date: {formatDate(data.date) || '__________'}</Text>
 
         <View style={styles.addressSection}>
           {(data.addressLines || []).map((line, index) => (
