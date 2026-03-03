@@ -15,6 +15,7 @@ import {
 import { IconPlus, IconTrash } from '@tabler/icons'
 import { Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
+import { useTheme } from '@mui/material/styles'
 
 const styles = StyleSheet.create({
   page: {
@@ -108,7 +109,7 @@ const ScometPdf = ({ data }) => {
   const columnWidth = `${100 / visibleColumns}%`
 
   return (
-    <Document>
+    <Document title="SCOMET Declaration">
       <Page size="A4" style={styles.page}>
         <View style={styles.headerContainer}>
           <Text style={styles.brandName}>{data.brandName || '__________'}</Text>
@@ -226,6 +227,8 @@ const SectionTitle = ({ children }) => (
 )
 
 export default function ScometDocument() {
+  const theme = useTheme()
+
   const [data, setData] = useState(defaultData)
   const [pdfData, setPdfData] = useState(defaultData)
 
@@ -275,7 +278,7 @@ export default function ScometDocument() {
   }, [ data ])
 
   return (
-    <MainCard title="SCOMET Declaration (Dynamic)">
+    <MainCard title="SCOMET Declaration">
       <Grid container spacing={2} alignItems="flex-start">
         <Grid item xs={12} md={5}>
           <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>
@@ -295,11 +298,11 @@ export default function ScometDocument() {
                   fullWidth
                 />
                 <IconButton aria-label="remove" onClick={() => removeArrayItem('contactLines', index)} size="large">
-                  <IconTrash size="1.1rem" />
+                  <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                 </IconButton>
               </Stack>
             ))}
-            <Button variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('contactLines')}>
+              <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={() => addArrayItem('contactLines')}>
               Add Contact Line
             </Button>
 
@@ -323,11 +326,11 @@ export default function ScometDocument() {
                   fullWidth
                 />
                 <IconButton aria-label="remove" onClick={() => removeArrayItem('addressLines', index)} size="large">
-                  <IconTrash size="1.1rem" />
+                  <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                 </IconButton>
               </Stack>
             ))}
-            <Button variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('addressLines')}>
+            <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('addressLines')}>
               Add Address Line
             </Button>
             <TextField label="Subject Line" value={data.subjectLine} onChange={updateField('subjectLine')} fullWidth multiline />
@@ -345,11 +348,11 @@ export default function ScometDocument() {
                   multiline
                 />
                 <IconButton aria-label="remove" onClick={() => removeArrayItem('bodyLines', index)} size="large">
-                  <IconTrash size="1.1rem" />
+                  <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                 </IconButton>
               </Stack>
             ))}
-            <Button variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('bodyLines')}>
+            <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('bodyLines')}>
               Add Body Line
             </Button>
 
@@ -366,11 +369,11 @@ export default function ScometDocument() {
                   fullWidth
                 />
                 <IconButton aria-label="remove" onClick={() => removeArrayItem('tableHeaders', index)} size="large">
-                  <IconTrash size="1.1rem" />
+                  <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                 </IconButton>
               </Stack>
             ))}
-            <Button variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('tableHeaders', `Header ${tableColumnCount + 1}`)}>
+            <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('tableHeaders', `Header ${tableColumnCount + 1}`)}>
               Add Table Column
             </Button>
 
@@ -379,7 +382,7 @@ export default function ScometDocument() {
                 <Stack direction="row" spacing={1} alignItems="center">
                   <SectionTitle>Row {rowIndex + 1}</SectionTitle>
                   <IconButton aria-label="remove" onClick={() => removeArrayItem('tableRows', rowIndex)} size="large">
-                    <IconTrash size="1.1rem" />
+                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                   </IconButton>
                 </Stack>
                 <Grid container spacing={1}>
@@ -452,11 +455,11 @@ export default function ScometDocument() {
                   multiline
                 />
                 <IconButton aria-label="remove" onClick={() => removeArrayItem('afterTableLines', index)} size="large">
-                  <IconTrash size="1.1rem" />
+                  <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                 </IconButton>
               </Stack>
             ))}
-            <Button variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('afterTableLines')}>
+            <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('afterTableLines')}>
               Add Line
             </Button>
 

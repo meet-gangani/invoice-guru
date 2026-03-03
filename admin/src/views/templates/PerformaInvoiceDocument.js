@@ -15,6 +15,7 @@ import {
 import { IconPlus, IconTrash } from '@tabler/icons'
 import { Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
+import { useTheme } from '@mui/material/styles'
 
 const styles = StyleSheet.create({
   page: {
@@ -93,7 +94,7 @@ const PerformaPdf = ({ data }) => {
   const normalizeLabel = (value = '') => value.trim().toUpperCase()
 
   return (
-    <Document>
+    <Document title="Performa">
       <Page size="A4" style={styles.page}>
         <View style={styles.titleRow}>
           <Text style={styles.title}>{data.companyName.visible ? data.companyName.value || '__________' : ''}</Text>
@@ -301,6 +302,8 @@ const FieldToggle = ({ label, value, visible, onChange, onToggle, multiline }) =
 )
 
 export default function PerformaInvoiceDocument() {
+  const theme = useTheme()
+
   const [data, setData] = useState(defaultData)
   const [pdfData, setPdfData] = useState(defaultData)
 
@@ -555,7 +558,7 @@ export default function PerformaInvoiceDocument() {
   }, [ data ])
 
   return (
-    <MainCard title="Performa Invoice (Dynamic)">
+    <MainCard title="Performa">
       <Grid container spacing={2} alignItems="flex-start">
         <Grid item xs={12} md={5}>
           <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>
@@ -576,11 +579,11 @@ export default function PerformaInvoiceDocument() {
                   <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleAddressLine(index)} />} label="" />
                   <TextField label={`Address Line ${index + 1}`} value={line.value} onChange={updateAddressLine(index)} fullWidth />
                   <IconButton aria-label="remove" onClick={() => removeAddressLine(index)} size="large">
-                    <IconTrash size="1.1rem" />
+                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                   </IconButton>
                 </Stack>
               ))}
-              <Button variant="outlined" startIcon={<IconPlus />} onClick={addAddressLine}>
+              <Button sx={{ color: theme.palette.secondary.dark }}  variant="outlined" startIcon={<IconPlus />} onClick={addAddressLine}>
                 Add Address Line
               </Button>
 
@@ -612,11 +615,11 @@ export default function PerformaInvoiceDocument() {
                   <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleCustomerLine(index)} />} label="" />
                   <TextField label={`Customer Line ${index + 1}`} value={line.value} onChange={updateCustomerLine(index)} fullWidth />
                   <IconButton aria-label="remove" onClick={() => removeCustomerLine(index)} size="large">
-                    <IconTrash size="1.1rem" />
+                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                   </IconButton>
                 </Stack>
               ))}
-              <Button variant="outlined" startIcon={<IconPlus />} onClick={addCustomerLine}>
+              <Button sx={{ color: theme.palette.secondary.dark }}  variant="outlined" startIcon={<IconPlus />} onClick={addCustomerLine}>
                 Add Customer Line
               </Button>
               <FieldToggle
@@ -641,11 +644,11 @@ export default function PerformaInvoiceDocument() {
                   <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleNotifyLine(index)} />} label="" />
                   <TextField label={`Notify Line ${index + 1}`} value={line.value} onChange={updateNotifyLine(index)} fullWidth />
                   <IconButton aria-label="remove" onClick={() => removeNotifyLine(index)} size="large">
-                    <IconTrash size="1.1rem" />
+                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                   </IconButton>
                 </Stack>
               ))}
-              <Button variant="outlined" startIcon={<IconPlus />} onClick={addNotifyLine}>
+              <Button sx={{ color: theme.palette.secondary.dark }}  variant="outlined" startIcon={<IconPlus />} onClick={addNotifyLine}>
                 Add Notify Line
               </Button>
               <FieldToggle
@@ -670,7 +673,7 @@ export default function PerformaInvoiceDocument() {
                   <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                     <Typography variant="subtitle2">Row {index + 1}</Typography>
                     <IconButton aria-label="remove" onClick={() => removeItemRow(index)} size="large">
-                      <IconTrash size="1.1rem" />
+                      <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                     </IconButton>
                   </Stack>
                   <Grid container spacing={1}>
@@ -686,7 +689,7 @@ export default function PerformaInvoiceDocument() {
                   </Grid>
                 </Box>
               ))}
-              <Button variant="outlined" startIcon={<IconPlus />} onClick={addItemRow}>
+              <Button sx={{ color: theme.palette.secondary.dark }}  variant="outlined" startIcon={<IconPlus />} onClick={addItemRow}>
                 Add Item Row
               </Button>
 
@@ -705,11 +708,11 @@ export default function PerformaInvoiceDocument() {
                   <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleCommentsLine(index)} />} label="" />
                   <TextField label={`Comment ${index + 1}`} value={line.value} onChange={updateCommentsLine(index)} fullWidth />
                   <IconButton aria-label="remove" onClick={() => removeCommentsLine(index)} size="large">
-                    <IconTrash size="1.1rem" />
+                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                   </IconButton>
                 </Stack>
               ))}
-              <Button variant="outlined" startIcon={<IconPlus />} onClick={addCommentsLine}>
+              <Button sx={{ color: theme.palette.secondary.dark }}  variant="outlined" startIcon={<IconPlus />} onClick={addCommentsLine}>
                 Add Comment Line
               </Button>
 

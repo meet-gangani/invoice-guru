@@ -29,6 +29,7 @@ import { IconPlus } from "@tabler/icons";
 import { Close, Search as SearchIcon } from "@mui/icons-material";
 import MainCard from "ui-component/cards/MainCard";
 import EndpointService from "../../services/endpoint.service";
+import { STATUS } from '../../utils/enum'
 
 const headCells = [
   { id: "name", label: "Name" },
@@ -37,6 +38,14 @@ const headCells = [
   { id: "status", label: "Status" },
 ];
 
+const createObj = {
+  name: "",
+  logo: "",
+  username: "",
+  password: "",
+  status: "",
+}
+
 const Companies = () => {
   const [companies, setCompanies] = useState([]);
   const [search, setSearch] = useState("");
@@ -44,17 +53,15 @@ const Companies = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const [createCompany, setCreateCompany] = useState({
-    name: "",
-    logo: "",
-    username: "",
-    password: "",
-    status: "",
-  });
+  const [createCompany, setCreateCompany] = useState(createObj);
 
   useEffect(() => {
     fetchCompanies();
   }, []);
+
+  function clearData() {
+    setCreateCompany(createObj)
+  }
 
   const fetchCompanies = async () => {
     try {
@@ -130,7 +137,10 @@ const Companies = () => {
         </CardContent>
 
         {/* Create Company Dialog */}
-        <Dialog open={openModel} onClose={() => setOpenModel(false)} fullWidth maxWidth="sm">
+        <Dialog open={openModel} onClose={() => {
+          setOpenModel(false)
+          clearData()
+        }} fullWidth maxWidth="sm">
           <DialogTitle
               sx={{
                 fontSize: '20px',
@@ -203,10 +213,7 @@ const Companies = () => {
                           }))
                       }
                   >
-                    <MenuItem value="active">Active</MenuItem>
-                    <MenuItem value="inactive">Inactive</MenuItem>
-                    <MenuItem value="pending">Pending</MenuItem>
-                    <MenuItem value="deleted">Deleted</MenuItem>
+                    {STATUS.map((status) => <MenuItem value={status.value}>{status.label}</MenuItem>)}
                   </Select>
                 </FormControl>
 
@@ -248,18 +255,10 @@ const Companies = () => {
                     <TableCell>{company.username}</TableCell>
                     <TableCell>{company.password}</TableCell>
                     <TableCell>
-                    <Chip
+                      <Chip
                           label={company.status}
-                          color={
-                            company.status === "active"
-                                ? "success"
-                                : company.status === "inactive"
-                                    ? "default"
-                                    : company.status === "pending"
-                                        ? "warning"
-                                        : "error"
-                          }
-                          size="small"
+                          color={STATUS.find((s) => s.value === company.status)?.color || "default"}
+                          size="medium"
                       />
                     </TableCell>
                   </TableRow>

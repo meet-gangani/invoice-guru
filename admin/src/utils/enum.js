@@ -1,6 +1,4 @@
-exports.STATUS = [
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
-  { value: 'deleted', label: 'Deleted' },
-  { value: 'pending', label: 'Pending' }
-]
+export const STATUS = [
+  { value: "Active", label: "Active", color: "success" },
+  { value: "Deactivate", label: "Deactivate", color: "error" },
+];

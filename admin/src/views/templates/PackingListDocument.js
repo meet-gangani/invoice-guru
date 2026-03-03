@@ -14,6 +14,7 @@ import {
 import { IconPlus, IconTrash } from '@tabler/icons'
 import { Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
+import { useTheme } from '@mui/material/styles'
 
 const styles = StyleSheet.create({
   page: { padding: 30, fontSize: 7.5, fontFamily: 'Helvetica', color: '#000' },
@@ -267,6 +268,7 @@ const FieldToggle = ({ label, value, visible, onChange, onToggle, multiline }) =
 )
 
 export default function PackingListDocument() {
+  const theme = useTheme()
   const [data, setData] = useState(defaultData)
   const [pdfData, setPdfData] = useState(defaultData)
 
@@ -374,11 +376,11 @@ export default function PackingListDocument() {
                   />
                   <TextField label={`Exporter Line ${index + 1}`} value={line.value} onChange={updateExporterLine(index)} fullWidth />
                   <IconButton aria-label="remove" onClick={() => removeExporterLine(index)} size="large">
-                    <IconTrash size="1.1rem" />
+                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                   </IconButton>
                 </Stack>
               ))}
-              <Button variant="outlined" startIcon={<IconPlus />} onClick={addExporterLine}>
+              <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={addExporterLine}>
                 Add Exporter Line
               </Button>
 
@@ -425,7 +427,7 @@ export default function PackingListDocument() {
                   <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                     <Typography variant="subtitle2">Row {rowIndex + 1}</Typography>
                     <IconButton aria-label="remove" onClick={() => removeTableRow(rowIndex)} size="large">
-                      <IconTrash size="1.1rem" />
+                      <IconTrash size="1.1rem" color={theme.palette.error.dark} />
                     </IconButton>
                   </Stack>
                   <Grid container spacing={1}>
@@ -442,7 +444,7 @@ export default function PackingListDocument() {
                   </Grid>
                 </Box>
               ))}
-              <Button variant="outlined" startIcon={<IconPlus />} onClick={addTableRow}>
+              <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={addTableRow}>
                 Add Table Row
               </Button>
 
