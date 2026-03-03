@@ -20,76 +20,21 @@ const initialize = async () => {
   app.use(express.json())
   app.use(cors())
 
-  const allowedOrigins = [
-    'http://localhost:4000',
-    'http://localhost:4001',
-    'https://emoongames.com',
-    'https://admin.emoongames.com'
-  ]
-
-  const containsPublicDir = (fullUrl, publicDir) => {
-    return publicDir.some(word => fullUrl.includes(word))
-  }
-
-  // app.use((req, res, next) => {
-  //   cors({
-  //     origin: function(origin, callback) {
-  //       const publicDir = [ 'zip', 'games', 'category', 'blogs' ]
-  //       if ('no-token' in req.headers) return callback(null, true)
-  //       if (containsPublicDir(req.originalUrl, publicDir)) return callback(null, true)
-  //       if (!origin) return callback(new Error('Missing Permission Token'), false)
-  //       if (allowedOrigins.includes(origin)) return callback(null, true)
-  //
-  //       return callback(new Error(`Access Blocked`), false)
-  //     },
-  //     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  //     credentials: true
-  //   })(req, res, next)
-  // })
-
   app.use(fileUpload())
   app.use(requestMonitor(requestMonitorConfig))
-
-//   app.use((req, res, next) => {
-//     res.set('X-Robots-Tag', 'noindex, nofollow')
-//     next()
-//   })
-
-//   app.get('/robots.txt', (req, res) => {
-//     res.type('text/plain')
-//     res.send(`User-agent: *
-// Disallow: /`)
-//   })
 
   morganBody(app, {
     prettify: false,
     includeNewLine: true
   })
 
-  const uploadDir = 'zip/'
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir)
-  }
-
-  const thumbnailDir = 'games/'
-  if (!fs.existsSync(thumbnailDir)) {
-    fs.mkdirSync(thumbnailDir)
-  }
-
-  const categoryDir = 'category/'
-  if (!fs.existsSync(categoryDir)) {
-    fs.mkdirSync(categoryDir)
-  }
-
-  const blogDir = 'blogs/'
-  if (!fs.existsSync(blogDir)) {
-    fs.mkdirSync(blogDir)
+  const assets = 'assets/'
+  if (!fs.existsSync(assets)) {
+    fs.mkdirSync(assets)
   }
 
   const dirname = path.resolve()
-  app.use('/games', express.static(path.join(dirname, 'games')))
-  app.use('/blogs', express.static(path.join(dirname, 'blogs')))
-  app.use('/category', express.static(path.join(dirname, 'category')))
+  app.use('/assets', express.static(path.join(dirname, 'assets')))
 
   // Public Routes! i.e. Login, SignUp etc.
   app.use('/', publicRoutes)

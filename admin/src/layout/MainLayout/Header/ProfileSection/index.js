@@ -12,11 +12,11 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 // project imports
 import MainCard from 'ui-component/cards/MainCard'
 import Transitions from 'ui-component/extended/Transitions'
-import User1 from 'assets/images/square-logo.png'
 import UserService from '../../../../services/user.service'
 
 // assets
 import { IconLogout, IconPassword, IconSettings } from '@tabler/icons'
+import Logo from '../../../../ui-component/Logo'
 
 // ==============================|| PROFILE MENU ||============================== //
 
@@ -57,6 +57,20 @@ const ProfileSection = () => {
     prevOpen.current = open
   }, [open])
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+
+    let greeting = "";
+
+    if (hour === 0) greeting = "Midnight";
+    else if (hour < 12) greeting = "Morning";
+    else if (hour === 12) greeting = "Noon";
+    else if (hour < 18) greeting = "Afternoon";
+    else greeting = "Evening";
+
+    return `Good ${greeting} Sir`;
+  };
+
   return (
     <>
       <Chip
@@ -81,7 +95,7 @@ const ProfileSection = () => {
         }}
         icon={
           <Avatar
-            src={User1}
+            src={Logo}
             sx={{
               ...theme.typography.mediumAvatar,
               margin: '8px 0 8px 8px !important',
@@ -127,72 +141,11 @@ const ProfileSection = () => {
                   <Box sx={{ p: 2, pb: 0 }}>
                     <Stack direction="row" alignItems="center">
                       <Typography variant="h4">
-                        Hello Admin
+                        {getGreeting()}
                       </Typography>
                     </Stack>
-                    {/*<OutlinedInput*/}
-                    {/*  sx={{ width: '100%', pr: 1, pl: 2, my: 2 }}*/}
-                    {/*  id="input-search-profile"*/}
-                    {/*  value={value}*/}
-                    {/*  onChange={(e) => setValue(e.target.value)}*/}
-                    {/*  placeholder="Search profile options"*/}
-                    {/*  startAdornment={*/}
-                    {/*    <InputAdornment position="start">*/}
-                    {/*      <IconSearch stroke={1.5} size="1rem" color={theme.palette.grey[500]} />*/}
-                    {/*    </InputAdornment>*/}
-                    {/*  }*/}
-                    {/*  aria-describedby="search-helper-text"*/}
-                    {/*  inputProps={{*/}
-                    {/*    'aria-label': 'weight'*/}
-                    {/*  }}*/}
-                    {/*/>*/}
-                    {/*<Divider />*/}
                   </Box>
                   <Box sx={{ p: 2, maxHeight: 'calc(100vh - 150px)', overflowY: 'auto', overflowX: 'hidden' }}>
-                    {/*<UpgradePlanCard />*/}
-                    {/*<Divider />*/}
-                    {/*<Card*/}
-                    {/*  sx={{*/}
-                    {/*    bgcolor: theme.palette.primary.light,*/}
-                    {/*    my: 2*/}
-                    {/*  }}*/}
-                    {/*>*/}
-                    {/*  <CardContent>*/}
-                    {/*    <Grid container spacing={3} direction="column">*/}
-                    {/*      <Grid item>*/}
-                    {/*        <Grid item container alignItems="center" justifyContent="space-between">*/}
-                    {/*          <Grid item>*/}
-                    {/*            <Typography variant="subtitle1">Start DND Mode</Typography>*/}
-                    {/*          </Grid>*/}
-                    {/*          <Grid item>*/}
-                    {/*            <Switch*/}
-                    {/*              color="primary"*/}
-                    {/*              checked={sdm}*/}
-                    {/*              onChange={(e) => setSdm(e.target.checked)}*/}
-                    {/*              name="sdm"*/}
-                    {/*              size="small"*/}
-                    {/*            />*/}
-                    {/*          </Grid>*/}
-                    {/*        </Grid>*/}
-                    {/*      </Grid>*/}
-                    {/*      <Grid item>*/}
-                    {/*        <Grid item container alignItems="center" justifyContent="space-between">*/}
-                    {/*          <Grid item>*/}
-                    {/*            <Typography variant="subtitle1">Allow Notifications</Typography>*/}
-                    {/*          </Grid>*/}
-                    {/*          <Grid item>*/}
-                    {/*            <Switch*/}
-                    {/*              checked={notification}*/}
-                    {/*              onChange={(e) => setNotification(e.target.checked)}*/}
-                    {/*              name="sdm"*/}
-                    {/*              size="small"*/}
-                    {/*            />*/}
-                    {/*          </Grid>*/}
-                    {/*        </Grid>*/}
-                    {/*      </Grid>*/}
-                    {/*    </Grid>*/}
-                    {/*  </CardContent>*/}
-                    {/*</Card>*/}
                     <Divider />
                     <List
                       component="nav"

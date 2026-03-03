@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import MainCard from 'ui-component/cards/MainCard'
 import { useNavigate, useParams } from 'react-router'
-import categoryService from '../../services/category.service'
+import EndpointService from '../../services/endpoint.service'
 import {
   Alert,
   AlertTitle,
@@ -23,14 +23,14 @@ import {
   TextField,
   Typography
 } from '@mui/material'
-import defaultImg from '../../assets/images/default-category-icon.png'
+import Logo from '../../assets/images/logo.png'
 import { IconEdit, IconTrash, IconUsers } from '@tabler/icons'
 import { STATUS } from '../../utils/enum'
 import { LoadingButton } from '@mui/lab'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import DoneAllIcon from '@mui/icons-material/DoneAll'
 
-const Category = () => {
+const Invoice = () => {
   const params = useParams()
   const navigate = useNavigate()
   const [ loading, setLoading ] = useState([ true ])
@@ -60,7 +60,7 @@ const Category = () => {
   async function fetchCategory(categoryId) {
     try {
       setLoading(true)
-      const response = await categoryService.getCategory(categoryId)
+      const response = await EndpointService.getCategory(categoryId)
       setCategory(response.category)
       setLoading(false)
     } catch (error) {
@@ -73,8 +73,8 @@ const Category = () => {
   async function handleUpdateCategory(categoryId, category) {
     try {
       setLoading(true)
-      await categoryService.updateCategory(categoryId, { ...category })
-      const updatedCategory = await categoryService.getCategory(categoryId)
+      await EndpointService.updateCategory(categoryId, { ...category })
+      const updatedCategory = await EndpointService.getCategory(categoryId)
       setCategory(updatedCategory.category)
       setLoading(false)
     } catch (error) {
@@ -87,11 +87,11 @@ const Category = () => {
   async function updateCategoryIcon(file) {
     try {
       setUploadIconLoading(true)
-      const res = await categoryService.uploadCategoryIcon(file, params?.id)
+      const res = await EndpointService.uploadCategoryIcon(file, params?.id)
       await setNewCategoryIcon(res.url)
       setSnackbar({
         open: true,
-        message: 'Game Thumbnail updated successfully!',
+        message: 'Company Thumbnail updated successfully!',
         severity: 'success'
       })
       setCategory({ ...category, categoryIcon: res.url })
@@ -109,7 +109,7 @@ const Category = () => {
 
   async function deleteCategory(categoryId) {
     try {
-      await categoryService.deleteCategory(categoryId)
+      await EndpointService.deleteCategory(categoryId)
       navigate('/categories')
     } catch (error) {
       console.log(error)
@@ -122,7 +122,7 @@ const Category = () => {
   }
 
   return (
-      <MainCard title="Category">
+      <MainCard title="Invoice">
         {loading ? (
             <Typography varient="body2">Loading...</Typography>
         ) : (
@@ -244,7 +244,7 @@ const Category = () => {
                           }}>
 
                             <img
-                                src={newCategoryIcon ? newCategoryIcon : (!category?.categoryIcon?.includes('http') ? defaultImg : category?.categoryIcon)}
+                                src={newCategoryIcon ? newCategoryIcon : (!category?.categoryIcon?.includes('http') ? Logo : category?.categoryIcon)}
                                 style={{
                                   borderRadius: 4,
                                   width: '100%',
@@ -353,4 +353,4 @@ const Category = () => {
   )
 }
 
-export default Category
+export default Invoice

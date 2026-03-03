@@ -4,7 +4,6 @@ import PropTypes from "prop-types";
 import { makeStyles, useTheme } from "@mui/styles";
 import { visuallyHidden } from "@mui/utils";
 import MainCard from "ui-component/cards/MainCard";
-import gameService from "../../services/game.service";
 import {
   getComparator,
   rowsInitial,
@@ -43,12 +42,11 @@ import {
   TableHead,
   TablePagination,
   TableRow,
-  TableSortLabel,
   TextField,
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import defaultImg from '../../assets/images/white-logo3.png'
+import Logo from '../../assets/images/logo.png'
 import {
   Close,
   Launch,
@@ -57,7 +55,7 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { STATUS } from "../../utils/enum";
-import categoryService from "../../services/category.service";
+import EndpointService from "../../services/endpoint.service";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 
@@ -69,9 +67,15 @@ const headCells = [
     align: "left",
   },
   {
-    id: "description",
+    id: "username",
     numeric: false,
-    label: "Description",
+    label: "Username",
+    align: "center",
+  },
+  {
+    id: "password",
+    numeric: false,
+    label: "Password",
     align: "center",
   },
   {
@@ -79,12 +83,6 @@ const headCells = [
     numeric: true,
     label: "Status",
     align: "left",
-  },
-  {
-    id: "visit",
-    numeric: false,
-    label: "Visit",
-    align: "center",
   },
   {
     id: "actions",
@@ -155,13 +153,14 @@ EnhancedTableHead.propTypes = {
 
 // ===========================|| CUSTOMER LIST ||=========================== //
 
-const Games = () => {
+const Companies = () => {
   const classes = useStyles();
   const theme = useTheme();
   const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  const [games, setGames] = useState([]);
+  const [companies, setCompanies] = useState([]);
+
   const [createGame, setCreateGame] = useState({
     gameName: "",
     description: "",
@@ -179,6 +178,8 @@ const Games = () => {
     likes: 0,
     disLikes: 0,
   });
+
+
   const [categories, setCategories] = useState([]);
   // const [mobileSupport, setMobileSupport] = useState();
   // const [desktopSupport, setDesktopSupport] = useState();
@@ -192,19 +193,17 @@ const Games = () => {
   const [noSearchResults, setNoSearchResults] = useState(false);
 
   useEffect(() => {
-    fetchGames();
+    fetchCompanies();
     fetchCategories();
     setNoSearchResults(false);
   }, [rowsPerPage]);
 
-  async function fetchGames() {
+  async function fetchCompanies() {
     try {
-      const response = await gameService.getGameList();
-      const gamesData = response?.games || [];
-      const sortedData = gamesData.sort(
-        (a, b) => new Date(b.createdOn) - new Date(a.createdOn)
-      );
-      setGames(sortedData);
+      const response = await EndpointService.getCompanyList();
+      const companiesData = response?.companies || []
+
+      setCompanies(companiesData)
     } catch (error) {
       console.log(error.message);
     }
@@ -212,7 +211,7 @@ const Games = () => {
 
   async function fetchCategories() {
     try {
-      const response = await categoryService.getActiveCategoryList();
+      const response = await EndpointService.getActiveCategoryList();
       setCategories(response.categories);
     } catch (error) {
       console.log(error);
@@ -222,9 +221,8 @@ const Games = () => {
   async function addGame(event) {
     try {
       event.preventDefault();
-      const res = await gameService.createGames(createGame);
+      await EndpointService.createGames(createGame);
 
-      setGames([...games, res.data]);
       setCreateGame({
         gameName: "",
         slug: "",
@@ -243,7 +241,7 @@ const Games = () => {
         likes: 0,
         disLikes: 0,
       });
-      await fetchGames()
+      await fetchCompanies()
     } catch (error) {
       console.log(error.message);
     } finally {
@@ -254,17 +252,19 @@ const Games = () => {
   const handleSearch = (event) => {
     const newString = event?.target?.value || search;
     if (newString) {
-      const searchedGames = games.filter((game) =>
-        game.gameName.toLowerCase().includes(newString.toString().toLowerCase())
+
+      const searchedCompanies = companies.filter((company) =>
+          company.name.toLowerCase().includes(newString.toString().toLowerCase())
       );
-      if (searchedGames.length) {
-        setGames(searchedGames);
+
+      if (searchedCompanies.length) {
+        setCompanies(searchedCompanies);
         setNoSearchResults(false);
       } else {
         setNoSearchResults(true);
       }
     } else {
-      fetchGames(); // Reset to all games if search is cleared
+      fetchCompanies(); // Reset to all company if search is cleared
       setNoSearchResults(false);
     }
   };
@@ -284,11 +284,10 @@ const Games = () => {
     setPage(0);
   };
 
-  const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - games.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - companies.length) : 0;
 
   return (
-    <MainCard title="Games" content={false}>
+    <MainCard title="Companies" content={false}>
       <CardContent>
         <Grid
           container
@@ -310,7 +309,7 @@ const Games = () => {
                       size="small"
                       onClick={() => {
                         setSearch('');
-                        fetchGames();
+                        fetchCompanies();
                         setNoSearchResults(false);
                       }}
                     >
@@ -325,7 +324,7 @@ const Games = () => {
                   handleSearch(e);
                 }
               }}
-              placeholder="Search games..."
+              placeholder="Search company..."
               value={search}
               size="small"
             />
@@ -394,12 +393,12 @@ const Games = () => {
                     fontWeight: "600",
                     padding: 0,
                     paddingBottom: "4px",
-                    color: "rgb(206,154,7)",
+                    color: theme.palette.secondary.dark,
                     display: "flex",
                     justifyContent: "space-between",
                   }}
                 >
-                  Add Game
+                  Add Company
                   {isMobile && (
                     <IconButton
                       onClick={() => setOpenModel(false)}
@@ -410,16 +409,6 @@ const Games = () => {
                     </IconButton>
                   )}
                 </DialogTitle>
-                <DialogContent
-                  sx={{
-                    fontSize: "16px",
-                    paddingX: 0,
-                    paddingBottom: "24px",
-                    color: "rgb(206,154,7)",
-                  }}
-                >
-                  Fill in the information of new game.
-                </DialogContent>
                 <form onSubmit={addGame}>
                   <Stack spacing={3}>
                     <TextField
@@ -427,8 +416,8 @@ const Games = () => {
                       required
                       variant="outlined"
                       type="text"
-                      label="Game Name"
-                      placeholder="Game Name"
+                      label="Company Name"
+                      placeholder="Company Name"
                       value={createGame.gameName || ""}
                       onChange={(e) =>
                         setCreateGame({
@@ -742,7 +731,7 @@ const Games = () => {
                       sx={{ color: "#fff", mt: '12px !important', textTransform: 'uppercase' }}
                       type="submit"
                     >
-                      Add Game
+                      Add Company
                     </Button>
                   </Stack>
                 </form>
@@ -822,7 +811,7 @@ const Games = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              games
+              companies
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((row, index) => {
                   const labelId = `enhanced-table-checkbox-${index}`;
@@ -830,7 +819,7 @@ const Games = () => {
                     <TableRow hover
                       tabIndex={-1}
                       key={`table-${row?._id}`}
-                      onClick={() => navigate(`/games/${row.slug}`)}
+                      onClick={() => navigate(`/company/${row.slug}`)}
                       sx={{ cursor: "pointer" }}>
                       <TableCell
                         id={labelId}
@@ -854,7 +843,7 @@ const Games = () => {
                           >
                             <img
                               // src={row?.thumbnail.includes(process.env.REACT_APP_BACKEND_URL) ? row.thumbnail : `${process.env.REACT_APP_BACKEND_URL}/${row.thumbnail}`}
-                              src={!row?.thumbnail?.includes('http') ? defaultImg : row.thumbnail}
+                              src={!row?.thumbnail?.includes('http') ? Logo : row.thumbnail}
                               width="70px"
                               height="70px"
                               style={{
@@ -916,7 +905,7 @@ const Games = () => {
                       <TableCell
                         align="center"
                         sx={{ pr: 3 }}
-                        onClick={() => navigate(`/games/${row.slug}`)}
+                        onClick={() => navigate(`/company/${row.slug}`)}
                       >
                         <IconButton color="primary">
                           <VisibilityTwoToneIcon sx={{ fontSize: "1.3rem" }} />
@@ -939,7 +928,7 @@ const Games = () => {
       <TablePagination
         rowsPerPageOptions={[5, 10, 25]}
         component="div"
-        count={games.length}
+        count={companies.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
@@ -949,4 +938,4 @@ const Games = () => {
   );
 };
 
-export default Games;
+export default Companies;

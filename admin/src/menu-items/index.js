@@ -18,7 +18,7 @@ const QuickView = {
       id: 'invoice',
       title: 'Invoices',
       type: 'item',
-      url: '/invoice',
+      url: '/invoices',
       icon: IconFileInvoice,
       breadcrumbs: false
     },

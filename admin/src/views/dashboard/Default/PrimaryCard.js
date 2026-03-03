@@ -9,26 +9,21 @@ import MainCard from 'ui-component/cards/MainCard'
 import SkeletonGamesCard from 'ui-component/cards/Skeleton/GamesCard'
 
 // assets
-import { IconTags } from '@tabler/icons'
+import { IconDeviceGamepad2 } from '@tabler/icons'
 import { useNavigate } from 'react-router'
 
 const CardWrapper = styled(MainCard)(({ theme }) => ({
-  backgroundColor: theme.palette.primary.dark,
+  backgroundColor: theme.palette.secondary.dark,
   color: '#fff',
   overflow: 'hidden',
   position: 'relative',
-  '&>div': {
-    position: 'relative',
-    zIndex: 5
-  },
   '&:after': {
     content: '""',
     position: 'absolute',
     width: 210,
     height: 210,
-    background: theme.palette.primary[800],
+    background: theme.palette.secondary[800],
     borderRadius: '50%',
-    zIndex: 1,
     top: -85,
     right: -95,
     [theme.breakpoints.down('sm')]: {
@@ -39,10 +34,9 @@ const CardWrapper = styled(MainCard)(({ theme }) => ({
   '&:before': {
     content: '""',
     position: 'absolute',
-    zIndex: 1,
     width: 210,
     height: 210,
-    background: theme.palette.primary[800],
+    background: theme.palette.secondary[800],
     borderRadius: '50%',
     top: -125,
     right: -15,
@@ -54,9 +48,9 @@ const CardWrapper = styled(MainCard)(({ theme }) => ({
   }
 }))
 
-// ==============================|| DASHBOARD - TOTAL ORDER LINE CHART CARD ||============================== //
+// ===========================|| DASHBOARD DEFAULT - EARNING CARD ||=========================== //
 
-const CategoriesCard = ({ isLoading, count }) => {
+const PrimaryCard = ({ isLoading, count = 0 }) => {
   const theme = useTheme()
   const navigate = useNavigate();
 
@@ -66,7 +60,7 @@ const CategoriesCard = ({ isLoading, count }) => {
         <SkeletonGamesCard />
       ) : (
         <CardWrapper border={false} content={false}>
-          <Box sx={{ p: 2.25, cursor: 'pointer' }} onClick={() => navigate('/categories')}>
+          <Box sx={{ p: 2.25, cursor: 'pointer' }} onClick={() => navigate('/games')}>
             <Grid container direction="column">
               <Grid item>
                 <Grid container justifyContent="space-between">
@@ -76,15 +70,13 @@ const CategoriesCard = ({ isLoading, count }) => {
                       sx={{
                         ...theme.typography.commonAvatar,
                         ...theme.typography.largeAvatar,
-                        backgroundColor: theme.palette.primary[800],
-                        color: '#fff',
+                        backgroundColor: theme.palette.secondary[800],
                         mt: 1
                       }}
                     >
-                      <IconTags fontSize="inherit" />
+                      <IconDeviceGamepad2 color="white" />
                     </Avatar>
                   </Grid>
-
                 </Grid>
               </Grid>
               <Grid item>
@@ -101,10 +93,10 @@ const CategoriesCard = ({ isLoading, count }) => {
                   sx={{
                     fontSize: '1rem',
                     fontWeight: 500,
-                    color: theme.palette.primary[200]
+                    color: theme.palette.secondary[200]
                   }}
                 >
-                  Total Invoice
+                  Today Invoice
                 </Typography>
               </Grid>
             </Grid>
@@ -115,8 +107,9 @@ const CategoriesCard = ({ isLoading, count }) => {
   )
 }
 
-CategoriesCard.propTypes = {
-  isLoading: PropTypes.bool
+PrimaryCard.propTypes = {
+  isLoading: PropTypes.bool,
+  count: PropTypes.any
 }
 
-export default CategoriesCard
+export default PrimaryCard

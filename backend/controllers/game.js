@@ -1,12 +1,11 @@
-const { log } = require("console");
 const { GameStore, CategoryStore } = require("../models");
 const { sendSuccess, sendError } = require("./utils");
 const fs = require("fs");
 const path = require("path");
 const AdmZip = require('adm-zip');
 
-const backendUrl = 'https://api.emoongames.com';
-// const backendUrl = 'http://localhost:5050';
+// const backendUrl = 'https://api.emoongames.com';
+const backendUrl = 'http://localhost:2020';
 
 const maxFileUploadSize =
   2048 * 1024 * 1024 || process.env.MAX_FILE_UPLOAD_SIZE; // default 2 GB
@@ -119,15 +118,13 @@ const getAllGameList = async (req, res) => {
 
 const dashboardCards = async (req, res) => {
   try {
-    const games = await GameStore.countDocuments();
-    const categories = await CategoryStore.countDocuments();
 
     return sendSuccess(res, {
-      categoryCount: categories,
-      gameCount: games,
+      todayInvoice: 5,
+      totalInvoice: 10,
     });
   } catch (error) {
-    return sendError(res, "can't find game list", error);
+    return sendError(res, "error while fetch count", error);
   }
 };
 

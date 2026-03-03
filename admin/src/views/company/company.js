@@ -5,17 +5,16 @@ import { useNavigate, useParams } from 'react-router'
 import { CKEditor } from '@ckeditor/ckeditor5-react'
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic'
 
-import gameService from '../../services/game.service'
 import { STATUS } from '../../utils/enum'
-import { Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, Fab, FormControl, FormGroup, Grid, IconButton, InputLabel, MenuItem, OutlinedInput, Select, Stack, TextField, Tooltip, Typography, Avatar, Paper, Alert, AlertTitle, Snackbar } from '@mui/material'
+import { Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Fab, FormControl, Grid, IconButton, InputLabel, MenuItem, OutlinedInput, Select, Stack, TextField, Tooltip, Typography, Avatar, Paper, Alert, AlertTitle, Snackbar } from '@mui/material'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import DoneAllIcon from '@mui/icons-material/DoneAll'
 import { IconBrandGooglePlay, IconDeviceDesktop, IconDeviceMobile, IconEdit, IconTrash, IconUpload, IconX } from '@tabler/icons'
-import defaultImg from '../../assets/images/white-logo3.png'
-import categoryService from '../../services/category.service'
+import Logo from '../../assets/images/logo.png'
+import EndpointService from '../../services/endpoint.service'
 import { LoadingButton } from '@mui/lab'
 
-const Game = () => {
+const Company = () => {
   const params = useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -61,7 +60,7 @@ const Game = () => {
     try {
       setLoading(true)
 
-      const response = await gameService.getGame(gameId)
+      const response = await EndpointService.getGame(gameId)
       setGame(response?.game)
       setMobileSupport(response.game.isSupportMobile)
       setDesktopSupport(response.game.isSupportDesktop)
@@ -74,7 +73,7 @@ const Game = () => {
 
   async function fetchCategories() {
     try {
-      const response = await categoryService.getActiveCategoryList()
+      const response = await EndpointService.getActiveCategoryList()
       setCategories(response.categories)
     } catch (error) {
       console.log(error)
@@ -86,7 +85,7 @@ const Game = () => {
       setLoading(true)
       const categories = game.categories.map((category) => category._id)
 
-      const updateGame = await gameService.updateGame(gameId, {
+      const updateGame = await EndpointService.updateGame(gameId, {
         ...game,
         categories,
         isSupportMobile: mobileSupport,
@@ -104,11 +103,11 @@ const Game = () => {
   async function updateGameThumbnail(file) {
     try {
       setUploadThumbnailLoading(true)
-      const res = await gameService.uploadGameThumbnailMedia(file, game?._id)
+      const res = await EndpointService.uploadGameThumbnailMedia(file, game?._id)
       await setNewThumbnail(res.url)
       setSnackbar({
         open: true,
-        message: 'Game Thumbnail updated successfully!',
+        message: 'Company Thumbnail updated successfully!',
         severity: 'success'
       })
       setGame({ ...game, thumbnail: res.url })
@@ -126,7 +125,7 @@ const Game = () => {
 
   async function deleteGame(gameId) {
     try {
-      await gameService.deleteGame(gameId)
+      await EndpointService.deleteGame(gameId)
       navigate('/games')
     } catch (error) {
       console.log(error)
@@ -141,13 +140,13 @@ const Game = () => {
   async function handleFileUpload(files) {
     try {
       setUploadZipLoading(true)
-      const response = await gameService.uploadGameZip(files, game?._id)
+      const response = await EndpointService.uploadGameZip(files, game?._id)
       setGame({ ...game, url: response.gameUrl })
       setZipUploaded(true)
 
       setSnackbar({
         open: true,
-        message: 'Game ZIP uploaded successfully!',
+        message: 'Company ZIP uploaded successfully!',
         severity: 'success'
       })
     } catch (error) {
@@ -169,7 +168,7 @@ const Game = () => {
   }
 
   return (
-    <MainCard title={`${game?.gameName}`}>
+    <MainCard title={game?.gameName}>
       {loading ? (
         <Box display="flex" justifyContent="center" alignItems="center" py={4}>
           <CircularProgress color="primary" />
@@ -185,7 +184,7 @@ const Game = () => {
                   {game?.gameName}
                 </Typography> */}
                 <Box sx={{ display: 'flex', gap: '10px' }}>
-                  <Tooltip title={isUpdateMode ? "Cancel Editing" : "Edit Game"}>
+                  <Tooltip title={isUpdateMode ? "Cancel Editing" : "Edit Company"}>
                     <Fab
                       size="small"
                       sx={{
@@ -201,7 +200,7 @@ const Game = () => {
                     </Fab>
                   </Tooltip>
 
-                  <Tooltip title="Delete Game">
+                  <Tooltip title="Delete Company">
                     <Fab
                       size="small"
                       sx={{
@@ -233,7 +232,7 @@ const Game = () => {
               fontWeight: '600',
               pt: 3
             }}>
-              Delete Game/{game?.gameName}
+              Delete Company/{game?.gameName}
             </DialogTitle>
             <Divider />
             <DialogContent sx={{ py: 3 }}>
@@ -267,7 +266,7 @@ const Game = () => {
                     color: 'rgb(54, 37, 82)'
                   }}
                 >
-                  Game/{game?.gameName}
+                  Company/{game?.gameName}
                 </Typography>
               </Box>
 
@@ -302,7 +301,7 @@ const Game = () => {
                 onClick={() => deleteGame(game?._id)}
                 startIcon={<IconTrash size="1rem" />}
               >
-                Delete Game
+                Delete Company
               </Button>
             </DialogActions>
           </Dialog>
@@ -325,8 +324,8 @@ const Game = () => {
                     disabled={!isUpdateMode}
                     variant="outlined"
                     type="text"
-                    label="Game Name"
-                    placeholder="Game Name"
+                    label="Company Name"
+                    placeholder="Company Name"
                     value={game?.gameName}
                     onChange={(e) =>
                       setGame({
@@ -419,7 +418,7 @@ const Game = () => {
                 {/* Thumbnail section */}
                 <Grid item xs={12} md={5}>
                   <Typography variant="subtitle2" gutterBottom>
-                    Game Thumbnail
+                    Company Thumbnail
                   </Typography>
                   <Box sx={{
                     display: 'flex',
@@ -428,15 +427,15 @@ const Game = () => {
                   }}>
 
                     <img
-                      src={newThumbnail ? newThumbnail : (!game?.thumbnail?.includes('http') ? defaultImg : game?.thumbnail)}
-                      style={{
-                        borderRadius: 4,
-                        width: '100%',
-                        height: 300,
-                        backgroundColor: !game?.thumbnail?.includes('http') ? 'black' : 'white',
-                        objectFit: !game?.thumbnail?.includes('http') ? 'contain' : 'cover'
-                      }}
-                      alt={'thumbnail'}
+                        src={newThumbnail ? newThumbnail : (!game?.thumbnail?.includes('http') ? Logo : game?.thumbnail)}
+                        style={{
+                          borderRadius: 4,
+                          width: '100%',
+                          height: 300,
+                          backgroundColor: !game?.thumbnail?.includes('http') ? 'black' : 'white',
+                          objectFit: !game?.thumbnail?.includes('http') ? 'contain' : 'cover'
+                        }}
+                        alt={'thumbnail'}
                     />
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                       <input
@@ -491,11 +490,11 @@ const Game = () => {
                   </Box>
                 </Grid>
 
-                {/* Game URL and categories */}
+                {/* Company URL and invoices */}
                 <Grid item xs={12} md={7}>
                   <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 2 }}>
                     <Typography variant="subtitle2" gutterBottom>
-                      Game URL & Files
+                      Company URL & Files
                     </Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                       {/* <TextField
@@ -503,8 +502,8 @@ const Game = () => {
                         disabled={!isUpdateMode}
                         variant="outlined"
                         type="url"
-                        label="Game URL"
-                        placeholder="Game URL"
+                        label="Company URL"
+                        placeholder="Company URL"
                         value={game?.url}
                         onChange={(e) => setGame({ ...game, url: e.target.value })}
                         sx={{ flexGrow: 1 }}
@@ -558,7 +557,7 @@ const Game = () => {
                         }}
                       >
                         <DoneAllIcon fontSize="small" />
-                        <span>Game ZIP Uploaded</span>
+                        <span>Company ZIP Uploaded</span>
                       </Box>
                     )}
 
@@ -797,7 +796,7 @@ const Game = () => {
                   onClick={() => updateGame(game?._id, game)}
                   startIcon={<IconUpload stroke={1.5} size="1.3rem" />}
                 >
-                  Update Game
+                  Update Company
                 </Button>
               </Box>
             )}
@@ -818,4 +817,4 @@ const Game = () => {
     </MainCard >
   )
 }
-export default Game
+export default Company

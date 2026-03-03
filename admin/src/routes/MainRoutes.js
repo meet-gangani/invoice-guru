@@ -5,24 +5,13 @@ import Loadable from 'ui-component/Loadable'
 
 const DashboardDefault = Loadable(lazy(() => import('views/dashboard/Default')))
 
-const Games = Loadable(lazy(() => import('views/games/List')))
-const Game = Loadable(lazy(() => import('views/games/game')))
+const Companies = Loadable(lazy(() => import('views/company/List')))
+const Company = Loadable(lazy(() => import('views/company/company')))
 
-const Categories = Loadable(lazy(() => import('views/categories/List')))
-const Category = Loadable(lazy(() => import('views/categories/category')))
+const Invoices = Loadable(lazy(() => import('views/invoices/List')))
+const Invoice = Loadable(lazy(() => import('views/invoices/invoice')))
 
-const Blogs = Loadable(lazy(() => import('views/blogs/List')))
-const Blog = Loadable(lazy(() => import('views/blogs/blog')))
-
-const AdsSetup = Loadable(lazy(() => import('views/AdsSetUps/AdsSetup')))
-
-const Privacy = Loadable(lazy(() => import('views/privacy/Privacy')))
 const ScometDocument = Loadable(lazy(() => import('views/templates/ScometDocument')))
-const TermsAndCondition = Loadable(lazy(() => import('views/termsOfService/TermsOfService')))
-const CookiePolicy = Loadable(lazy(() => import('views/cookiePolicy/CookiePolicy')))
-
-const Feature = Loadable(lazy(() => import('views/feature/List')))
-const Trending = Loadable(lazy(() => import('views/trending/List')))
 
 const MainRoutes = {
   path: '/',
@@ -37,57 +26,24 @@ const MainRoutes = {
       element: <DashboardDefault/>
     },
     {
-      path: 'feature',
-      element: <Feature/>
+      path: 'invoices/:id',
+      element: <Invoice/>
     },
     {
-      path: 'trending',
-      element: <Trending/>
+      path: 'invoices',
+      element: <Invoices/>
     },
     {
-      path: 'games/:id',
-      element: <Game/>
+      path: 'company/:id',
+      element: <Company/>
     },
     {
-      path: 'games',
-      element: <Games/>
-    },
-    {
-      path: 'categories/:id',
-      element: <Category/>
-    },
-    {
-      path: 'categories',
-      element: <Categories/>
-    },
-    {
-      path: 'blogs/:id',
-      element: <Blog/>
-    },
-    {
-      path: 'blogs',
-      element: <Blogs/>
-    },
-
-    {
-      path: 'ads-setup',
-      element: <AdsSetup/>
-    },
-    {
-      path: 'privacy',
-      element: <Privacy/>
+      path: 'company',
+      element: <Companies/>
     },
     {
       path: 'scomet-document',
       element: <ScometDocument/>
-    },
-    {
-      path: 'terms-of-service',
-      element: <TermsAndCondition/>
-    },
-    {
-      path: 'cookie-policy',
-      element: <CookiePolicy/>
     }
   ]
 }

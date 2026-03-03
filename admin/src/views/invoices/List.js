@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { makeStyles, useTheme } from '@mui/styles'
 import { visuallyHidden } from '@mui/utils'
 import MainCard from 'ui-component/cards/MainCard'
-import categoryService from '../../services/category.service'
+import EndpointService from '../../services/endpoint.service'
 import { getComparator, rowsInitial, stableSort } from '../../utils/table-filter'
 import {
   Alert,
@@ -36,7 +36,7 @@ import {
   Toolbar,
   Typography
 } from '@mui/material'
-import defaultImg from '../../assets/images/default-category-icon.png'
+import Logo from '../../assets/images/logo.png'
 import { Close, Search as SearchIcon, VisibilityTwoTone as VisibilityTwoToneIcon } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import { STATUS } from '../../utils/enum'
@@ -154,7 +154,7 @@ EnhancedTableToolbar.propTypes = {}
 
 // ===========================|| CUSTOMER LIST ||=========================== //
 
-const Categories = () => {
+const Invoices = () => {
   const classes = useStyles()
   const theme = useTheme()
   const navigate = useNavigate()
@@ -182,7 +182,7 @@ const Categories = () => {
 
   async function fetchCategories() {
     try {
-      const response = await categoryService.getCategoryList()
+      const response = await EndpointService.getCategoryList()
       setCategories(response.categories)
     } catch (error) {
       console.log(error)
@@ -192,11 +192,11 @@ const Categories = () => {
   async function addCategory(event) {
     try {
       event.preventDefault()
-      const res = await categoryService.createCategory(createCategory)
+      const res = await EndpointService.createCategory(createCategory)
 
       if (res) {
         await fetchCategories()
-        setCategories([ ...Categories, res.category ])
+        setCategories([ ...categories, res.category ])
         setCreateCategory({
           categoryName: '',
           categoryIcon: '',
@@ -223,7 +223,7 @@ const Categories = () => {
         setNoSearchResults(true)
       }
     } else {
-      fetchCategories() // Reset to all categories if search is cleared
+      fetchCategories() // Reset to all invoices if search is cleared
       setNoSearchResults(false)
     }
 
@@ -247,7 +247,7 @@ const Categories = () => {
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - categories.length) : 0
 
   return (
-      <MainCard title="Categories" content={false}>
+      <MainCard title="Invoices" content={false}>
         <CardContent>
           <Grid container justifyContent="space-between" alignItems="center" spacing={2}>
             <Grid item xs={12} sm={6}>
@@ -380,7 +380,7 @@ const Categories = () => {
                       </TableCell>
                       <TableCell align="left"> {row.name} </TableCell>
                       <TableCell align="left">{row.status}</TableCell>
-                      <TableCell align="center" sx={{ pr: 3 }} onClick={() => navigate(`/categories/${row.id}`)}>
+                      <TableCell align="center" sx={{ pr: 3 }} onClick={() => navigate(`/invoices/${row.id}`)}>
                         <IconButton color="primary">
                           <VisibilityTwoToneIcon sx={{ fontSize: '1.3rem' }}/>
                         </IconButton>
@@ -403,7 +403,7 @@ const Categories = () => {
                             <TableCell align="left" component="th" id={labelId} scope="row" sx={{ cursor: 'pointer' }}>
                               <Grid item xs={12} sx={{ display: 'flex', gap: '14px' }}>
                                 <img
-                                    src={!row.categoryIcon.includes('http') ? defaultImg : row.categoryIcon}
+                                    src={!row.categoryIcon.includes('http') ? Logo : row.categoryIcon}
                                     width="50px"
                                     height="50px"
                                     style={{
@@ -423,7 +423,7 @@ const Categories = () => {
                               {row.status === 'deleted' && <Chip label="Deleted" size="small" color="error"/>}
                               {row.status === 'pending' && <Chip label="Pending" size="small" color="warning"/>}
                             </TableCell>
-                            <TableCell align="center" sx={{ pr: 3 }} onClick={() => navigate(`/categories/${row._id}`)}>
+                            <TableCell align="center" sx={{ pr: 3 }} onClick={() => navigate(`/invoices/${row._id}`)}>
                               <IconButton color="primary">
                                 <VisibilityTwoToneIcon sx={{ fontSize: '1.3rem' }}/>
                               </IconButton>
@@ -456,4 +456,4 @@ const Categories = () => {
   )
 }
 
-export default Categories
+export default Invoices
