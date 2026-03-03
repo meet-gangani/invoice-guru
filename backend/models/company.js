@@ -15,6 +15,6 @@ const CompanySchema = new Schema({
   ...defaultSchemaOptions
 })
 
-const Category = mongoose.model('company', CompanySchema, 'companies')
+const Company = mongoose.model('company', CompanySchema, 'companies')
 
-module.exports = Category
+module.exports = Company

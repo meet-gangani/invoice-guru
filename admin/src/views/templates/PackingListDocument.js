@@ -64,7 +64,7 @@ const PackingListPdf = ({ data }) => {
     return `${dd}-${mm}-${yyyy}`
   }
   return (
-    <Document>
+    <Document title={"Packaging List"}>
       <Page size="A4" style={styles.page}>
         <View style={styles.table}>
           
@@ -345,7 +345,7 @@ export default function PackingListDocument() {
   }, [ data ])
 
   return (
-    <MainCard title="Packing List (Dynamic)">
+    <MainCard title="Packaging">
       <Grid container spacing={2} alignItems="flex-start">
         <Grid item xs={12} md={5}>
           <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>

@@ -38,14 +38,3 @@ exports.getCompanies = async (req, res) => {
   }
 }
 
-exports.dashboardCards = async (req, res) => {
-  try {
-
-    return sendSuccess(res, {
-      todayInvoice: 5,
-      totalInvoice: 10
-    })
-  } catch (error) {
-    return sendError(res, 'error while fetch count', error)
-  }
-}

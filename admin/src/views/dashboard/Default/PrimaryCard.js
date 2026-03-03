@@ -9,7 +9,7 @@ import MainCard from 'ui-component/cards/MainCard'
 import SkeletonGamesCard from 'ui-component/cards/Skeleton/GamesCard'
 
 // assets
-import { IconDeviceGamepad2 } from '@tabler/icons'
+import { IconCalendarEvent } from '@tabler/icons'
 import { useNavigate } from 'react-router'
 
 const CardWrapper = styled(MainCard)(({ theme }) => ({
@@ -60,7 +60,7 @@ const PrimaryCard = ({ isLoading, count = 0 }) => {
         <SkeletonGamesCard />
       ) : (
         <CardWrapper border={false} content={false}>
-          <Box sx={{ p: 2.25, cursor: 'pointer' }} onClick={() => navigate('/games')}>
+          <Box sx={{ p: 2.25, cursor: 'pointer' }} onClick={() => navigate('/invoices')}>
             <Grid container direction="column">
               <Grid item>
                 <Grid container justifyContent="space-between">
@@ -74,7 +74,7 @@ const PrimaryCard = ({ isLoading, count = 0 }) => {
                         mt: 1
                       }}
                     >
-                      <IconDeviceGamepad2 color="white" />
+                      <IconCalendarEvent color="white" />
                     </Avatar>
                   </Grid>
                 </Grid>

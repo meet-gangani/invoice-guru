@@ -9,7 +9,7 @@ import MainCard from 'ui-component/cards/MainCard'
 import SkeletonGamesCard from 'ui-component/cards/Skeleton/GamesCard'
 
 // assets
-import { IconTags } from '@tabler/icons'
+import { IconFileInvoice } from '@tabler/icons'
 import { useNavigate } from 'react-router'
 
 const CardWrapper = styled(MainCard)(({ theme }) => ({
@@ -66,7 +66,7 @@ const SecondaryCard = ({ isLoading, count = 0 }) => {
         <SkeletonGamesCard />
       ) : (
         <CardWrapper border={false} content={false}>
-          <Box sx={{ p: 2.25, cursor: 'pointer' }} onClick={() => navigate('/categories')}>
+          <Box sx={{ p: 2.25, cursor: 'pointer' }} onClick={() => navigate('/invoices')}>
             <Grid container direction="column">
               <Grid item>
                 <Grid container justifyContent="space-between">
@@ -81,7 +81,7 @@ const SecondaryCard = ({ isLoading, count = 0 }) => {
                         mt: 1
                       }}
                     >
-                      <IconTags fontSize="inherit" />
+                      <IconFileInvoice fontSize="inherit" />
                     </Avatar>
                   </Grid>
 

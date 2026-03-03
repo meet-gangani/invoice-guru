@@ -78,7 +78,7 @@ const Website = {
       url: '/company',
       icon: IconBuilding,
       breadcrumbs: false
-    },
+    }
   ]
 }
 
