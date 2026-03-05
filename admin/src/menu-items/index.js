@@ -44,7 +44,7 @@ const pages = {
       title: 'Delivery',
       type: 'item',
       url: '/delivery',
-      icon: IconTruckDelivery,
+      icon: IconFileInvoice,
       breadcrumbs: false
     },
     {

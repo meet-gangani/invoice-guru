@@ -15,6 +15,8 @@ import { IconPlus, IconTrash } from '@tabler/icons'
 import { Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
+import { useNavigate, useParams } from 'react-router-dom'
+import axiosInstance from '../../services/axiosInstance'
 
 const styles = StyleSheet.create({
   page: { padding: 30, fontSize: 7.5, fontFamily: 'Helvetica', color: '#000' },
@@ -60,7 +62,10 @@ const styles = StyleSheet.create({
 const PackingListPdf = ({ data }) => {
   const formatDate = (value) => {
     if (!value) return ''
-    const [yyyy, mm, dd] = value.split('-')
+    const raw = String(value).split('T')[0]
+    const ddmmyyyy = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/)
+    if (ddmmyyyy) return raw
+    const [yyyy, mm, dd] = raw.split('-')
     if (!yyyy || !mm || !dd) return value
     return `${dd}-${mm}-${yyyy}`
   }
@@ -269,8 +274,19 @@ const FieldToggle = ({ label, value, visible, onChange, onToggle, multiline }) =
 
 export default function PackingListDocument() {
   const theme = useTheme()
+  const navigate = useNavigate()
+  const params = useParams()
+  const invoiceId = params?.id
   const [data, setData] = useState(defaultData)
   const [pdfData, setPdfData] = useState(defaultData)
+  const [isSaving, setIsSaving] = useState(false)
+
+  const formatDateForSave = (value) => {
+    if (!value) return ''
+    const [ yyyy, mm, dd ] = String(value).split('-')
+    if (!yyyy || !mm || !dd) return value
+    return `${dd}-${mm}-${yyyy}`
+  }
 
   const updateField = (field) => (event) => {
     setData((prev) => ({ ...prev, [field]: { ...prev[field], value: event.target.value } }))
@@ -346,8 +362,89 @@ export default function PackingListDocument() {
     return () => clearTimeout(handle)
   }, [ data ])
 
+  useEffect(() => {
+    let isActive = true
+    const loadInvoice = async () => {
+      if (!invoiceId) {
+        try {
+          const byTemplate = await axiosInstance.get('/api/invoices/by-template/packing')
+          if (!isActive) return
+          const existing = byTemplate?.data
+          if (existing?._id) {
+            navigate(`/packaging/${existing._id}`, { replace: true })
+            return
+          }
+        } catch (error) {
+          // ignore and fall back to default
+        }
+        setData(defaultData)
+        setPdfData(defaultData)
+        return
+      }
+      try {
+        const response = await axiosInstance.get(`/api/invoices/${invoiceId}`)
+        if (!isActive) return
+        const invoice = response?.data || {}
+        const normalizeDateValue = (value) => {
+          if (!value) return ''
+          if (typeof value === 'string') return value.split('T')[0]
+          if (value instanceof Date && !Number.isNaN(value.getTime())) {
+            return value.toISOString().slice(0, 10)
+          }
+          if (typeof value === 'object' && value.value) return value.value
+          return ''
+        }
+        const coerceDateField = (value, fallbackVisible) => {
+          if (value && typeof value === 'object' && !Array.isArray(value)) {
+            return { ...value, value: normalizeDateValue(value.value || value) }
+          }
+          return { value: normalizeDateValue(value), visible: fallbackVisible }
+        }
+        const merged = {
+          ...defaultData,
+          ...(invoice?.data || {})
+        }
+        merged.date = coerceDateField(invoice?.data?.date ?? invoice?.date, defaultData.date.visible)
+        setData(merged)
+        setPdfData(merged)
+      } catch (error) {
+        if (!isActive) return
+        setData(defaultData)
+        setPdfData(defaultData)
+      }
+    }
+
+    loadInvoice()
+    return () => {
+      isActive = false
+    }
+  }, [ invoiceId ])
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true)
+      const { date, ...restOfState } = data
+      const payloadDate = formatDateForSave(date?.value || '')
+      const payload = { _id: invoiceId, date: payloadDate, type: 'packing', ...restOfState }
+      const response = await axiosInstance.post('/api/invoices/save', payload)
+      const savedInvoice = response?.data
+      if (savedInvoice?._id && !invoiceId) {
+        navigate(`/packaging/${savedInvoice._id}`, { replace: true })
+      }
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
-    <MainCard title="Packaging">
+    <MainCard
+      title="Packaging"
+      secondary={(
+        <Button variant="contained" onClick={handleSave} disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save'}
+        </Button>
+      )}
+    >
       <Grid container spacing={2} alignItems="flex-start">
         <Grid item xs={12} md={5}>
           <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>

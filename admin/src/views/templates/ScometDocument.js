@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Box,
   Button,
@@ -16,6 +16,8 @@ import { IconPlus, IconTrash } from '@tabler/icons'
 import { Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
+import { useNavigate, useParams } from 'react-router-dom'
+import axiosInstance from '../../services/axiosInstance'
 
 const styles = StyleSheet.create({
   page: {
@@ -100,7 +102,10 @@ const styles = StyleSheet.create({
 const ScometPdf = ({ data }) => {
   const formatDate = (value) => {
     if (!value) return ''
-    const [yyyy, mm, dd] = value.split('-')
+    const raw = String(value).split('T')[0]
+    const ddmmyyyy = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/)
+    if (ddmmyyyy) return raw
+    const [yyyy, mm, dd] = raw.split('-')
     if (!yyyy || !mm || !dd) return value
     return `${dd}-${mm}-${yyyy}`
   }
@@ -228,9 +233,19 @@ const SectionTitle = ({ children }) => (
 
 export default function ScometDocument() {
   const theme = useTheme()
+  const navigate = useNavigate()
+  const params = useParams()
+  const invoiceId = params?.id
 
   const [data, setData] = useState(defaultData)
   const [pdfData, setPdfData] = useState(defaultData)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
+
+  const hydrateData = (nextData) => {
+    setData(nextData)
+    setPdfData(nextData)
+  }
 
   const updateField = (field) => (event) => {
     setData((prev) => ({ ...prev, [field]: event.target.value }))
@@ -239,6 +254,23 @@ export default function ScometDocument() {
   const normalizeHeader = (value = '') => value.trim().toUpperCase()
 
   const sanitizeAlphaNumUpper = (value) => value.replace(/[^a-z0-9]/gi, '').toUpperCase()
+
+  const formatDateForSave = (value) => {
+    if (!value) return ''
+    const raw = String(value).split('T')[0]
+    const [ yyyy, mm, dd ] = raw.split('-')
+    if (!yyyy || !mm || !dd) return value
+    return `${dd}-${mm}-${yyyy}`
+  }
+
+  const normalizeDateInput = (value) => {
+    if (!value) return ''
+    const raw = String(value).split('T')[0]
+    const match = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/)
+    if (!match) return value
+    const [ , dd, mm, yyyy ] = match
+    return `${yyyy}-${mm}-${dd}`
+  }
 
   const updateArrayField = (field, index) => (event) => {
     setData((prev) => {
@@ -260,11 +292,6 @@ export default function ScometDocument() {
     })
   }
 
-  const tableColumnCount = useMemo(
-    () => Math.max(1, data.tableHeaders.filter((h) => h.trim() !== '').length),
-    [ data.tableHeaders ]
-  )
-
   const createEmptyRow = () => {
     const headers = data.tableHeaders || []
     return headers.map((header) => (normalizeHeader(header) === 'MODE OF EXPORT' ? 'AIR' : ''))
@@ -277,8 +304,85 @@ export default function ScometDocument() {
     return () => clearTimeout(handle)
   }, [ data ])
 
+  const normalizeTableRows = (rows = []) => {
+    if (!Array.isArray(rows)) return [ createEmptyRow() ]
+    const columnCount = Math.max(1, data.tableHeaders.filter((h) => h.trim() !== '').length)
+    return rows.map((row) => {
+      if (!Array.isArray(row)) return new Array(columnCount).fill('')
+      if (row.length >= columnCount) return row
+      return [ ...row, ...new Array(columnCount - row.length).fill('') ]
+    })
+  }
+
+  useEffect(() => {
+    let isActive = true
+    const loadInvoice = async () => {
+      if (!invoiceId) {
+        try {
+          const byTemplate = await axiosInstance.get('/api/invoices/by-template/scomet')
+          if (!isActive) return
+          const existing = byTemplate?.data
+          if (existing?._id) {
+            navigate(`/scomet-document/${existing._id}`, { replace: true })
+            return
+          }
+        } catch (error) {
+          // ignore and fall back to default
+        }
+        hydrateData(defaultData)
+        return
+      }
+      try {
+        const response = await axiosInstance.get(`/api/invoices/${invoiceId}`)
+        if (!isActive) return
+        const invoice = response?.data || {}
+        const merged = {
+          ...defaultData,
+          ...(invoice?.data || {}),
+          date: normalizeDateInput(invoice?.data?.date || invoice?.date || '')
+        }
+        merged.tableRows = normalizeTableRows(merged.tableRows)
+        hydrateData(merged)
+      } catch (error) {
+        if (!isActive) return
+        hydrateData(defaultData)
+      }
+    }
+
+    loadInvoice()
+    return () => {
+      isActive = false
+    }
+  }, [ invoiceId ])
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true)
+      const { date, ...restOfState } = data
+      const payloadDate = formatDateForSave(date)
+      const payload = { _id: invoiceId, date: payloadDate, type: 'scomet', ...restOfState }
+      const response = await axiosInstance.post('/api/invoices/save', payload)
+      const savedInvoice = response?.data
+      if (savedInvoice?._id && !invoiceId) {
+        navigate(`/scomet-document/${savedInvoice._id}`, { replace: true })
+      }
+      if (savedInvoice) {
+        setIsDirty(false)
+      }
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
-    <MainCard title="SCOMET Declaration">
+    <MainCard
+      title="SCOMET Declaration"
+      secondary={(
+        <Button variant="contained" onClick={handleSave} disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save'}
+        </Button>
+      )}
+    >
       <Grid container spacing={2} alignItems="flex-start">
         <Grid item xs={12} md={5}>
           <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>
@@ -373,7 +477,12 @@ export default function ScometDocument() {
                 </IconButton>
               </Stack>
             ))}
-            <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('tableHeaders', `Header ${tableColumnCount + 1}`)}>
+            <Button
+              sx={{ color: theme.palette.secondary.dark }}
+              variant="outlined"
+              startIcon={<IconPlus />}
+              onClick={() => addArrayItem('tableHeaders', `Header ${data.tableHeaders.length + 1}`)}
+            >
               Add Table Column
             </Button>
 

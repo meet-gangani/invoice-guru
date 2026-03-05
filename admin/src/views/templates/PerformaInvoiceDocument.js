@@ -16,6 +16,8 @@ import { IconPlus, IconTrash } from '@tabler/icons'
 import { Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
+import { useNavigate, useParams } from 'react-router-dom'
+import axiosInstance from '../../services/axiosInstance'
 
 const styles = StyleSheet.create({
   page: {
@@ -87,7 +89,10 @@ const PerformaPdf = ({ data }) => {
   const total = subtotal + freight + packing + insurance
   const formatDate = (value) => {
     if (!value) return ''
-    const [yyyy, mm, dd] = value.split('-')
+    const raw = String(value).split('T')[0]
+    const ddmmyyyy = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/)
+    if (ddmmyyyy) return raw
+    const [yyyy, mm, dd] = raw.split('-')
     if (!yyyy || !mm || !dd) return value
     return `${dd}-${mm}-${yyyy}`
   }
@@ -241,6 +246,7 @@ const PdfPreview = React.memo(({ data }) => (
 const defaultData = {
   companyName: { value: 'UNIQUE WAVES', visible: true },
   invoiceTitle: { value: 'PERFORMA INVOICE', visible: true },
+  date: '',
   addressLines: [
     { value: '102 PRABHU PRASAD BUILDING', visible: true },
     { value: 'NEAR SRK HOUSE,', visible: true },
@@ -303,11 +309,30 @@ const FieldToggle = ({ label, value, visible, onChange, onToggle, multiline }) =
 
 export default function PerformaInvoiceDocument() {
   const theme = useTheme()
+  const navigate = useNavigate()
+  const params = useParams()
+  const invoiceId = params?.id
 
   const [data, setData] = useState(defaultData)
   const [pdfData, setPdfData] = useState(defaultData)
+  const [isSaving, setIsSaving] = useState(false)
 
   const normalizeLabel = (value = '') => value.trim().toUpperCase()
+  const formatDateForSave = (value) => {
+    if (!value) return ''
+    const raw = String(value).split('T')[0]
+    const [ yyyy, mm, dd ] = raw.split('-')
+    if (!yyyy || !mm || !dd) return value
+    return `${dd}-${mm}-${yyyy}`
+  }
+  const normalizeDateInput = (value) => {
+    if (!value) return ''
+    const raw = String(value).split('T')[0]
+    const match = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/)
+    if (!match) return value
+    const [ , dd, mm, yyyy ] = match
+    return `${yyyy}-${mm}-${dd}`
+  }
   const sanitizeAlphaNumUpper = (value) => value.replace(/[^a-z0-9]/gi, '').toUpperCase()
   const sanitizeDigits = (value) => value.replace(/\D/g, '')
   const parseAmount = (value) => {
@@ -393,7 +418,7 @@ export default function PerformaInvoiceDocument() {
       const raw = event.target.value
       const value = label === 'INVOICE #' ? sanitizeAlphaNumUpper(raw) : raw
       next[index] = { ...next[index], value }
-      return { ...prev, metaFields: next }
+      return label === 'DATE' ? { ...prev, metaFields: next, date: value } : { ...prev, metaFields: next }
     })
   }
 
@@ -557,8 +582,86 @@ export default function PerformaInvoiceDocument() {
     return () => clearTimeout(handle)
   }, [ data ])
 
+  const normalizeMetaFieldsDate = (metaFields, dateValue) => {
+    if (!Array.isArray(metaFields)) return metaFields
+    return metaFields.map((meta) => {
+      const label = normalizeLabel(meta.label)
+      if (label === 'DATE') {
+        return { ...meta, value: dateValue || meta.value }
+      }
+      return meta
+    })
+  }
+
+  useEffect(() => {
+    let isActive = true
+    const loadInvoice = async () => {
+      if (!invoiceId) {
+        try {
+          const byTemplate = await axiosInstance.get('/api/invoices/by-template/performa')
+          if (!isActive) return
+          const existing = byTemplate?.data
+          if (existing?._id) {
+            navigate(`/performa/${existing._id}`, { replace: true })
+            return
+          }
+        } catch (error) {
+          // ignore and fall back to default
+        }
+        setData(defaultData)
+        setPdfData(defaultData)
+        return
+      }
+      try {
+        const response = await axiosInstance.get(`/api/invoices/${invoiceId}`)
+        if (!isActive) return
+        const invoice = response?.data || {}
+        const merged = {
+          ...defaultData,
+          ...(invoice?.data || {}),
+          date: normalizeDateInput(invoice?.data?.date || invoice?.date || '')
+        }
+        merged.metaFields = normalizeMetaFieldsDate(merged.metaFields, merged.date)
+        setData(merged)
+        setPdfData(merged)
+      } catch (error) {
+        if (!isActive) return
+        setData(defaultData)
+        setPdfData(defaultData)
+      }
+    }
+
+    loadInvoice()
+    return () => {
+      isActive = false
+    }
+  }, [ invoiceId ])
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true)
+      const { date, ...restOfState } = data
+      const payloadDate = formatDateForSave(date)
+      const payload = { _id: invoiceId, date: payloadDate, type: 'performa', ...restOfState }
+      const response = await axiosInstance.post('/api/invoices/save', payload)
+      const savedInvoice = response?.data
+      if (savedInvoice?._id && !invoiceId) {
+        navigate(`/performa/${savedInvoice._id}`, { replace: true })
+      }
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
-    <MainCard title="Performa">
+    <MainCard
+      title="Performa"
+      secondary={(
+        <Button variant="contained" onClick={handleSave} disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save'}
+        </Button>
+      )}
+    >
       <Grid container spacing={2} alignItems="flex-start">
         <Grid item xs={12} md={5}>
           <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>
