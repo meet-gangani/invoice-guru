@@ -3,15 +3,15 @@ const router = require('express').Router()
 const {
   dashboardCards,
   getInvoices,
-  getInvoiceByTemplateApi,
-  getInvoiceApi,
-  saveInvoiceApi
+  getInvoiceByType,
+  getInvoiceById,
+  saveInvoice
 } = require('../../controllers/invoice')
 
 router.get('/dashboard-cards', dashboardCards)
-router.get('/by-template/:template', getInvoiceByTemplateApi)
-router.get('/:id', getInvoiceApi)
-router.post('/save', saveInvoiceApi)
+router.get('/by-template/:template', getInvoiceByType)
+router.get('/:id', getInvoiceById)
+router.post('/save', saveInvoice)
 router.get('/', getInvoices)
 
 module.exports = router

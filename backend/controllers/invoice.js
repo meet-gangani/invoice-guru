@@ -30,7 +30,14 @@ exports.dashboardCards = async (req, res) => {
 
 exports.getInvoices = async (req, res) => {
   try {
-    const invoices = await InvoiceStore.find().sort({ createdOn: -1 }).populate({
+    let filter = {}
+    if (req.companyId) {
+      filter = {
+        company: req.companyId
+      }
+    }
+
+    const invoices = await InvoiceStore.find(filter).sort({ createdOn: -1 }).populate({
       path: 'company',
       model: 'company',
       select: '_id name logo'
@@ -42,7 +49,7 @@ exports.getInvoices = async (req, res) => {
   }
 }
 
-exports.getInvoiceApi = async (req, res) => {
+exports.getInvoiceById = async (req, res) => {
   try {
     const invoice = await InvoiceStore.findById(req.params.id)
     if (!invoice) {
@@ -55,7 +62,7 @@ exports.getInvoiceApi = async (req, res) => {
   }
 }
 
-exports.saveInvoiceApi = async (req, res) => {
+exports.saveInvoice = async (req, res) => {
   try {
     const { _id, date, data, template, type, ...rest } = req.body || {}
     const payloadData = data || rest
@@ -88,11 +95,17 @@ exports.saveInvoiceApi = async (req, res) => {
       invoice.data = payloadData
       await invoice.save()
     } else {
-      invoice = await InvoiceStore.create({
+      let payload = {
         date: payloadDate,
         type: payloadType,
         data: payloadData
-      })
+      }
+
+      if (req.companyId) {
+        payload.company = req.companyId
+      }
+
+      invoice = await InvoiceStore.create(payload)
     }
 
     return sendSuccess(res, invoice, 200)
@@ -101,7 +114,7 @@ exports.saveInvoiceApi = async (req, res) => {
   }
 }
 
-exports.getInvoiceByTemplateApi = async (req, res) => {
+exports.getInvoiceByType = async (req, res) => {
   try {
     const template = req.params.template
     if (!template) {
