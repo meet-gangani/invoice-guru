@@ -1,4 +1,4 @@
-const { UserStore } = require('../models')
+const { UserStore, CompanyStore } = require('../models')
 const { sendSuccess, sendError } = require('./utils')
 const constants = require('../global')
 const bcrypt = require('bcrypt')
@@ -101,20 +101,41 @@ const verifyUser = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { email } = req.body
+    const { email, password } = req.body
 
     const user = await UserStore.findOne({ email })
-    if (!user) {
+
+    const company = await CompanyStore.findOne({
+      username: email,
+      status: "Active"
+    })
+
+    if (!user && !company) {
       return sendError(res, 'User not found', null, 400)
     }
 
-    const validPassword = await bcrypt.compare(req.body.password, user.password)
-    if (!validPassword) {
-      return sendError(res, 'Invalid Password.', null, 400)
+    let token
+    let isAdmin
+    if (user) {
+      const validPassword = await bcrypt.compare(password, user.password)
+      if (!validPassword) {
+        return sendError(res, 'Invalid Password.', null, 400)
+      }
+
+      isAdmin = true
+      token = user.generateAuthToken()
     }
 
-    const token = user.generateAuthToken()
-    sendSuccess(res, { token })
+    if (company) {
+      if (company.password !== password) {
+        return sendError(res, 'Invalid Password.', null, 400)
+      }
+
+      isAdmin = false
+      token = company.generateAuthToken()
+    }
+
+    sendSuccess(res, { token, isAdmin })
   } catch (error) {
     return sendError(res, 'Something went wrong in log-in', error, 500)
   }

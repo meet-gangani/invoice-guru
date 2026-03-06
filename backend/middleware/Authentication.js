@@ -28,7 +28,7 @@ const authentication = async (req, res, next) => {
     }).lean()
 
     if (!user) {
-      return sendError(res, 'User not found', null, 404)
+      return sendError(res, 'User not found', null, 401)
     }
 
     // TODO : recheck token logic

@@ -8,12 +8,6 @@ const axiosInstance = axios.create({
   }
 })
 
-const errorMessages = [
-  'jwt expired',
-  'Token has expired',
-  'No token found'
-]
-
 axiosInstance.interceptors.request.use((config) => {
   const decryptedString = encryptStorage.getItem('token')
   config.headers.Authorization = decryptedString
@@ -22,7 +16,7 @@ axiosInstance.interceptors.request.use((config) => {
 })
 
 axiosInstance.interceptors.response.use((response) => response, (error) => {
-  if (errorMessages.includes(error?.response?.data?.error)) {
+  if (error?.response.status === 401) {
     encryptStorage.removeItem('token')
     window.open("http://localhost:3000/login")
   }
