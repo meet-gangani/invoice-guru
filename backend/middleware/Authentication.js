@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken')
 const constants = require('../global')
 const { sendError } = require('../controllers/utils')
-const { UserStore } = require('../models')
+const { UserStore, CompanyStore } = require('../models')
 
 const authentication = async (req, res, next) => {
   try {
@@ -17,26 +17,35 @@ const authentication = async (req, res, next) => {
       return sendError(res, 'Token has expired', null, 401)
     }
 
-    const userId = decryptedToken._id
+    const typeId = decryptedToken._id
+    const isAdmin = decryptedToken.isAdmin
 
-    if (!userId) {
+    if (!typeId) {
       return sendError(res, 'UserId not found', null, 401)
     }
 
-    const user = await UserStore.findById({
-      _id: userId
-    }).lean()
+    if (isAdmin) {
+      const user = await UserStore.findById({
+        _id: typeId
+      }).lean()
 
-    if (!user) {
-      return sendError(res, 'User not found', null, 401)
+      if (!user) {
+        return sendError(res, 'User not found', null, 401)
+      }
+    } else {
+      const company = await CompanyStore.findOne({
+        _id: typeId,
+        status: "Active"
+      }).lean()
+
+      if (!company) {
+        return sendError(res, 'company user not found', null, 401)
+      }
     }
 
-    // TODO : recheck token logic
-    // if (!user.tokens.includes(authorization)) {
-    //   return sendError(res, 'User does not have valid token', null, 401)
-    // }
-
-    req.user = user
+    req.typeId = typeId
+    req.companyId = isAdmin ? null : typeId
+    req.isAdmin = isAdmin
 
     next()
   } catch (error) {

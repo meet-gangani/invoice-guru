@@ -8,6 +8,10 @@ const axiosInstance = axios.create({
   }
 })
 
+const STATUS_CODE = {
+  UNAUTHORIZED: 401,
+}
+
 axiosInstance.interceptors.request.use((config) => {
   const decryptedString = encryptStorage.getItem('token')
   config.headers.Authorization = decryptedString
@@ -16,9 +20,10 @@ axiosInstance.interceptors.request.use((config) => {
 })
 
 axiosInstance.interceptors.response.use((response) => response, (error) => {
-  if (error?.response.status === 401) {
+  if (error?.response.status === STATUS_CODE.UNAUTHORIZED) {
     encryptStorage.removeItem('token')
-    window.open("http://localhost:3000/login")
+
+    window.open(`${window.location.origin}/login`)
   }
 
   return error
