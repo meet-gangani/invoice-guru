@@ -228,7 +228,6 @@ export default function ScometDocument() {
   const [ data, setData ] = useState(defaultData)
   const [ pdfData, setPdfData ] = useState(defaultData)
   const [ isSaving, setIsSaving ] = useState(false)
-  const [ isDirty, setIsDirty ] = useState(false)
 
   const hydrateData = (nextData) => {
     setData(nextData)
@@ -356,9 +355,6 @@ export default function ScometDocument() {
       const savedInvoice = response?.data
       if (savedInvoice?._id && !invoiceId) {
         navigate(`/scomet/${savedInvoice._id}`, { replace: true })
-      }
-      if (savedInvoice) {
-        setIsDirty(false)
       }
     } finally {
       setIsSaving(false)

@@ -30,7 +30,11 @@ exports.dashboardCards = async (req, res) => {
 
 exports.getInvoices = async (req, res) => {
   try {
-    const invoices = await InvoiceStore.find().sort({ createdOn: -1 })
+    const invoices = await InvoiceStore.find().sort({ createdOn: -1 }).populate({
+      path: 'company',
+      model: 'company',
+      select: '_id name logo'
+    }).lean()
 
     return sendSuccess(res, { invoices })
   } catch (error) {

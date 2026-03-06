@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { CardContent, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow } from '@mui/material'
+import { Box, CardContent, Chip, Grid, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Typography } from '@mui/material'
 import MainCard from 'ui-component/cards/MainCard'
 import EndpointService from '../../services/endpoint.service'
 import { IconEye } from '@tabler/icons'
@@ -35,6 +35,13 @@ const Invoices = () => {
     }
   }
 
+  const TYPE_CONFIG = {
+    scomet: { label: 'SCOMET', color: 'secondary' },
+    delivery: { label: 'DELIVERY', color: 'success' },
+    packing: { label: 'PACKING', color: 'warning' },
+    performa: { label: 'PERFORMA', color: 'primary' }
+  }
+
   return (
       <MainCard title="Invoices" content={false}>
         <CardContent>
@@ -53,20 +60,64 @@ const Invoices = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {invoices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((invoice, idx) => (
-                  <TableRow key={invoice._id}>
-                    <TableCell>{idx + 1}</TableCell>
-                    <TableCell>{invoice.type}</TableCell>
-                    <TableCell>
-                      {DateTime?.fromISO(invoice.date)?.toFormat('dd MMMM yyyy hh:mm a')}
-                    </TableCell>
-                    <TableCell>
-                      <Link to={`/${invoice.type}/${invoice._id}`}>
-                        <IconEye fontSize="inherit" color={theme.palette.secondary.dark}/>
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-              ))}
+              {invoices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((invoice, idx) => {
+                const typeConfig = TYPE_CONFIG[invoice?.type] || {
+                  label: invoice?.type?.toUpperCase(),
+                  color: 'default'
+                }
+
+                return <TableRow key={invoice._id}>
+                  <TableCell>{idx + 1}</TableCell>
+                  <TableCell>
+                    <Chip
+                        label={typeConfig.label}
+                        color={typeConfig.color}
+                        size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="column" spacing={0.5}>
+                      {invoice?.company && (
+                          <Stack direction="row" spacing={1} alignItems="center">
+
+                            {invoice?.company?.logo && (
+                                <Box
+                                    component="img"
+                                    src={invoice.company.logo}
+                                    alt={invoice.company.name}
+                                    sx={{
+                                      width: 28,
+                                      height: 28,
+                                      objectFit: 'contain',
+                                      borderRadius: 1
+                                    }}
+                                />
+                            )}
+
+                            <Typography variant="body" fontWeight={500}>
+                              {invoice.company.name}
+                            </Typography>
+                          </Stack>
+                      )}
+
+                      {(() => {
+                        const date = DateTime.fromISO(invoice?.date || '')
+                        return date.isValid ? (
+                            <Typography variant="body3" color="text.secondary">
+                              {date.toFormat('dd MMMM yyyy hh:mm a')}
+                            </Typography>
+                        ) : null
+                      })()}
+
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Link to={`/${invoice.type}/${invoice._id}`}>
+                      <IconEye fontSize="inherit" color={theme.palette.secondary.dark}/>
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              })}
             </TableBody>
           </Table>
         </TableContainer>
