@@ -10,7 +10,6 @@ import encryptStorage from 'services/storage'
 
 const MenuList = () => {
   const role = encryptStorage.getItem('role')
-  console.log("role", role);
   const isAdmin = role === 'admin'
 
   const navItems = menuItem.items.map((item) => {
