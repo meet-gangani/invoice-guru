@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Box, Button, Checkbox, Divider, FormControlLabel, Grid, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material'
 import { IconPlus, IconTrash } from '@tabler/icons'
 import { Document, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer'
@@ -271,11 +271,14 @@ const defaultData = {
     'We declare that this invoice shows the actual price of the goods described and that all',
     'particulars are true and correct.'
   ],
-  total: { value: 'EUR 0.00', visible: true },
-  packingCharge: { value: 'EUR 0.00', visible: true },
-  forwarding: { value: 'EUR 0.00', visible: true },
-  insurance: { value: 'EUR 0.00', visible: true },
-  grandTotal: { value: 'EUR 0.00', visible: true },
+  total: { value: '0.00', visible: true },
+  packingCharge: { value: '0.00', visible: true },
+  packingChargeInr: { value: '', visible: true },
+  forwarding: { value: '0.00', visible: true },
+  forwardingInr: { value: '', visible: true },
+  insurance: { value: '0.00', visible: true },
+  insuranceInr: { value: '', visible: true },
+  grandTotal: { value: '0.00', visible: true },
   signature: { value: 'UNIQUE WAVES', visible: true },
   netWeight: { value: '', visible: true },
   grossWeight: { value: '', visible: true }
@@ -303,6 +306,9 @@ export default function PackagingDocument() {
   const [ data, setData ] = useState(defaultData)
   const [ pdfData, setPdfData ] = useState(defaultData)
   const [ isSaving, setIsSaving ] = useState(false)
+  const [ eurToInrRate, setEurToInrRate ] = useState(null)
+  const rateRequestRef = useRef(null)
+  const [ tableAmountInr, setTableAmountInr ] = useState(() => (defaultData.tableRows || []).map(() => ''))
 
   const updateField = (field) => (event) => {
     setData((prev) => ({ ...prev, [field]: { ...prev[field], value: event.target.value } }))
@@ -321,37 +327,54 @@ export default function PackagingDocument() {
   }
 
   const normalizeHeader = (value = '') => value.trim().toUpperCase()
-  const parseAmount = (value) => {
-    const cleaned = String(value || '').replace(/[^0-9.]/g, '')
-    const parsed = Number.parseFloat(cleaned)
-    return Number.isFinite(parsed) ? parsed : 0
-  }
-  const formatCurrency = (value, prefix = 'EUR') => `${prefix} ${value.toFixed(2)}`
+
   const sanitizeAmountInput = (value) => {
     const cleaned = String(value || '').replace(/[^0-9.]/g, '')
     const parts = cleaned.split('.')
     if (parts.length <= 1) return cleaned
     return `${parts[0]}.${parts.slice(1).join('')}`
   }
-  const formatDisplay = (value) => {
-    const parsed = Number.parseFloat(value || 0)
-    if (!Number.isFinite(parsed)) return '0'
-    const fixed = parsed.toFixed(2)
-    return fixed.replace(/\.?0+$/, '')
+  const parseNumericInput = (value) => {
+    const parsed = Number.parseFloat(String(value || ''))
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  const convertEurToInr = (value, rate) => {
+    const numeric = parseNumericInput(value)
+    if (numeric === null || !Number.isFinite(rate) || rate <= 0) return ''
+    return (numeric * rate).toFixed(2)
+  }
+  const convertInrToEur = (value, rate) => {
+    const numeric = parseNumericInput(value)
+    if (numeric === null || !Number.isFinite(rate) || rate <= 0) return ''
+    return (numeric / rate).toFixed(2)
+  }
+
+  const fetchEurToInrRate = async () => {
+    if (eurToInrRate) return eurToInrRate
+    if (rateRequestRef.current) return rateRequestRef.current
+
+    rateRequestRef.current = fetch('https://api.frankfurter.dev/v1/latest?amount=1&from=EUR&to=INR')
+        .then((response) => response.json())
+        .then((payload) => {
+          const rate = Number(payload?.rates?.INR)
+          if (!Number.isFinite(rate) || rate <= 0) {
+            throw new Error('Invalid rate')
+          }
+          setEurToInrRate(rate)
+          return rate
+        })
+        .catch(() => null)
+        .finally(() => {
+          rateRequestRef.current = null
+        })
+
+    return rateRequestRef.current
   }
 
   const amountIndex = useMemo(() => {
     const index = data.tableHeaders.findIndex((h) => normalizeHeader(h) === 'AMOUNT')
     return index >= 0 ? index : Math.max(0, data.tableHeaders.length - 1)
   }, [ data.tableHeaders ])
-  const subtotal = useMemo(
-      () => data.tableRows.reduce((sum, row) => sum + parseAmount(row?.[amountIndex]), 0),
-      [ data.tableRows, amountIndex ]
-  )
-  const packing = useMemo(() => parseAmount(data.packingCharge.value), [ data.packingCharge.value ])
-  const forwarding = useMemo(() => parseAmount(data.forwarding.value), [ data.forwarding.value ])
-  const insurance = useMemo(() => parseAmount(data.insurance.value), [ data.insurance.value ])
-  const grandTotal = useMemo(() => subtotal + packing + forwarding + insurance, [ subtotal, packing, forwarding, insurance ])
 
   const updateExporterLine = (index) => (event) => {
     setData((prev) => {
@@ -438,25 +461,18 @@ export default function PackagingDocument() {
   }, [ data ])
 
   useEffect(() => {
+    setTableAmountInr((prev) => {
+      const next = [ ...(prev || []) ]
+      const targetLength = data.tableRows.length
+      if (next.length > targetLength) next.length = targetLength
+      while (next.length < targetLength) next.push('')
+      return next
+    })
+  }, [ data.tableRows.length ])
+
+  useEffect(() => {
     let isActive = true
     const loadInvoice = async () => {
-      // if (!invoiceId) {
-      //   try {
-      //     const byTemplate = await axiosInstance.get('/v1/invoice/by-template/delivery')
-      //     if (!isActive) return
-      //     const existing = byTemplate?.data
-      //     if (existing?._id) {
-      //       navigate(`/delivery/${existing._id}`, { replace: true })
-      //       return
-      //     }
-      //   } catch (error) {
-      //     // ignore
-      //   }
-      //   setData(defaultData)
-      //   setPdfData(defaultData)
-      //   return
-      // }
-
       if (invoiceId) {
         try {
           const response = await axiosInstance.get(`/v1/invoice/${invoiceId}`)
@@ -514,7 +530,9 @@ export default function PackagingDocument() {
                 sx={{
                   position: { md: 'sticky' },
                   top: { md: 24 },
-                  height: { xs: '70vh', md: '85vh' },
+                  height: { xs: '88vh', md: 'calc(100vh - 140px)' },
+                  minHeight: { xs: 520, md: 700 },
+                  overflow: 'hidden',
                   border: '1px solid',
                   borderColor: 'divider'
                 }}
@@ -600,17 +618,80 @@ export default function PackagingDocument() {
                           <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
                         </IconButton>
                       </Stack>
-                      <Grid container spacing={1}>
-                        {data.tableHeaders.map((header, colIndex) => (
-                            <Grid key={`cell-${rowIndex}-${colIndex}`} item xs={12} sm={6}>
-                              <TextField
-                                  label={`${header} (Row ${rowIndex + 1})`}
-                                  value={row[colIndex] || ''}
-                                  onChange={updateTableCell(rowIndex, colIndex)}
-                                  fullWidth
-                              />
-                            </Grid>
-                        ))}
+                      <Grid container spacing={2}>
+                        {data.tableHeaders.map((header, colIndex) => {
+                          if (colIndex === amountIndex) {
+                            return (
+                                <React.Fragment key={`cell-${rowIndex}-${colIndex}`}>
+                                  <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        label={`${header} (Row ${rowIndex + 1})`}
+                                        value={row[colIndex] || ''}
+                                        onChange={async (event) => {
+                                          const value = sanitizeAmountInput(event.target.value)
+                                          setData((prev) => {
+                                            const nextRows = [ ...(prev.tableRows || []) ]
+                                            const nextRow = [ ...(nextRows[rowIndex] || []) ]
+                                            nextRow[colIndex] = value
+                                            nextRows[rowIndex] = nextRow
+                                            return { ...prev, tableRows: nextRows }
+                                          })
+                                          const rate = await fetchEurToInrRate()
+                                          if (!rate) return
+                                          const inrValue = convertEurToInr(value, rate)
+                                          setTableAmountInr((prev) => {
+                                            const next = [ ...(prev || []) ]
+                                            next[rowIndex] = inrValue
+                                            return next
+                                          })
+                                        }}
+                                        fullWidth
+                                        InputProps={{ startAdornment: <InputAdornment position="start">EUR</InputAdornment> }}
+                                        inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
+                                    />
+                                  </Grid>
+                                  <Grid item xs={12} sm={6}>
+                                    <TextField
+                                        label={`AMOUNT INR (Row ${rowIndex + 1})`}
+                                        value={tableAmountInr[rowIndex] || ''}
+                                        onChange={async (event) => {
+                                          const value = sanitizeAmountInput(event.target.value)
+                                          setTableAmountInr((prev) => {
+                                            const next = [ ...(prev || []) ]
+                                            next[rowIndex] = value
+                                            return next
+                                          })
+                                          const rate = await fetchEurToInrRate()
+                                          if (!rate) return
+                                          const eurValue = convertInrToEur(value, rate)
+                                          setData((prev) => {
+                                            const nextRows = [ ...(prev.tableRows || []) ]
+                                            const nextRow = [ ...(nextRows[rowIndex] || []) ]
+                                            nextRow[colIndex] = eurValue
+                                            nextRows[rowIndex] = nextRow
+                                            return { ...prev, tableRows: nextRows }
+                                          })
+                                        }}
+                                        fullWidth
+                                        InputProps={{ startAdornment: <InputAdornment position="start">INR</InputAdornment> }}
+                                        inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
+                                    />
+                                  </Grid>
+                                </React.Fragment>
+                            )
+                          }
+
+                          return (
+                              <Grid key={`cell-${rowIndex}-${colIndex}`} item xs={12} sm={6}>
+                                <TextField
+                                    label={`${header} (Row ${rowIndex + 1})`}
+                                    value={row[colIndex] || ''}
+                                    onChange={updateTableCell(rowIndex, colIndex)}
+                                    fullWidth
+                                />
+                              </Grid>
+                          )
+                        })}
                       </Grid>
                     </Box>
                 ))}
@@ -621,72 +702,143 @@ export default function PackagingDocument() {
                 <Divider/>
 
                 <SectionTitle>Totals</SectionTitle>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <FormControlLabel control={<Checkbox checked={data.total.visible} onChange={toggleField('total')}/>} label=""/>
-                  <TextField
-                      label="Subtotal"
-                      value={formatDisplay(subtotal)}
-                      fullWidth
-                      InputProps={{ readOnly: true, startAdornment: <InputAdornment position="start">EUR</InputAdornment> }}
-                  />
-                </Stack>
+
                 <Stack direction="row" spacing={1} alignItems="center">
                   <FormControlLabel control={<Checkbox checked={data.packingCharge.visible} onChange={toggleField('packingCharge')}/>} label=""/>
                   <TextField
                       label="Packing Charge"
-                      value={formatDisplay(data.packingCharge.value)}
-                      onChange={(event) =>
-                          setData((prev) => ({
-                            ...prev,
-                            packingCharge: { ...prev.packingCharge, value: sanitizeAmountInput(event.target.value) }
-                          }))
-                      }
-                      fullWidth
+                      value={data.packingCharge.value}
+                      onChange={async (event) => {
+                        const value = sanitizeAmountInput(event.target.value)
+                        setData((prev) => ({
+                          ...prev,
+                          packingCharge: { ...prev.packingCharge, value }
+                        }))
+                        const rate = await fetchEurToInrRate()
+                        if (!rate) return
+                        const inrValue = convertEurToInr(value, rate)
+                        setData((prev) => ({
+                          ...prev,
+                          packingChargeInr: { ...prev.packingChargeInr, value: inrValue }
+                        }))
+                      }}
                       InputProps={{ startAdornment: <InputAdornment position="start">EUR</InputAdornment> }}
                       inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
+                      sx={{ flex: 1 }}
+                  />
+                  <TextField
+                      label="Packing Charge (INR)"
+                      value={data.packingChargeInr.value}
+                      onChange={async (event) => {
+                        const value = sanitizeAmountInput(event.target.value)
+                        setData((prev) => ({
+                          ...prev,
+                          packingChargeInr: { ...prev.packingChargeInr, value }
+                        }))
+                        const rate = await fetchEurToInrRate()
+                        if (!rate) return
+                        const eurValue = convertInrToEur(value, rate)
+                        setData((prev) => ({
+                          ...prev,
+                          packingCharge: { ...prev.packingCharge, value: eurValue }
+                        }))
+                      }}
+                      InputProps={{ startAdornment: <InputAdornment position="start">INR</InputAdornment> }}
+                      inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
+                      sx={{ flex: 1 }}
                   />
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <FormControlLabel control={<Checkbox checked={data.forwarding.visible} onChange={toggleField('forwarding')}/>} label=""/>
                   <TextField
                       label="Forwarding"
-                      value={formatDisplay(data.forwarding.value)}
-                      onChange={(event) =>
-                          setData((prev) => ({
-                            ...prev,
-                            forwarding: { ...prev.forwarding, value: sanitizeAmountInput(event.target.value) }
-                          }))
-                      }
-                      fullWidth
+                      value={data.forwarding.value}
+                      onChange={async (event) => {
+                        const value = sanitizeAmountInput(event.target.value)
+                        setData((prev) => ({
+                          ...prev,
+                          forwarding: { ...prev.forwarding, value }
+                        }))
+                        const rate = await fetchEurToInrRate()
+                        if (!rate) return
+                        const inrValue = convertEurToInr(value, rate)
+                        setData((prev) => ({
+                          ...prev,
+                          forwardingInr: { ...prev.forwardingInr, value: inrValue }
+                        }))
+                      }}
                       InputProps={{ startAdornment: <InputAdornment position="start">EUR</InputAdornment> }}
                       inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
+                      sx={{ flex: 1 }}
+                  />
+                  <TextField
+                      label="Forwarding (INR)"
+                      value={data.forwardingInr.value}
+                      onChange={async (event) => {
+                        const value = sanitizeAmountInput(event.target.value)
+                        setData((prev) => ({
+                          ...prev,
+                          forwardingInr: { ...prev.forwardingInr, value }
+                        }))
+                        const rate = await fetchEurToInrRate()
+                        if (!rate) return
+                        const eurValue = convertInrToEur(value, rate)
+                        setData((prev) => ({
+                          ...prev,
+                          forwarding: { ...prev.forwarding, value: eurValue }
+                        }))
+                      }}
+                      InputProps={{ startAdornment: <InputAdornment position="start">INR</InputAdornment> }}
+                      inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
+                      sx={{ flex: 1 }}
                   />
                 </Stack>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <FormControlLabel control={<Checkbox checked={data.insurance.visible} onChange={toggleField('insurance')}/>} label=""/>
                   <TextField
                       label="Insurance"
-                      value={formatDisplay(data.insurance.value)}
-                      onChange={(event) =>
-                          setData((prev) => ({
-                            ...prev,
-                            insurance: { ...prev.insurance, value: sanitizeAmountInput(event.target.value) }
-                          }))
-                      }
-                      fullWidth
+                      value={data.insurance.value}
+                      onChange={async (event) => {
+                        const value = sanitizeAmountInput(event.target.value)
+                        setData((prev) => ({
+                          ...prev,
+                          insurance: { ...prev.insurance, value }
+                        }))
+                        const rate = await fetchEurToInrRate()
+                        if (!rate) return
+                        const inrValue = convertEurToInr(value, rate)
+                        setData((prev) => ({
+                          ...prev,
+                          insuranceInr: { ...prev.insuranceInr, value: inrValue }
+                        }))
+                      }}
                       InputProps={{ startAdornment: <InputAdornment position="start">EUR</InputAdornment> }}
                       inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
+                      sx={{ flex: 1 }}
                   />
-                </Stack>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <FormControlLabel control={<Checkbox checked={data.grandTotal.visible} onChange={toggleField('grandTotal')}/>} label=""/>
                   <TextField
-                      label="Grand Total"
-                      value={formatDisplay(grandTotal)}
-                      fullWidth
-                      InputProps={{ readOnly: true, startAdornment: <InputAdornment position="start">EUR</InputAdornment> }}
+                      label="Insurance (INR)"
+                      value={data.insuranceInr.value}
+                      onChange={async (event) => {
+                        const value = sanitizeAmountInput(event.target.value)
+                        setData((prev) => ({
+                          ...prev,
+                          insuranceInr: { ...prev.insuranceInr, value }
+                        }))
+                        const rate = await fetchEurToInrRate()
+                        if (!rate) return
+                        const eurValue = convertInrToEur(value, rate)
+                        setData((prev) => ({
+                          ...prev,
+                          insurance: { ...prev.insurance, value: eurValue }
+                        }))
+                      }}
+                      InputProps={{ startAdornment: <InputAdornment position="start">INR</InputAdornment> }}
+                      inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
+                      sx={{ flex: 1 }}
                   />
                 </Stack>
+
                 <FieldToggle label="Signature" value={data.signature.value} visible={data.signature.visible} onChange={updateField('signature')} onToggle={toggleField('signature')}/>
                 <FieldToggle label="Net Weight" value={data.netWeight.value} visible={data.netWeight.visible} onChange={updateField('netWeight')} onToggle={toggleField('netWeight')}/>
                 <FieldToggle label="Gross Weight" value={data.grossWeight.value} visible={data.grossWeight.visible} onChange={updateField('grossWeight')} onToggle={toggleField('grossWeight')}/>

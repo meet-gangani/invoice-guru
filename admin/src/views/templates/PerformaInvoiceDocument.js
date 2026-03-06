@@ -340,7 +340,6 @@ export default function PerformaInvoiceDocument() {
     const fixed = parsed.toFixed(2)
     return fixed.replace(/\.?0+$/, '')
   }
-  const formatCurrency = (value) => `INR ${value.toFixed(2)}`
 
   const subtotal = useMemo(
       () => data.itemRows.reduce((sum, row) => sum + parseAmount(row.amount), 0),
@@ -584,22 +583,6 @@ export default function PerformaInvoiceDocument() {
   useEffect(() => {
     let isActive = true
     const loadInvoice = async () => {
-      // if (!invoiceId) {
-      //   try {
-      //     const byTemplate = await axiosInstance.get('/v1/invoice/by-template/performa')
-      //     if (!isActive) return
-      //     const existing = byTemplate?.data
-      //     if (existing?._id) {
-      //       navigate(`/performa/${existing._id}`, { replace: true })
-      //       return
-      //     }
-      //   } catch (error) {
-      //     // ignore and fall back to default
-      //   }
-      //   setData(defaultData)
-      //   setPdfData(defaultData)
-      //   return
-      // }
       if (invoiceId) {
         try {
           const response = await axiosInstance.get(`/v1/invoice/${invoiceId}`)
@@ -827,7 +810,7 @@ export default function PerformaInvoiceDocument() {
                 <Divider/>
 
                 <SectionTitle>Totals</SectionTitle>
-                {data.totals.map((totalItem, index) => {
+                {data.totals.filter((totalItem) => totalItem.label !== 'Subtotal' && totalItem.label !== 'Total').map((totalItem, index) => {
                   const label = totalItem.label
                   const computedValue =
                       label === 'Subtotal'
