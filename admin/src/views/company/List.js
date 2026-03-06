@@ -23,20 +23,23 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  TextField, Typography
-} from '@mui/material'
-import { IconPlus } from "@tabler/icons";
+  TextField,
+  Typography
+} from "@mui/material";
+
+import { IconPlus, IconEdit } from "@tabler/icons";
 import { Close, Search as SearchIcon } from "@mui/icons-material";
 import MainCard from "ui-component/cards/MainCard";
 import EndpointService from "../../services/endpoint.service";
-import { STATUS } from '../../utils/enum'
-import { useTheme } from '@mui/material/styles'
+import { STATUS } from "../../utils/enum";
+import { useTheme } from "@mui/material/styles";
 
 const headCells = [
   { id: "name", label: "Name" },
-  { id: "username", label: "Username" },
+  { id: "username", label: "Email" },
   { id: "password", label: "Password" },
   { id: "status", label: "Status" },
+  { id: "actions", label: "Actions" }
 ];
 
 const createObj = {
@@ -44,11 +47,12 @@ const createObj = {
   logo: "",
   username: "",
   password: "",
-  status: "",
-}
+  status: ""
+};
 
 const Companies = () => {
-  const theme = useTheme()
+  const theme = useTheme();
+
   const [companies, setCompanies] = useState([]);
   const [search, setSearch] = useState("");
   const [openModel, setOpenModel] = useState(false);
@@ -56,14 +60,15 @@ const Companies = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const [createCompany, setCreateCompany] = useState(createObj);
+  const [editId, setEditId] = useState(null);
 
   useEffect(() => {
     fetchCompanies();
   }, []);
 
-  function clearData() {
-    setCreateCompany(createObj)
-  }
+  const clearData = () => {
+    setCreateCompany(createObj);
+  };
 
   const fetchCompanies = async () => {
     try {
@@ -74,19 +79,18 @@ const Companies = () => {
     }
   };
 
-  const addCompany = async (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
     try {
-      await EndpointService.createCompany(createCompany);
+      if (editId) {
+        await EndpointService.updateCompany(editId, createCompany);
+      } else {
+        await EndpointService.createCompany(createCompany);
+      }
 
-      setCreateCompany({
-        name: "",
-        logo: "",
-        username: "",
-        password: "",
-        status: "",
-      });
-
+      clearData();
+      setEditId(null);
       fetchCompanies();
     } catch (error) {
       console.log(error.message);
@@ -122,37 +126,43 @@ const Companies = () => {
                             <Close fontSize="small" />
                           </IconButton>
                         </InputAdornment>
-                    ),
+                    )
                   }}
               />
             </Grid>
 
             <Grid item>
               <Fab
-                  color="primary"
-                  onClick={() => setOpenModel(true)}
+                  color="secondary"
+                  onClick={() => {
+                    clearData();
+                    setEditId(null);
+                    setOpenModel(true);
+                  }}
               >
-                <IconPlus />
+                <IconPlus size={24} color={theme.palette.primary.light} />
               </Fab>
             </Grid>
           </Grid>
         </CardContent>
 
-        {/* Create Company Dialog */}
-        <Dialog open={openModel} onClose={() => {
-          setOpenModel(false)
-          clearData()
-        }} fullWidth maxWidth="sm">
-          <DialogTitle
-              sx={{
-                fontSize: '20px',
-                fontWeight: '600',
-                pt: 3
-              }}>
-            Add Company
+        {/* Dialog */}
+        <Dialog
+            open={openModel}
+            onClose={() => {
+              setOpenModel(false);
+              clearData();
+              setEditId(null);
+            }}
+            fullWidth
+            maxWidth="sm"
+        >
+          <DialogTitle sx={{ fontSize: "20px", fontWeight: 600, pt: 3 }}>
+            {editId ? "Update Company" : "Add Company"}
           </DialogTitle>
+
           <DialogContent>
-            <form onSubmit={addCompany}>
+            <form onSubmit={handleSubmit}>
               <Stack spacing={3} mt={1}>
                 <TextField
                     required
@@ -161,7 +171,7 @@ const Companies = () => {
                     onChange={(e) =>
                         setCreateCompany((prev) => ({
                           ...prev,
-                          name: e.target.value,
+                          name: e.target.value
                         }))
                     }
                 />
@@ -173,32 +183,32 @@ const Companies = () => {
                     onChange={(e) =>
                         setCreateCompany((prev) => ({
                           ...prev,
-                          logo: e.target.value,
+                          logo: e.target.value
                         }))
                     }
                 />
 
                 <TextField
                     required
-                    label="Username"
+                    type="email"
+                    label="email"
                     value={createCompany.username}
                     onChange={(e) =>
                         setCreateCompany((prev) => ({
                           ...prev,
-                          username: e.target.value,
+                          username: e.target.value
                         }))
                     }
                 />
 
                 <TextField
-                    required
-                    type="password"
+                    required={!editId}
                     label="Password"
                     value={createCompany.password}
                     onChange={(e) =>
                         setCreateCompany((prev) => ({
                           ...prev,
-                          password: e.target.value,
+                          password: e.target.value
                         }))
                     }
                 />
@@ -211,16 +221,24 @@ const Companies = () => {
                       onChange={(e) =>
                           setCreateCompany((prev) => ({
                             ...prev,
-                            status: e.target.value,
+                            status: e.target.value
                           }))
                       }
                   >
-                    {STATUS.map((status) => <MenuItem value={status.value}>{status.label}</MenuItem>)}
+                    {STATUS.map((status) => (
+                        <MenuItem key={status.value} value={status.value}>
+                          {status.label}
+                        </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
 
-                <Button type="submit" variant="contained" sx={{ backgroundColor: theme.palette.secondary.main }}>
-                  Add New Company
+                <Button
+                    type="submit"
+                    variant="contained"
+                    sx={{ backgroundColor: theme.palette.secondary.main }}
+                >
+                  {editId ? "Update Company" : "Add New Company"}
                 </Button>
               </Stack>
             </form>
@@ -237,31 +255,52 @@ const Companies = () => {
                 ))}
               </TableRow>
             </TableHead>
+
             <TableBody>
               {filteredCompanies
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((company) => (
                   <TableRow key={company._id}>
                     <TableCell>
-                      <Box>
-                        <img
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Box
+                            component="img"
                             src={company.logo}
                             alt="logo"
-                            width="40"
-                            height="40"
-                            style={{ borderRadius: '50%' }}
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: "50%",
+                              objectFit: "cover"
+                            }}
                         />
                         <Typography>{company.name}</Typography>
-                      </Box>
+                      </Stack>
                     </TableCell>
+
                     <TableCell>{company.username}</TableCell>
                     <TableCell>{company.password}</TableCell>
+
                     <TableCell>
                       <Chip
                           label={company.status}
-                          color={STATUS.find((s) => s.value === company.status)?.color || "default"}
-                          size="medium"
+                          color={
+                              STATUS.find((s) => s.value === company.status)?.color ||
+                              "default"
+                          }
                       />
+                    </TableCell>
+
+                    <TableCell>
+                      <IconButton
+                          onClick={() => {
+                            setCreateCompany(company);
+                            setEditId(company._id);
+                            setOpenModel(true);
+                          }}
+                      >
+                        <IconEdit size={24} color={theme.palette.secondary.main} />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
               ))}

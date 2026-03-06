@@ -47,6 +47,15 @@ export default class EndpointService {
     }
   }
 
+  static async updateCompany(companyId, data) {
+    try {
+      const response = await axiosInstance.put(`/v1/company/${companyId}`, data)
+
+      return response.data
+    } catch (error) {
+      console.log(error.message)
+    }
+  }
   // MISC
 
 }
