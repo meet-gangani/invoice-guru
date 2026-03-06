@@ -37,8 +37,4 @@ yarn-error.log*
 *.lock
 
 #file-folders-upload
-/thumbnail
-/games
-/blogs
-/zip
-/category
+/assets
