@@ -1,0 +1,16 @@
+[
+  {
+    "_id": "6de540e2-a72c-415e-b5f1-e17bd38aa1f0",
+    "email": "meetgangani71@gmail.com",
+    "password": "$2b$10$ztYZthIbE/7DNyT6NalTruQB9e3fY88Nl58DEkJ8uaFdLrS3a5TIS",
+    "createdOn": 1772485760029,
+    "updatedOn": 1772485760029
+  },
+  {
+    "_id": "7a324394-a873-44b2-baed-98a6e2b17870",
+    "email": "anilviradiya1313@gmail.com",
+    "password": "$2b$10$dSEmf9T/4P15rgToFbSM3.QejMR/EXobyOVmmAh8LM1AF7Hdu.3pu",
+    "createdOn": 1772569265252,
+    "updatedOn": 1772569265252
+  }
+]
