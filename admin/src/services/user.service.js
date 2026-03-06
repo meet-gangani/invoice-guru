@@ -10,8 +10,11 @@ export default class UserService {
       })
 
       const token = response.data.token
+      const role = response.data.isAdmin ? 'admin' : 'user'
+
       if (token) {
         encryptStorage.setItem('token', token)
+        encryptStorage.setItem('role', role)
       }
 
       return response.data
@@ -33,6 +36,7 @@ export default class UserService {
     try {
       // const response = await axiosInstance.post('/logout');
       encryptStorage.removeItem('token')
+      encryptStorage.removeItem('role')
 
       // return response.data;
     } catch (error) {

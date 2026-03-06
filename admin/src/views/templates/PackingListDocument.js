@@ -26,8 +26,12 @@ const styles = StyleSheet.create({
   borderRight: { borderRight: '1pt solid black' },
 
   // Typography
+  itemRow: { flexDirection: 'row', alignItems: 'stretch' },
+  itemCell: { paddingVertical: 4, paddingHorizontal: 3 },
+  itemText: { fontSize: 7, lineHeight: 1.2, textAlign: 'left', wordBreak: 'break-all' },
+  itemHeaderText: { fontSize: 7.5, fontWeight: 'bold', textAlign: 'left' },
   label: { fontSize: 6, fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 2 },
-  value: { fontSize: 8 },
+  value: { fontSize: 8, wordBreak: 'break-all' },
   header: {
     backgroundColor: '#F0F0F0',
     textAlign: 'center',
@@ -57,6 +61,14 @@ const PackingListPdf = ({ data }) => {
     const [ yyyy, mm, dd ] = raw.split('-')
     if (!yyyy || !mm || !dd) return value
     return `${dd}-${mm}-${yyyy}`
+  }
+  const wrapCell = (value, chunkSize) => {
+    const text = String(value ?? '')
+    if (!text) return ''
+    if (/\s/.test(text)) return text
+    if (!chunkSize || text.length <= chunkSize) return text
+    const parts = text.match(new RegExp(`.{1,${chunkSize}}`, 'g'))
+    return parts ? parts.join('\n') : text
   }
   return (
       <Document title={'Packaging List'}>
@@ -148,28 +160,28 @@ const PackingListPdf = ({ data }) => {
             </View>
 
             {/* ITEM TABLE HEADER */}
-            <View style={[ styles.flexRow, { backgroundColor: '#F0F0F0', borderBottom: '1pt solid black' } ]}>
-              <Text style={[ styles.cellNoBottom, styles.c1 ]}>Marks & No.</Text>
-              <Text style={[ styles.cellNoBottom, styles.c2 ]}>No. & Pkgs</Text>
-              <Text style={[ styles.cellNoBottom, styles.c3 ]}>SR</Text>
-              <Text style={[ styles.cellNoBottom, styles.c4 ]}>Description of Goods</Text>
-              <Text style={[ styles.cellNoBottom, styles.c5 ]}>QTY</Text>
-              <Text style={[ styles.cellNoBottom, styles.c6 ]}>Net Wt</Text>
-              <Text style={[ styles.cellNoBottom, styles.c7 ]}>Gross</Text>
-              <Text style={[ styles.cellNoBottom, styles.c8 ]}>Dim</Text>
+            <View style={[ styles.itemRow, { backgroundColor: '#F0F0F0', borderBottom: '1pt solid black' } ]}>
+              <View style={[ styles.itemCell, styles.c1 ]}><Text style={styles.itemHeaderText}>Marks & No.</Text></View>
+              <View style={[ styles.itemCell, styles.c2 ]}><Text style={styles.itemHeaderText}>No. & Pkgs</Text></View>
+              <View style={[ styles.itemCell, styles.c3 ]}><Text style={styles.itemHeaderText}>SR</Text></View>
+              <View style={[ styles.itemCell, styles.c4 ]}><Text style={styles.itemHeaderText}>Description of Goods</Text></View>
+              <View style={[ styles.itemCell, styles.c5 ]}><Text style={styles.itemHeaderText}>QTY</Text></View>
+              <View style={[ styles.itemCell, styles.c6 ]}><Text style={styles.itemHeaderText}>Net Wt</Text></View>
+              <View style={[ styles.itemCell, styles.c7 ]}><Text style={styles.itemHeaderText}>Gross</Text></View>
+              <View style={[ styles.itemCell, styles.c8 ]}><Text style={styles.itemHeaderText}>Dim</Text></View>
             </View>
 
             {/* DYNAMIC ROWS */}
             {data.tableRows.map((row, i) => (
-                <View key={i} style={[ styles.flexRow, { borderBottom: '0.5pt solid #AAA' } ]}>
-                  <Text style={[ styles.cellNoBottom, styles.c1 ]}>{row[0]}</Text>
-                  <Text style={[ styles.cellNoBottom, styles.c2 ]}>{row[1]}</Text>
-                  <Text style={[ styles.cellNoBottom, styles.c3 ]}>{row[2] || i + 1}</Text>
-                  <Text style={[ styles.cellNoBottom, styles.c4 ]}>{row[3]}</Text>
-                  <Text style={[ styles.cellNoBottom, styles.c5 ]}>{row[4]}</Text>
-                  <Text style={[ styles.cellNoBottom, styles.c6 ]}>{row[5]}</Text>
-                  <Text style={[ styles.cellNoBottom, styles.c7 ]}>{row[6]}</Text>
-                  <Text style={[ styles.cellNoBottom, styles.c8 ]}>{row[7]}</Text>
+                <View key={i} style={[ styles.itemRow, { borderBottom: '0.5pt solid #AAA' } ]}>
+                  <View style={[ styles.itemCell, styles.c1 ]}><Text style={styles.itemText}>{wrapCell(row[0], 6)}</Text></View>
+                  <View style={[ styles.itemCell, styles.c2 ]}><Text style={styles.itemText}>{wrapCell(row[1], 8)}</Text></View>
+                  <View style={[ styles.itemCell, styles.c3 ]}><Text style={styles.itemText}>{wrapCell(row[2] || i + 1, 4)}</Text></View>
+                  <View style={[ styles.itemCell, styles.c4 ]}><Text style={styles.itemText}>{wrapCell(row[3], 18)}</Text></View>
+                  <View style={[ styles.itemCell, styles.c5 ]}><Text style={styles.itemText}>{wrapCell(row[4], 6)}</Text></View>
+                  <View style={[ styles.itemCell, styles.c6 ]}><Text style={styles.itemText}>{wrapCell(row[5], 6)}</Text></View>
+                  <View style={[ styles.itemCell, styles.c7 ]}><Text style={styles.itemText}>{wrapCell(row[6], 6)}</Text></View>
+                  <View style={[ styles.itemCell, styles.c8 ]}><Text style={styles.itemText}>{wrapCell(row[7], 6)}</Text></View>
                 </View>
             ))}
 
@@ -443,7 +455,9 @@ export default function PackingListDocument() {
                 sx={{
                   position: { md: 'sticky' },
                   top: { md: 24 },
-                  height: { xs: '70vh', md: '85vh' },
+                  height: { xs: '88vh', md: 'calc(100vh - 140px)' },
+                  minHeight: { xs: 520, md: 700 },
+                  overflow: 'hidden',
                   border: '1px solid',
                   borderColor: 'divider'
                 }}

@@ -77,7 +77,8 @@ const Website = {
       type: 'item',
       url: '/company',
       icon: IconBuilding,
-      breadcrumbs: false
+      breadcrumbs: false,
+      adminOnly: true
     }
   ]
 }

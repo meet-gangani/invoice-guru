@@ -1,7 +1,9 @@
 import { lazy } from 'react'
+import { Navigate } from 'react-router-dom'
 
 import MainLayout from 'layout/MainLayout'
 import Loadable from 'ui-component/Loadable'
+import encryptStorage from 'services/storage'
 
 const DashboardDefault = Loadable(lazy(() => import('views/dashboard/Default')))
 
@@ -15,6 +17,15 @@ const ScometDocument = Loadable(lazy(() => import('views/templates/ScometDocumen
 const PackingListDocument = Loadable(lazy(() => import('views/templates/PackingListDocument')))
 const PerformaInvoiceDocument = Loadable(lazy(() => import('views/templates/PerformaInvoiceDocument')))
 const PackagingDocument = Loadable(lazy(() => import('views/templates/PackagingDocument')))
+
+const RequireAdmin = ({ children }) => {
+  const token = encryptStorage.getItem('token')
+  const role = encryptStorage.getItem('role')
+
+  if (!token) return <Navigate to="/login" replace/>
+  if (role !== 'admin') return <Navigate to="/dashboard" replace/>
+  return children
+}
 
 const MainRoutes = {
   path: '/',
@@ -38,11 +49,19 @@ const MainRoutes = {
     },
     {
       path: 'company/:id',
-      element: <Company/>
+      element: (
+          <RequireAdmin>
+            <Company/>
+          </RequireAdmin>
+      )
     },
     {
       path: 'company',
-      element: <Companies/>
+      element: (
+          <RequireAdmin>
+            <Companies/>
+          </RequireAdmin>
+      )
     },
     {
       path: 'scomet/:id',
