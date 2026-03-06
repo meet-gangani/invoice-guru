@@ -111,9 +111,9 @@ const PackingListPdf = ({ data }) => {
                   </View>
                   <View style={styles.innerBox}>
                     <Text style={styles.label}>Export Ref / IEC / GSTIN</Text>
-                    <Text style={styles.value}>{data.exportRef.value}</Text>
+                    <Text style={styles.value}>{wrapCell(data.exportRef.value, 14)}</Text>
                     <Text style={styles.value}>
-                      {data.iec.value} {data.gstin.value}
+                      {wrapCell(`${data.iec.value} ${data.gstin.value}`, 14)}
                     </Text>
                   </View>
                 </View>

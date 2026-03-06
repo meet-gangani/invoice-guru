@@ -38,11 +38,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#2f3f7a',
     color: '#fff',
-    paddingVertical: 4,
-    paddingHorizontal: 4,
     borderBottom: '1pt solid #111'
   },
-  itemsRow: { flexDirection: 'row', borderBottom: '1pt solid #bbb', minHeight: 18 },
+  itemsRow: { flexDirection: 'row', borderBottom: '1pt solid #bbb', minHeight: 18, alignItems: 'stretch' },
   colDesc: { width: '70%', padding: 4, borderRight: '1pt solid #111' },
   colQty: { width: '10%', padding: 4, borderRight: '1pt solid #111', textAlign: 'center' },
   colAmt: { width: '20%', padding: 4, textAlign: 'right' },
@@ -85,6 +83,13 @@ const PerformaPdf = ({ data }) => {
     return `${dd}-${mm}-${yyyy}`
   }
   const normalizeLabel = (value = '') => value.trim().toUpperCase()
+  const wrapUnbroken = (value, chunkSize = 12) => {
+    const text = String(value ?? '')
+    if (!text) return ''
+    if (/\s/.test(text)) return text
+    const chunks = text.match(new RegExp(`.{1,${chunkSize}}`, 'g'))
+    return chunks ? chunks.join('\n') : text
+  }
 
   return (
       <Document title="Performa">
@@ -165,8 +170,8 @@ const PerformaPdf = ({ data }) => {
                     ]}
                 >
                   <Text style={styles.colDesc}>{row.description || ''}</Text>
-                  <Text style={styles.colQty}>{row.qty || ''}</Text>
-                  <Text style={styles.colAmt}>{row.amount || ''}</Text>
+                  <Text style={styles.colQty}>{wrapUnbroken(row.qty || '')}</Text>
+                  <Text style={styles.colAmt}>{wrapUnbroken(row.amount || '')}</Text>
                 </View>
             ))}
           </View>

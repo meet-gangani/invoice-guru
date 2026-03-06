@@ -100,6 +100,13 @@ const ScometPdf = ({ data }) => {
   const tableHeaders = data.tableHeaders.filter((h) => h.trim() !== '')
   const visibleColumns = tableHeaders.length || 4
   const columnWidth = `${100 / visibleColumns}%`
+  const wrapUnbroken = (value, chunkSize = 12) => {
+    const text = String(value ?? '')
+    if (!text) return ''
+    if (/\s/.test(text)) return text
+    const chunks = text.match(new RegExp(`.{1,${chunkSize}}`, 'g'))
+    return chunks ? chunks.join('\n') : text
+  }
 
   return (
       <Document title="SCOMET Declaration">
@@ -160,7 +167,7 @@ const ScometPdf = ({ data }) => {
                             }
                           ]}
                       >
-                        <Text style={styles.tableCell}>{row[colIndex] || '-'}</Text>
+                        <Text style={styles.tableCell}>{wrapUnbroken(row[colIndex] || '-')}</Text>
                       </View>
                   ))}
                 </View>

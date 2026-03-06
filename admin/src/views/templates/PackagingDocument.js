@@ -34,6 +34,13 @@ const ExportCommercialPdf = ({ data }) => {
 
   const tableHeaders = data.tableHeaders || []
   const normalizeHeader = (value = '') => value.trim().toUpperCase()
+  const wrapUnbroken = (value, chunkSize = 12) => {
+    const text = String(value ?? '')
+    if (!text) return ''
+    if (/\s/.test(text)) return text
+    const chunks = text.match(new RegExp(`.{1,${chunkSize}}`, 'g'))
+    return chunks ? chunks.join('\n') : text
+  }
   const parseAmount = (value) => {
     const cleaned = String(value || '').replace(/[^0-9.]/g, '')
     const parsed = Number.parseFloat(cleaned)
@@ -167,7 +174,7 @@ const ExportCommercialPdf = ({ data }) => {
                             }
                           ]}
                       >
-                        <Text style={styles.value}>{row[colIndex] || ''}</Text>
+                        <Text style={styles.value}>{wrapUnbroken(row[colIndex] || '')}</Text>
                       </View>
                   ))}
                 </View>

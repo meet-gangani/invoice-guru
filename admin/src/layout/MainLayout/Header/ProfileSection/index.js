@@ -6,8 +6,6 @@ import { useSelector } from 'react-redux'
 import { useTheme } from '@mui/material/styles'
 import { Avatar, Box, Chip, ClickAwayListener, Divider, List, ListItemButton, ListItemIcon, ListItemText, Paper, Popper, Stack, Typography } from '@mui/material'
 
-// third-party
-import PerfectScrollbar from 'react-perfect-scrollbar'
 
 // project imports
 import MainCard from 'ui-component/cards/MainCard'
@@ -16,8 +14,8 @@ import UserService from '../../../../services/user.service'
 
 // assets
 import { IconLogout, IconPassword, IconSettings } from '@tabler/icons'
-import Logo from '../../../../ui-component/Logo'
 import SiteLogo from '../../../../assets/images/logo.png'
+import encryptStorage from 'services/storage'
 
 // ==============================|| PROFILE MENU ||============================== //
 
@@ -26,8 +24,10 @@ const ProfileSection = () => {
   const customization = useSelector((state) => state.customization)
   const navigate = useNavigate()
 
-  const [selectedIndex, setSelectedIndex] = useState(-1)
   const [open, setOpen] = useState(false)
+
+  const role = encryptStorage.getItem('role')
+  const isAdmin = role === 'admin'
 
   /**
    * anchorRef is used on different componets and specifying one type leads to other pages throwing an error
@@ -166,19 +166,19 @@ const ProfileSection = () => {
                         }
                       }}
                     >
+                      {isAdmin && (
+                        <ListItemButton
+                          sx={{ borderRadius: `${customization.borderRadius}px` }}
+                          onClick={() => navigate('/change-password')}
+                        >
+                          <ListItemIcon>
+                            <IconPassword stroke={1.5} size="1.3rem" />
+                          </ListItemIcon>
+                          <ListItemText primary={<Typography variant="body2">Change Password</Typography>} />
+                        </ListItemButton>
+                      )}
                       <ListItemButton
                         sx={{ borderRadius: `${customization.borderRadius}px` }}
-                        selected={selectedIndex === 0}
-                        onClick={() => navigate('/change-password')}
-                      >
-                        <ListItemIcon>
-                          <IconPassword stroke={1.5} size="1.3rem" />
-                        </ListItemIcon>
-                        <ListItemText primary={<Typography variant="body2">Change Password</Typography>} />
-                      </ListItemButton>
-                      <ListItemButton
-                        sx={{ borderRadius: `${customization.borderRadius}px` }}
-                        selected={selectedIndex === 4}
                         onClick={handleLogout}
                       >
                         <ListItemIcon>

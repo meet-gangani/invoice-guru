@@ -23,7 +23,7 @@ axiosInstance.interceptors.response.use((response) => response, (error) => {
   if (error?.response.status === STATUS_CODE.UNAUTHORIZED) {
     encryptStorage.removeItem('token')
 
-    window.open(`${window.location.origin}/login`)
+    window.location.replace(`${window.location.origin}/login`)
   }
 
   return error
