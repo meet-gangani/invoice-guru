@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react'
-import { Box, CardContent, Chip, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Typography } from '@mui/material'
+import { CardContent, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow } from '@mui/material'
 import MainCard from 'ui-component/cards/MainCard'
 import EndpointService from '../../services/endpoint.service'
 import { IconEye } from '@tabler/icons'
 import { useTheme } from '@mui/material/styles'
+import { Link } from 'react-router-dom'
+import { DateTime } from 'luxon'
 
 const headCells = [
   { id: 'index', label: 'No' },
-  { id: 'Date', label: 'Date' },
+  { id: 'type', label: 'Type' },
+  { id: 'Date', label: 'Generated On' },
   { id: 'View', label: 'View' }
 ]
 
@@ -53,9 +56,14 @@ const Invoices = () => {
               {invoices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((invoice, idx) => (
                   <TableRow key={invoice._id}>
                     <TableCell>{idx + 1}</TableCell>
-                    <TableCell>{invoice.date}</TableCell>
+                    <TableCell>{invoice.type}</TableCell>
                     <TableCell>
-                      <IconEye fontSize="inherit" color={theme.palette.secondary.dark} />
+                      {DateTime?.fromISO(invoice.date)?.toFormat('dd MMMM yyyy hh:mm a')}
+                    </TableCell>
+                    <TableCell>
+                      <Link to={`/${invoice.type}/${invoice._id}`}>
+                        <IconEye fontSize="inherit" color={theme.palette.secondary.dark}/>
+                      </Link>
                     </TableCell>
                   </TableRow>
               ))}

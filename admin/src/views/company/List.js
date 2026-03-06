@@ -30,6 +30,7 @@ import { Close, Search as SearchIcon } from "@mui/icons-material";
 import MainCard from "ui-component/cards/MainCard";
 import EndpointService from "../../services/endpoint.service";
 import { STATUS } from '../../utils/enum'
+import { useTheme } from '@mui/material/styles'
 
 const headCells = [
   { id: "name", label: "Name" },
@@ -47,6 +48,7 @@ const createObj = {
 }
 
 const Companies = () => {
+  const theme = useTheme()
   const [companies, setCompanies] = useState([]);
   const [search, setSearch] = useState("");
   const [openModel, setOpenModel] = useState(false);
@@ -217,7 +219,7 @@ const Companies = () => {
                   </Select>
                 </FormControl>
 
-                <Button type="submit" variant="contained" color="success">
+                <Button type="submit" variant="contained" sx={{ backgroundColor: theme.palette.secondary.main }}>
                   Add New Company
                 </Button>
               </Stack>

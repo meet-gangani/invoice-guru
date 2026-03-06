@@ -30,7 +30,7 @@ exports.dashboardCards = async (req, res) => {
 
 exports.getInvoices = async (req, res) => {
   try {
-    const invoices = await InvoiceStore.find().sort({ createdAt: -1 })
+    const invoices = await InvoiceStore.find().sort({ createdOn: -1 })
 
     return sendSuccess(res, { invoices })
   } catch (error) {
@@ -56,11 +56,11 @@ exports.saveInvoiceApi = async (req, res) => {
     const { _id, date, data, template, type, ...rest } = req.body || {}
     const payloadData = data || rest
     const payloadType =
-      type ||
-      template ||
-      payloadData?.type ||
-      payloadData?.template ||
-      'scomet'
+        type ||
+        template ||
+        payloadData?.type ||
+        payloadData?.template || 'scomet'
+
     const parseDateInput = (value) => {
       if (!value) return new Date()
       if (value instanceof Date) return value
@@ -73,38 +73,22 @@ exports.saveInvoiceApi = async (req, res) => {
       }
       return new Date(value)
     }
+
     const payloadDate = parseDateInput(date)
 
     let invoice = null
     if (_id) {
       invoice = await InvoiceStore.findById(_id)
-      if (invoice) {
-        invoice.date = payloadDate
-        invoice.type = payloadType
-        invoice.data = payloadData
-        await invoice.save()
-      } else {
-        invoice = await InvoiceStore.create({
-          _id,
-          date: payloadDate,
-          type: payloadType,
-          data: payloadData
-        })
-      }
+      invoice.date = payloadDate
+      invoice.type = payloadType
+      invoice.data = payloadData
+      await invoice.save()
     } else {
-      invoice = await InvoiceStore.findOne({ type: payloadType })
-      if (invoice) {
-        invoice.date = payloadDate
-        invoice.type = payloadType
-        invoice.data = payloadData
-        await invoice.save()
-      } else {
-        invoice = await InvoiceStore.create({
-          date: payloadDate,
-          type: payloadType,
-          data: payloadData
-        })
-      }
+      invoice = await InvoiceStore.create({
+        date: payloadDate,
+        type: payloadType,
+        data: payloadData
+      })
     }
 
     return sendSuccess(res, invoice, 200)

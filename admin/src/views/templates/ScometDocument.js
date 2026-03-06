@@ -1,19 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import {
-  Box,
-  Button,
-  Divider,
-  FormControl,
-  Grid,
-  IconButton,
-  MenuItem,
-  Select,
-  Stack,
-  TextField,
-  Typography
-} from '@mui/material'
+import { Box, Button, Divider, FormControl, Grid, IconButton, MenuItem, Select, Stack, TextField, Typography } from '@mui/material'
 import { IconPlus, IconTrash } from '@tabler/icons'
-import { Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer'
+import { Document, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -105,7 +93,7 @@ const ScometPdf = ({ data }) => {
     const raw = String(value).split('T')[0]
     const ddmmyyyy = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/)
     if (ddmmyyyy) return raw
-    const [yyyy, mm, dd] = raw.split('-')
+    const [ yyyy, mm, dd ] = raw.split('-')
     if (!yyyy || !mm || !dd) return value
     return `${dd}-${mm}-${yyyy}`
   }
@@ -114,90 +102,90 @@ const ScometPdf = ({ data }) => {
   const columnWidth = `${100 / visibleColumns}%`
 
   return (
-    <Document title="SCOMET Declaration">
-      <Page size="A4" style={styles.page}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.brandName}>{data.brandName || '__________'}</Text>
-          <View style={styles.contactSection}>
-            {(data.contactLines || []).map((line, index) => (
-              <Text key={`contact-${index}`}>{line || '__________'}</Text>
-            ))}
-          </View>
-        </View>
-        <View style={styles.blueLine} />
-
-        <Text style={styles.dateText}>Date: {formatDate(data.date) || '__________'}</Text>
-
-        <View style={styles.addressSection}>
-          {(data.addressLines || []).map((line, index) => (
-            <Text key={`address-${index}`}>{line || '__________'}</Text>
-          ))}
-        </View>
-
-        <Text style={styles.subject}>{data.subjectLine || '__________'}</Text>
-
-        {(data.bodyLines || []).map((line, index) => (
-          <Text key={`body-${index}`} style={styles.bodyParagraph}>
-            {line || '__________'}
-          </Text>
-        ))}
-
-        {data.tableTitle ? <Text style={{ marginBottom: 5 }}>{data.tableTitle}</Text> : null}
-
-        <View style={styles.table}>
-          <View style={[styles.tableRow, styles.tableHeaderRow]}>
-            {tableHeaders.map((header, index) => (
-              <View
-                key={`header-${index}`}
-                style={[
-                  styles.tableCol,
-                  { width: columnWidth, borderRightWidth: index === tableHeaders.length - 1 ? 0 : 1 }
-                ]}
-              >
-                <Text style={styles.tableCellHeader}>{header || 'HEADER'}</Text>
-              </View>
-            ))}
-          </View>
-          {(data.tableRows || []).map((row, rowIndex) => (
-            <View key={`row-${rowIndex}`} style={styles.tableRow}>
-              {tableHeaders.map((_, colIndex) => (
-                <View
-                  key={`cell-${rowIndex}-${colIndex}`}
-                  style={[
-                    styles.tableCol,
-                    {
-                      width: columnWidth,
-                      borderBottomWidth: rowIndex === data.tableRows.length - 1 ? 0 : 1,
-                      borderRightWidth: colIndex === tableHeaders.length - 1 ? 0 : 1
-                    }
-                  ]}
-                >
-                  <Text style={styles.tableCell}>{row[colIndex] || '-'}</Text>
-                </View>
+      <Document title="SCOMET Declaration">
+        <Page size="A4" style={styles.page}>
+          <View style={styles.headerContainer}>
+            <Text style={styles.brandName}>{data.brandName || '__________'}</Text>
+            <View style={styles.contactSection}>
+              {(data.contactLines || []).map((line, index) => (
+                  <Text key={`contact-${index}`}>{line || '__________'}</Text>
               ))}
             </View>
+          </View>
+          <View style={styles.blueLine}/>
+
+          <Text style={styles.dateText}>Date: {formatDate(data.date) || '__________'}</Text>
+
+          <View style={styles.addressSection}>
+            {(data.addressLines || []).map((line, index) => (
+                <Text key={`address-${index}`}>{line || '__________'}</Text>
+            ))}
+          </View>
+
+          <Text style={styles.subject}>{data.subjectLine || '__________'}</Text>
+
+          {(data.bodyLines || []).map((line, index) => (
+              <Text key={`body-${index}`} style={styles.bodyParagraph}>
+                {line || '__________'}
+              </Text>
           ))}
-        </View>
 
-        {(data.afterTableLines || []).map((line, index) => (
-          <Text key={`after-${index}`} style={styles.bodyParagraph}>
-            {line || '__________'}
-          </Text>
-        ))}
+          {data.tableTitle ? <Text style={{ marginBottom: 5 }}>{data.tableTitle}</Text> : null}
 
-        <Text style={styles.signature}>{data.signatureLine || '__________'}</Text>
+          <View style={styles.table}>
+            <View style={[ styles.tableRow, styles.tableHeaderRow ]}>
+              {tableHeaders.map((header, index) => (
+                  <View
+                      key={`header-${index}`}
+                      style={[
+                        styles.tableCol,
+                        { width: columnWidth, borderRightWidth: index === tableHeaders.length - 1 ? 0 : 1 }
+                      ]}
+                  >
+                    <Text style={styles.tableCellHeader}>{header || 'HEADER'}</Text>
+                  </View>
+              ))}
+            </View>
+            {(data.tableRows || []).map((row, rowIndex) => (
+                <View key={`row-${rowIndex}`} style={styles.tableRow}>
+                  {tableHeaders.map((_, colIndex) => (
+                      <View
+                          key={`cell-${rowIndex}-${colIndex}`}
+                          style={[
+                            styles.tableCol,
+                            {
+                              width: columnWidth,
+                              borderBottomWidth: rowIndex === data.tableRows.length - 1 ? 0 : 1,
+                              borderRightWidth: colIndex === tableHeaders.length - 1 ? 0 : 1
+                            }
+                          ]}
+                      >
+                        <Text style={styles.tableCell}>{row[colIndex] || '-'}</Text>
+                      </View>
+                  ))}
+                </View>
+            ))}
+          </View>
 
-        <View style={styles.footerLine} />
-        <Text style={styles.footerText}>{data.footerLine || '__________'}</Text>
-      </Page>
-    </Document>
+          {(data.afterTableLines || []).map((line, index) => (
+              <Text key={`after-${index}`} style={styles.bodyParagraph}>
+                {line || '__________'}
+              </Text>
+          ))}
+
+          <Text style={styles.signature}>{data.signatureLine || '__________'}</Text>
+
+          <View style={styles.footerLine}/>
+          <Text style={styles.footerText}>{data.footerLine || '__________'}</Text>
+        </Page>
+      </Document>
   )
 }
 
 const PdfPreview = React.memo(({ data }) => (
-  <PDFViewer style={{ width: '100%', height: '100%' }}>
-    <ScometPdf data={data} />
-  </PDFViewer>
+    <PDFViewer style={{ width: '100%', height: '100%' }}>
+      <ScometPdf data={data}/>
+    </PDFViewer>
 ))
 
 const defaultData = {
@@ -206,7 +194,7 @@ const defaultData = {
   date: '',
   addressLines: [ 'To, The Assistant commissioner of customs - exports Sahar Cargo Complex - Mumbai, India' ],
   subjectLine:
-    'Sub: Scomet declaration  Ref: Invoice No: ________  Date: ________  Dest: ________',
+      'Sub: Scomet declaration  Ref: Invoice No: ________  Date: ________  Dest: ________',
   bodyLines: [
     'Dear Sir / Madam,',
     'Refer to the above mentioned export invoice number, which is to be exported to ________. We hereby certify that m/s. UNIQUE WAVES having iec no.: ________ and is ________ which is used for measurement & evaluate of gem.',
@@ -222,13 +210,13 @@ const defaultData = {
   ],
   signatureLine: 'FOR UNIQUE WAVES',
   footerLine:
-    'Office No 102, 1st floor Prabhu Prasad Building, Nr. SRK House, Kasa Nagar Main Road, Katargam - 395004, Surat - Gujarat.'
+      'Office No 102, 1st floor Prabhu Prasad Building, Nr. SRK House, Kasa Nagar Main Road, Katargam - 395004, Surat - Gujarat.'
 }
 
 const SectionTitle = ({ children }) => (
-  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-    {children}
-  </Typography>
+    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+      {children}
+    </Typography>
 )
 
 export default function ScometDocument() {
@@ -237,10 +225,10 @@ export default function ScometDocument() {
   const params = useParams()
   const invoiceId = params?.id
 
-  const [data, setData] = useState(defaultData)
-  const [pdfData, setPdfData] = useState(defaultData)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isDirty, setIsDirty] = useState(false)
+  const [ data, setData ] = useState(defaultData)
+  const [ pdfData, setPdfData ] = useState(defaultData)
+  const [ isSaving, setIsSaving ] = useState(false)
+  const [ isDirty, setIsDirty ] = useState(false)
 
   const hydrateData = (nextData) => {
     setData(nextData)
@@ -317,35 +305,38 @@ export default function ScometDocument() {
   useEffect(() => {
     let isActive = true
     const loadInvoice = async () => {
-      if (!invoiceId) {
+      // if (!invoiceId) {
+      //   try {
+      //     const byTemplate = await axiosInstance.get('/v1/invoice/by-template/scomet')
+      //     if (!isActive) return
+      //     const existing = byTemplate?.data
+      //     if (existing?._id) {
+      //       navigate(`/scomet/${existing._id}`, { replace: true })
+      //       return
+      //     }
+      //   } catch (error) {
+      //     // ignore and fall back to default
+      //   }
+      //   hydrateData(defaultData)
+      //   return
+      // }
+
+      if (invoiceId) {
         try {
-          const byTemplate = await axiosInstance.get('/api/invoices/by-template/scomet')
+          const response = await axiosInstance.get(`/v1/invoice/${invoiceId}`)
           if (!isActive) return
-          const existing = byTemplate?.data
-          if (existing?._id) {
-            navigate(`/scomet-document/${existing._id}`, { replace: true })
-            return
+          const invoice = response?.data || {}
+          const merged = {
+            ...defaultData,
+            ...(invoice?.data || {}),
+            date: normalizeDateInput(invoice?.data?.date || invoice?.date || '')
           }
+          merged.tableRows = normalizeTableRows(merged.tableRows)
+          hydrateData(merged)
         } catch (error) {
-          // ignore and fall back to default
+          if (!isActive) return
+          hydrateData(defaultData)
         }
-        hydrateData(defaultData)
-        return
-      }
-      try {
-        const response = await axiosInstance.get(`/api/invoices/${invoiceId}`)
-        if (!isActive) return
-        const invoice = response?.data || {}
-        const merged = {
-          ...defaultData,
-          ...(invoice?.data || {}),
-          date: normalizeDateInput(invoice?.data?.date || invoice?.date || '')
-        }
-        merged.tableRows = normalizeTableRows(merged.tableRows)
-        hydrateData(merged)
-      } catch (error) {
-        if (!isActive) return
-        hydrateData(defaultData)
       }
     }
 
@@ -361,10 +352,10 @@ export default function ScometDocument() {
       const { date, ...restOfState } = data
       const payloadDate = formatDateForSave(date)
       const payload = { _id: invoiceId, date: payloadDate, type: 'scomet', ...restOfState }
-      const response = await axiosInstance.post('/api/invoices/save', payload)
+      const response = await axiosInstance.post('/v1/invoice/save', payload)
       const savedInvoice = response?.data
       if (savedInvoice?._id && !invoiceId) {
-        navigate(`/scomet-document/${savedInvoice._id}`, { replace: true })
+        navigate(`/scomet/${savedInvoice._id}`, { replace: true })
       }
       if (savedInvoice) {
         setIsDirty(false)
@@ -375,226 +366,225 @@ export default function ScometDocument() {
   }
 
   return (
-    <MainCard
-      title="SCOMET Declaration"
-      secondary={(
-        <Button variant="contained" onClick={handleSave} disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save'}
-        </Button>
-      )}
-    >
-      <Grid container spacing={2} alignItems="flex-start">
-        <Grid item xs={12} md={5}>
-          <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>
-            <Stack spacing={2}>
-            <Typography variant="body2" color="textSecondary">
-              Edit any line below to update the PDF. Add or remove rows and sections as needed.
-            </Typography>
-
-            <SectionTitle>Header</SectionTitle>
-            <TextField label="Brand Name" value={data.brandName} onChange={updateField('brandName')} fullWidth />
-            {data.contactLines.map((line, index) => (
-              <Stack key={`contact-${index}`} direction="row" spacing={1} alignItems="center">
-                <TextField
-                  label={`Contact Line ${index + 1}`}
-                  value={line}
-                  onChange={updateArrayField('contactLines', index)}
-                  fullWidth
-                />
-                <IconButton aria-label="remove" onClick={() => removeArrayItem('contactLines', index)} size="large">
-                  <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                </IconButton>
-              </Stack>
-            ))}
-              <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={() => addArrayItem('contactLines')}>
-              Add Contact Line
-            </Button>
-
-            <Divider />
-
-            <SectionTitle>Address & Subject</SectionTitle>
-            <TextField
-              label="Date"
-              type="date"
-              value={data.date}
-              onChange={updateField('date')}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-            {data.addressLines.map((line, index) => (
-              <Stack key={`address-${index}`} direction="row" spacing={1} alignItems="center">
-                <TextField
-                  label={`Address Line ${index + 1}`}
-                  value={line}
-                  onChange={updateArrayField('addressLines', index)}
-                  fullWidth
-                />
-                <IconButton aria-label="remove" onClick={() => removeArrayItem('addressLines', index)} size="large">
-                  <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                </IconButton>
-              </Stack>
-            ))}
-            <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('addressLines')}>
-              Add Address Line
-            </Button>
-            <TextField label="Subject Line" value={data.subjectLine} onChange={updateField('subjectLine')} fullWidth multiline />
-
-            <Divider />
-
-            <SectionTitle>Body</SectionTitle>
-            {data.bodyLines.map((line, index) => (
-              <Stack key={`body-${index}`} direction="row" spacing={1} alignItems="center">
-                <TextField
-                  label={`Body Line ${index + 1}`}
-                  value={line}
-                  onChange={updateArrayField('bodyLines', index)}
-                  fullWidth
-                  multiline
-                />
-                <IconButton aria-label="remove" onClick={() => removeArrayItem('bodyLines', index)} size="large">
-                  <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                </IconButton>
-              </Stack>
-            ))}
-            <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('bodyLines')}>
-              Add Body Line
-            </Button>
-
-            <Divider />
-
-            <SectionTitle>Invoice Table</SectionTitle>
-            <TextField label="Table Title" value={data.tableTitle} onChange={updateField('tableTitle')} fullWidth />
-            {data.tableHeaders.map((header, index) => (
-              <Stack key={`header-${index}`} direction="row" spacing={1} alignItems="center">
-                <TextField
-                  label={`Header ${index + 1}`}
-                  value={header}
-                  onChange={updateArrayField('tableHeaders', index)}
-                  fullWidth
-                />
-                <IconButton aria-label="remove" onClick={() => removeArrayItem('tableHeaders', index)} size="large">
-                  <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                </IconButton>
-              </Stack>
-            ))}
-            <Button
-              sx={{ color: theme.palette.secondary.dark }}
-              variant="outlined"
-              startIcon={<IconPlus />}
-              onClick={() => addArrayItem('tableHeaders', `Header ${data.tableHeaders.length + 1}`)}
+      <MainCard
+          title="SCOMET Declaration"
+          secondary={(
+              <Button sx={{ backgroundColor : theme.palette.secondary.main }} variant="contained" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? 'Saving...' : 'Save'}
+              </Button>
+          )}
+      >
+        <Grid container spacing={2} alignItems="flex-start">
+          <Grid item xs={12} md={7}>
+            <Box
+                sx={{
+                  position: { md: 'sticky' },
+                  top: { md: 24 },
+                  height: { xs: '70vh', md: '85vh' },
+                  border: '1px solid',
+                  borderColor: 'divider'
+                }}
             >
-              Add Table Column
-            </Button>
+              <PdfPreview data={pdfData}/>
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={5}>
+            <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>
+              <Stack spacing={2}>
+                <Typography variant="body2" color="textSecondary">
+                  Edit any line below to update the PDF. Add or remove rows and sections as needed.
+                </Typography>
 
-            {data.tableRows.map((row, rowIndex) => (
-              <Box key={`row-${rowIndex}`}>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <SectionTitle>Row {rowIndex + 1}</SectionTitle>
-                  <IconButton aria-label="remove" onClick={() => removeArrayItem('tableRows', rowIndex)} size="large">
-                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                  </IconButton>
-                </Stack>
-                <Grid container spacing={1}>
-                  {data.tableHeaders.map((_, colIndex) => (
-                    <Grid key={`cell-${rowIndex}-${colIndex}`} item xs={12} sm={6}>
-                      {normalizeHeader(data.tableHeaders[colIndex]) === 'MODE OF EXPORT' ? (
-                        <FormControl fullWidth>
-                          <Select
-                            value={row[colIndex] || ''}
-                            displayEmpty
-                            onChange={(event) => {
-                              const value = String(event.target.value).toUpperCase()
-                              setData((prev) => {
-                                const nextRows = [ ...(prev.tableRows || []) ]
-                                const nextRow = [ ...(nextRows[rowIndex] || []) ]
-                                nextRow[colIndex] = value
-                                nextRows[rowIndex] = nextRow
-                                return { ...prev, tableRows: nextRows }
-                              })
-                            }}
-                          >
-                            <MenuItem value="AIR">AIR</MenuItem>
-                            <MenuItem value="SHIP">SHIP</MenuItem>
-                          </Select>
-                        </FormControl>
-                      ) : (
-                        <TextField
-                          label={`Row ${rowIndex + 1} Col ${colIndex + 1}`}
-                          value={row[colIndex] || ''}
-                          onChange={(event) => {
-                            const rawValue = event.target.value
-                            const nextValue =
-                              normalizeHeader(data.tableHeaders[colIndex]) === 'INVOICE NO'
-                                ? sanitizeAlphaNumUpper(rawValue)
-                                : rawValue
-                            setData((prev) => {
-                              const nextRows = [ ...(prev.tableRows || []) ]
-                              const nextRow = [ ...(nextRows[rowIndex] || []) ]
-                              nextRow[colIndex] = nextValue
-                              nextRows[rowIndex] = nextRow
-                              return { ...prev, tableRows: nextRows }
-                            })
-                          }}
+                <SectionTitle>Header</SectionTitle>
+                <TextField label="Brand Name" value={data.brandName} onChange={updateField('brandName')} fullWidth/>
+                {data.contactLines.map((line, index) => (
+                    <Stack key={`contact-${index}`} direction="row" spacing={1} alignItems="center">
+                      <TextField
+                          label={`Contact Line ${index + 1}`}
+                          value={line}
+                          onChange={updateArrayField('contactLines', index)}
                           fullWidth
-                        />
-                      )}
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            ))}
-            <Button
-              variant="outlined"
-              startIcon={<IconPlus />}
-              onClick={() => addArrayItem('tableRows', createEmptyRow())}
-            >
-              Add Table Row
-            </Button>
+                      />
+                      <IconButton aria-label="remove" onClick={() => removeArrayItem('contactLines', index)} size="large">
+                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                      </IconButton>
+                    </Stack>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={() => addArrayItem('contactLines')}>
+                  Add Contact Line
+                </Button>
 
-            <Divider />
+                <Divider/>
 
-            <SectionTitle>After Table</SectionTitle>
-            {data.afterTableLines.map((line, index) => (
-              <Stack key={`after-${index}`} direction="row" spacing={1} alignItems="center">
+                <SectionTitle>Address & Subject</SectionTitle>
                 <TextField
-                  label={`Line ${index + 1}`}
-                  value={line}
-                  onChange={updateArrayField('afterTableLines', index)}
-                  fullWidth
-                  multiline
+                    label="Date"
+                    type="date"
+                    value={data.date}
+                    onChange={updateField('date')}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
                 />
-                <IconButton aria-label="remove" onClick={() => removeArrayItem('afterTableLines', index)} size="large">
-                  <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                </IconButton>
+                {data.addressLines.map((line, index) => (
+                    <Stack key={`address-${index}`} direction="row" spacing={1} alignItems="center">
+                      <TextField
+                          label={`Address Line ${index + 1}`}
+                          value={line}
+                          onChange={updateArrayField('addressLines', index)}
+                          fullWidth
+                      />
+                      <IconButton aria-label="remove" onClick={() => removeArrayItem('addressLines', index)} size="large">
+                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                      </IconButton>
+                    </Stack>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={() => addArrayItem('addressLines')}>
+                  Add Address Line
+                </Button>
+                <TextField label="Subject Line" value={data.subjectLine} onChange={updateField('subjectLine')} fullWidth multiline/>
+
+                <Divider/>
+
+                <SectionTitle>Body</SectionTitle>
+                {data.bodyLines.map((line, index) => (
+                    <Stack key={`body-${index}`} direction="row" spacing={1} alignItems="center">
+                      <TextField
+                          label={`Body Line ${index + 1}`}
+                          value={line}
+                          onChange={updateArrayField('bodyLines', index)}
+                          fullWidth
+                          multiline
+                      />
+                      <IconButton aria-label="remove" onClick={() => removeArrayItem('bodyLines', index)} size="large">
+                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                      </IconButton>
+                    </Stack>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={() => addArrayItem('bodyLines')}>
+                  Add Body Line
+                </Button>
+
+                <Divider/>
+
+                <SectionTitle>Invoice Table</SectionTitle>
+                <TextField label="Table Title" value={data.tableTitle} onChange={updateField('tableTitle')} fullWidth/>
+                {data.tableHeaders.map((header, index) => (
+                    <Stack key={`header-${index}`} direction="row" spacing={1} alignItems="center">
+                      <TextField
+                          label={`Header ${index + 1}`}
+                          value={header}
+                          onChange={updateArrayField('tableHeaders', index)}
+                          fullWidth
+                      />
+                      <IconButton aria-label="remove" onClick={() => removeArrayItem('tableHeaders', index)} size="large">
+                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                      </IconButton>
+                    </Stack>
+                ))}
+                <Button
+                    sx={{ color: theme.palette.secondary.dark }}
+                    variant="outlined"
+                    startIcon={<IconPlus/>}
+                    onClick={() => addArrayItem('tableHeaders', `Header ${data.tableHeaders.length + 1}`)}
+                >
+                  Add Table Column
+                </Button>
+
+                {data.tableRows.map((row, rowIndex) => (
+                    <Box key={`row-${rowIndex}`}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <SectionTitle>Row {rowIndex + 1}</SectionTitle>
+                        <IconButton aria-label="remove" onClick={() => removeArrayItem('tableRows', rowIndex)} size="large">
+                          <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                        </IconButton>
+                      </Stack>
+                      <Grid container spacing={1}>
+                        {data.tableHeaders.map((_, colIndex) => (
+                            <Grid key={`cell-${rowIndex}-${colIndex}`} item xs={12} sm={6}>
+                              {normalizeHeader(data.tableHeaders[colIndex]) === 'MODE OF EXPORT' ? (
+                                  <FormControl fullWidth>
+                                    <Select
+                                        value={row[colIndex] || ''}
+                                        displayEmpty
+                                        onChange={(event) => {
+                                          const value = String(event.target.value).toUpperCase()
+                                          setData((prev) => {
+                                            const nextRows = [ ...(prev.tableRows || []) ]
+                                            const nextRow = [ ...(nextRows[rowIndex] || []) ]
+                                            nextRow[colIndex] = value
+                                            nextRows[rowIndex] = nextRow
+                                            return { ...prev, tableRows: nextRows }
+                                          })
+                                        }}
+                                    >
+                                      <MenuItem value="AIR">AIR</MenuItem>
+                                      <MenuItem value="SHIP">SHIP</MenuItem>
+                                    </Select>
+                                  </FormControl>
+                              ) : (
+                                  <TextField
+                                      label={`Row ${rowIndex + 1} Col ${colIndex + 1}`}
+                                      value={row[colIndex] || ''}
+                                      onChange={(event) => {
+                                        const rawValue = event.target.value
+                                        const nextValue =
+                                            normalizeHeader(data.tableHeaders[colIndex]) === 'INVOICE NO'
+                                                ? sanitizeAlphaNumUpper(rawValue)
+                                                : rawValue
+                                        setData((prev) => {
+                                          const nextRows = [ ...(prev.tableRows || []) ]
+                                          const nextRow = [ ...(nextRows[rowIndex] || []) ]
+                                          nextRow[colIndex] = nextValue
+                                          nextRows[rowIndex] = nextRow
+                                          return { ...prev, tableRows: nextRows }
+                                        })
+                                      }}
+                                      fullWidth
+                                  />
+                              )}
+                            </Grid>
+                        ))}
+                      </Grid>
+                    </Box>
+                ))}
+                <Button
+                    variant="outlined"
+                    startIcon={<IconPlus/>}
+                    onClick={() => addArrayItem('tableRows', createEmptyRow())}
+                >
+                  Add Table Row
+                </Button>
+
+                <Divider/>
+
+                <SectionTitle>After Table</SectionTitle>
+                {data.afterTableLines.map((line, index) => (
+                    <Stack key={`after-${index}`} direction="row" spacing={1} alignItems="center">
+                      <TextField
+                          label={`Line ${index + 1}`}
+                          value={line}
+                          onChange={updateArrayField('afterTableLines', index)}
+                          fullWidth
+                          multiline
+                      />
+                      <IconButton aria-label="remove" onClick={() => removeArrayItem('afterTableLines', index)} size="large">
+                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                      </IconButton>
+                    </Stack>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={() => addArrayItem('afterTableLines')}>
+                  Add Line
+                </Button>
+
+                <Divider/>
+
+                <SectionTitle>Footer</SectionTitle>
+                <TextField label="Signature Line" value={data.signatureLine} onChange={updateField('signatureLine')} fullWidth/>
+                <TextField label="Footer Line" value={data.footerLine} onChange={updateField('footerLine')} fullWidth multiline/>
               </Stack>
-            ))}
-            <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={() => addArrayItem('afterTableLines')}>
-              Add Line
-            </Button>
-
-            <Divider />
-
-            <SectionTitle>Footer</SectionTitle>
-            <TextField label="Signature Line" value={data.signatureLine} onChange={updateField('signatureLine')} fullWidth />
-            <TextField label="Footer Line" value={data.footerLine} onChange={updateField('footerLine')} fullWidth multiline />
-            </Stack>
-          </Box>
+            </Box>
+          </Grid>
         </Grid>
-
-        <Grid item xs={12} md={7}>
-          <Box
-            sx={{
-              position: { md: 'sticky' },
-              top: { md: 24 },
-              height: { xs: '70vh', md: '85vh' },
-              border: '1px solid',
-              borderColor: 'divider'
-            }}
-          >
-            <PdfPreview data={pdfData} />
-          </Box>
-        </Grid>
-      </Grid>
-    </MainCard>
+      </MainCard>
   )
 }

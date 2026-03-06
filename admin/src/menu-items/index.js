@@ -35,7 +35,7 @@ const pages = {
       id: 'packaging',
       title: 'Packaging',
       type: 'item',
-      url: '/packaging',
+      url: '/packing',
       icon: IconPackages,
       breadcrumbs: false
     },
@@ -59,7 +59,7 @@ const pages = {
       id: 'scomet',
       title: 'Scomet Declaration',
       type: 'item',
-      url: '/scomet-document',
+      url: '/scomet',
       icon: IconTemplate,
       // icon: IconChecklist,
       breadcrumbs: false

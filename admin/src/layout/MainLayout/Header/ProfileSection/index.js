@@ -17,6 +17,7 @@ import UserService from '../../../../services/user.service'
 // assets
 import { IconLogout, IconPassword, IconSettings } from '@tabler/icons'
 import Logo from '../../../../ui-component/Logo'
+import SiteLogo from '../../../../assets/images/logo.png'
 
 // ==============================|| PROFILE MENU ||============================== //
 
@@ -95,12 +96,14 @@ const ProfileSection = () => {
         }}
         icon={
           <Avatar
-            src={Logo}
+            src={SiteLogo}
             sx={{
               ...theme.typography.mediumAvatar,
               margin: '8px 0 8px 8px !important',
               cursor: 'pointer'
+
             }}
+            width={140} height={40}
             ref={anchorRef}
             aria-controls={open ? 'menu-list-grow' : undefined}
             aria-haspopup="true"

@@ -1,19 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  Box,
-  Button,
-  Checkbox,
-  Divider,
-  FormControlLabel,
-  Grid,
-  IconButton,
-  InputAdornment,
-  Stack,
-  TextField,
-  Typography
-} from '@mui/material'
+import { Box, Button, Checkbox, Divider, FormControlLabel, Grid, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material'
 import { IconPlus, IconTrash } from '@tabler/icons'
-import { Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer'
+import { Document, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -92,155 +80,155 @@ const PerformaPdf = ({ data }) => {
     const raw = String(value).split('T')[0]
     const ddmmyyyy = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/)
     if (ddmmyyyy) return raw
-    const [yyyy, mm, dd] = raw.split('-')
+    const [ yyyy, mm, dd ] = raw.split('-')
     if (!yyyy || !mm || !dd) return value
     return `${dd}-${mm}-${yyyy}`
   }
   const normalizeLabel = (value = '') => value.trim().toUpperCase()
 
   return (
-    <Document title="Performa">
-      <Page size="A4" style={styles.page}>
-        <View style={styles.titleRow}>
-          <Text style={styles.title}>{data.companyName.visible ? data.companyName.value || '__________' : ''}</Text>
-          <Text style={styles.subtitle}>{data.invoiceTitle.visible ? data.invoiceTitle.value || 'PERFORMA INVOICE' : ''}</Text>
-        </View>
-
-        <View style={styles.sectionRow}>
-          <View style={styles.leftCol}>
-            {addressLines.length ? (
-              addressLines.map((line, index) => (
-                <Text key={`addr-${index}`} style={styles.addressLine}>
-                  {line.value}
-                </Text>
-              ))
-            ) : (
-              <Text style={styles.addressLine}>__________</Text>
-            )}
+      <Document title="Performa">
+        <Page size="A4" style={styles.page}>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>{data.companyName.visible ? data.companyName.value || '__________' : ''}</Text>
+            <Text style={styles.subtitle}>{data.invoiceTitle.visible ? data.invoiceTitle.value || 'PERFORMA INVOICE' : ''}</Text>
           </View>
-          <View style={styles.rightCol}>
-            <View style={styles.metaTable}>
-              {data.metaFields.map((meta, index) =>
-                meta.visible ? (
-                  <View
-                    key={`meta-${index}`}
-                    style={[ styles.metaRow, index === data.metaFields.length - 1 ? { borderBottomWidth: 0 } : null ]}
-                  >
-                    <Text style={styles.metaLabel}>{meta.label}</Text>
-                    <Text style={styles.metaValue}>
-                      {normalizeLabel(meta.label) === 'DATE' || normalizeLabel(meta.label) === 'DUE DATE'
-                        ? formatDate(meta.value) || '__________'
-                        : meta.value || '__________'}
-                    </Text>
-                  </View>
-                ) : null
+
+          <View style={styles.sectionRow}>
+            <View style={styles.leftCol}>
+              {addressLines.length ? (
+                  addressLines.map((line, index) => (
+                      <Text key={`addr-${index}`} style={styles.addressLine}>
+                        {line.value}
+                      </Text>
+                  ))
+              ) : (
+                  <Text style={styles.addressLine}>__________</Text>
               )}
             </View>
+            <View style={styles.rightCol}>
+              <View style={styles.metaTable}>
+                {data.metaFields.map((meta, index) =>
+                    meta.visible ? (
+                        <View
+                            key={`meta-${index}`}
+                            style={[ styles.metaRow, index === data.metaFields.length - 1 ? { borderBottomWidth: 0 } : null ]}
+                        >
+                          <Text style={styles.metaLabel}>{meta.label}</Text>
+                          <Text style={styles.metaValue}>
+                            {normalizeLabel(meta.label) === 'DATE' || normalizeLabel(meta.label) === 'DUE DATE'
+                                ? formatDate(meta.value) || '__________'
+                                : meta.value || '__________'}
+                          </Text>
+                        </View>
+                    ) : null
+                )}
+              </View>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.blockRow}>
-          <View style={styles.block}>
-            <Text style={styles.blockHeader}>{data.customerTitle.visible ? data.customerTitle.value : 'CUSTOMER DETAILS. SHIP TO'}</Text>
-            <View style={styles.blockBody}>
-              {customerLines.length ? customerLines.map((line, index) => <Text key={`cust-${index}`}>{line.value}</Text>) : <Text>__________</Text>}
+          <View style={styles.blockRow}>
+            <View style={styles.block}>
+              <Text style={styles.blockHeader}>{data.customerTitle.visible ? data.customerTitle.value : 'CUSTOMER DETAILS. SHIP TO'}</Text>
+              <View style={styles.blockBody}>
+                {customerLines.length ? customerLines.map((line, index) => <Text key={`cust-${index}`}>{line.value}</Text>) : <Text>__________</Text>}
+              </View>
+              <View style={styles.blockFooter}>
+                {data.customerPhone.visible ? <Text>Ph: {data.customerPhone.value || '__________'}</Text> : null}
+                {data.customerEmail.visible ? <Text>Mail ID: {data.customerEmail.value || '__________'}</Text> : null}
+              </View>
             </View>
-            <View style={styles.blockFooter}>
-              {data.customerPhone.visible ? <Text>Ph: {data.customerPhone.value || '__________'}</Text> : null}
-              {data.customerEmail.visible ? <Text>Mail ID: {data.customerEmail.value || '__________'}</Text> : null}
+            <View style={styles.block}>
+              <Text style={styles.blockHeader}>{data.notifyTitle.visible ? data.notifyTitle.value : 'NOTIFY BUYER - BILL TO'}</Text>
+              <View style={styles.blockBody}>
+                {notifyLines.length ? notifyLines.map((line, index) => <Text key={`notify-${index}`}>{line.value}</Text>) : <Text>__________</Text>}
+              </View>
+              <View style={styles.blockFooter}>
+                {data.notifyPhone.visible ? <Text>Ph: {data.notifyPhone.value || '__________'}</Text> : null}
+                {data.notifyEmail.visible ? <Text>Mail ID: {data.notifyEmail.value || '__________'}</Text> : null}
+              </View>
             </View>
           </View>
-          <View style={styles.block}>
-            <Text style={styles.blockHeader}>{data.notifyTitle.visible ? data.notifyTitle.value : 'NOTIFY BUYER - BILL TO'}</Text>
-            <View style={styles.blockBody}>
-              {notifyLines.length ? notifyLines.map((line, index) => <Text key={`notify-${index}`}>{line.value}</Text>) : <Text>__________</Text>}
-            </View>
-            <View style={styles.blockFooter}>
-              {data.notifyPhone.visible ? <Text>Ph: {data.notifyPhone.value || '__________'}</Text> : null}
-              {data.notifyEmail.visible ? <Text>Mail ID: {data.notifyEmail.value || '__________'}</Text> : null}
-            </View>
-          </View>
-        </View>
 
-        <View style={styles.itemsTable}>
-          <View style={styles.itemsHeader}>
-            <Text style={[ styles.colDesc, { color: '#fff', fontWeight: 'bold' } ]}>DESCRIPTION</Text>
-            <Text style={[ styles.colQty, { color: '#fff', fontWeight: 'bold' } ]}>QTY</Text>
-            <Text style={[ styles.colAmt, { color: '#fff', fontWeight: 'bold' } ]}>TOTAL AMOUNT</Text>
-          </View>
-          {data.itemRows.map((row, index) => (
-            <View
-              key={`item-${index}`}
-              style={[
-                styles.itemsRow,
-                { backgroundColor: index % 2 === 1 ? '#f4f4f4' : '#fff' }
-              ]}
-            >
-              <Text style={styles.colDesc}>{row.description || ''}</Text>
-              <Text style={styles.colQty}>{row.qty || ''}</Text>
-              <Text style={styles.colAmt}>{row.amount || ''}</Text>
+          <View style={styles.itemsTable}>
+            <View style={styles.itemsHeader}>
+              <Text style={[ styles.colDesc, { color: '#fff', fontWeight: 'bold' } ]}>DESCRIPTION</Text>
+              <Text style={[ styles.colQty, { color: '#fff', fontWeight: 'bold' } ]}>QTY</Text>
+              <Text style={[ styles.colAmt, { color: '#fff', fontWeight: 'bold' } ]}>TOTAL AMOUNT</Text>
             </View>
-          ))}
-        </View>
-
-        {data.notes.visible ? (
-          <View style={styles.notes}>
-            {data.notes.value.split('\n').map((line, idx) => (
-              <Text key={`note-${idx}`}>{line}</Text>
+            {data.itemRows.map((row, index) => (
+                <View
+                    key={`item-${index}`}
+                    style={[
+                      styles.itemsRow,
+                      { backgroundColor: index % 2 === 1 ? '#f4f4f4' : '#fff' }
+                    ]}
+                >
+                  <Text style={styles.colDesc}>{row.description || ''}</Text>
+                  <Text style={styles.colQty}>{row.qty || ''}</Text>
+                  <Text style={styles.colAmt}>{row.amount || ''}</Text>
+                </View>
             ))}
           </View>
-        ) : null}
 
-        {data.gstin.visible ? <Text style={styles.gstRow}>GST IN NO: {data.gstin.value || '__________'}</Text> : null}
+          {data.notes.visible ? (
+              <View style={styles.notes}>
+                {data.notes.value.split('\n').map((line, idx) => (
+                    <Text key={`note-${idx}`}>{line}</Text>
+                ))}
+              </View>
+          ) : null}
 
-        {data.word.visible ? (
-          <Text style={styles.wordRow}>Word: {data.word.value || '__________'}</Text>
-        ) : null}
+          {data.gstin.visible ? <Text style={styles.gstRow}>GST IN NO: {data.gstin.value || '__________'}</Text> : null}
 
-        <View style={styles.footerRow}>
-          <View style={styles.comments}>
-            <Text style={styles.commentsHeader}>OTHER COMMENTS</Text>
-            <View style={styles.commentsBody}>
-              {data.commentsLines.filter((l) => l.visible && l.value.trim() !== '').map((line, idx) => (
-                <Text key={`comment-${idx}`}>{line.value}</Text>
-              ))}
+          {data.word.visible ? (
+              <Text style={styles.wordRow}>Word: {data.word.value || '__________'}</Text>
+          ) : null}
+
+          <View style={styles.footerRow}>
+            <View style={styles.comments}>
+              <Text style={styles.commentsHeader}>OTHER COMMENTS</Text>
+              <View style={styles.commentsBody}>
+                {data.commentsLines.filter((l) => l.visible && l.value.trim() !== '').map((line, idx) => (
+                    <Text key={`comment-${idx}`}>{line.value}</Text>
+                ))}
+              </View>
+            </View>
+            <View style={styles.totals}>
+              {data.totals.map((totalItem, idx) => {
+                const label = totalItem.label
+                const computedValue =
+                    label === 'Subtotal'
+                        ? formatCurrency(subtotal)
+                        : label === 'Total'
+                            ? formatCurrency(total)
+                            : totalItem.value || 'INR 0.00'
+                return totalItem.visible ? (
+                    <View
+                        key={`total-${idx}`}
+                        style={[
+                          styles.totalRow,
+                          totalItem.highlight ? { backgroundColor: '#ffef6b' } : null
+                        ]}
+                    >
+                      <Text style={styles.totalLabel}>{label}</Text>
+                      <Text style={styles.totalValue}>{computedValue}</Text>
+                    </View>
+                ) : null
+              })}
             </View>
           </View>
-          <View style={styles.totals}>
-            {data.totals.map((totalItem, idx) => {
-              const label = totalItem.label
-              const computedValue =
-                label === 'Subtotal'
-                  ? formatCurrency(subtotal)
-                  : label === 'Total'
-                    ? formatCurrency(total)
-                    : totalItem.value || 'INR 0.00'
-              return totalItem.visible ? (
-                <View
-                  key={`total-${idx}`}
-                  style={[
-                    styles.totalRow,
-                    totalItem.highlight ? { backgroundColor: '#ffef6b' } : null
-                  ]}
-                >
-                  <Text style={styles.totalLabel}>{label}</Text>
-                  <Text style={styles.totalValue}>{computedValue}</Text>
-                </View>
-              ) : null
-            })}
-          </View>
-        </View>
 
-        {data.signature.visible ? <Text style={styles.footerSignature}>{data.signature.value || '__________'}</Text> : null}
-      </Page>
-    </Document>
+          {data.signature.visible ? <Text style={styles.footerSignature}>{data.signature.value || '__________'}</Text> : null}
+        </Page>
+      </Document>
   )
 }
 
 const PdfPreview = React.memo(({ data }) => (
-  <PDFViewer style={{ width: '100%', height: '100%' }}>
-    <PerformaPdf data={data} />
-  </PDFViewer>
+    <PDFViewer style={{ width: '100%', height: '100%' }}>
+      <PerformaPdf data={data}/>
+    </PDFViewer>
 ))
 
 const defaultData = {
@@ -272,7 +260,7 @@ const defaultData = {
   itemRows: [ { description: '', qty: '', amount: '' } ],
   notes: {
     value:
-      '1. Warranty Is start On The Day When We Shipped A Shipment\n2. If You Do Installation By Your Own Then If Any Kind Of Problem Accure During Installation Then We Are Not Responsible\n3. If You Want Our Technician On Your Place Then You Have To Pay Visa Charges, residence, labor permits & Round Trip For A Technician Person',
+        '1. Warranty Is start On The Day When We Shipped A Shipment\n2. If You Do Installation By Your Own Then If Any Kind Of Problem Accure During Installation Then We Are Not Responsible\n3. If You Want Our Technician On Your Place Then You Have To Pay Visa Charges, residence, labor permits & Round Trip For A Technician Person',
     visible: true
   },
   gstin: { value: '24AAFFU9324C1ZC', visible: true },
@@ -295,16 +283,16 @@ const defaultData = {
 }
 
 const SectionTitle = ({ children }) => (
-  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-    {children}
-  </Typography>
+    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+      {children}
+    </Typography>
 )
 
 const FieldToggle = ({ label, value, visible, onChange, onToggle, multiline }) => (
-  <Stack direction="row" spacing={1} alignItems="center">
-    <FormControlLabel control={<Checkbox checked={visible} onChange={onToggle} />} label="" />
-    <TextField label={label} value={value} onChange={onChange} fullWidth multiline={multiline} />
-  </Stack>
+    <Stack direction="row" spacing={1} alignItems="center">
+      <FormControlLabel control={<Checkbox checked={visible} onChange={onToggle}/>} label=""/>
+      <TextField label={label} value={value} onChange={onChange} fullWidth multiline={multiline}/>
+    </Stack>
 )
 
 export default function PerformaInvoiceDocument() {
@@ -313,9 +301,9 @@ export default function PerformaInvoiceDocument() {
   const params = useParams()
   const invoiceId = params?.id
 
-  const [data, setData] = useState(defaultData)
-  const [pdfData, setPdfData] = useState(defaultData)
-  const [isSaving, setIsSaving] = useState(false)
+  const [ data, setData ] = useState(defaultData)
+  const [ pdfData, setPdfData ] = useState(defaultData)
+  const [ isSaving, setIsSaving ] = useState(false)
 
   const normalizeLabel = (value = '') => value.trim().toUpperCase()
   const formatDateForSave = (value) => {
@@ -355,20 +343,20 @@ export default function PerformaInvoiceDocument() {
   const formatCurrency = (value) => `INR ${value.toFixed(2)}`
 
   const subtotal = useMemo(
-    () => data.itemRows.reduce((sum, row) => sum + parseAmount(row.amount), 0),
-    [ data.itemRows ]
+      () => data.itemRows.reduce((sum, row) => sum + parseAmount(row.amount), 0),
+      [ data.itemRows ]
   )
   const freight = useMemo(
-    () => parseAmount(data.totals.find((t) => t.label === 'Freight')?.value),
-    [ data.totals ]
+      () => parseAmount(data.totals.find((t) => t.label === 'Freight')?.value),
+      [ data.totals ]
   )
   const packing = useMemo(
-    () => parseAmount(data.totals.find((t) => t.label === 'Packing')?.value),
-    [ data.totals ]
+      () => parseAmount(data.totals.find((t) => t.label === 'Packing')?.value),
+      [ data.totals ]
   )
   const insurance = useMemo(
-    () => parseAmount(data.totals.find((t) => t.label === 'Insurance')?.value),
-    [ data.totals ]
+      () => parseAmount(data.totals.find((t) => t.label === 'Insurance')?.value),
+      [ data.totals ]
   )
   const total = useMemo(() => subtotal + freight + packing + insurance, [ subtotal, freight, packing, insurance ])
 
@@ -596,38 +584,40 @@ export default function PerformaInvoiceDocument() {
   useEffect(() => {
     let isActive = true
     const loadInvoice = async () => {
-      if (!invoiceId) {
+      // if (!invoiceId) {
+      //   try {
+      //     const byTemplate = await axiosInstance.get('/v1/invoice/by-template/performa')
+      //     if (!isActive) return
+      //     const existing = byTemplate?.data
+      //     if (existing?._id) {
+      //       navigate(`/performa/${existing._id}`, { replace: true })
+      //       return
+      //     }
+      //   } catch (error) {
+      //     // ignore and fall back to default
+      //   }
+      //   setData(defaultData)
+      //   setPdfData(defaultData)
+      //   return
+      // }
+      if (invoiceId) {
         try {
-          const byTemplate = await axiosInstance.get('/api/invoices/by-template/performa')
+          const response = await axiosInstance.get(`/v1/invoice/${invoiceId}`)
           if (!isActive) return
-          const existing = byTemplate?.data
-          if (existing?._id) {
-            navigate(`/performa/${existing._id}`, { replace: true })
-            return
+          const invoice = response?.data || {}
+          const merged = {
+            ...defaultData,
+            ...(invoice?.data || {}),
+            date: normalizeDateInput(invoice?.data?.date || invoice?.date || '')
           }
+          merged.metaFields = normalizeMetaFieldsDate(merged.metaFields, merged.date)
+          setData(merged)
+          setPdfData(merged)
         } catch (error) {
-          // ignore and fall back to default
+          if (!isActive) return
+          setData(defaultData)
+          setPdfData(defaultData)
         }
-        setData(defaultData)
-        setPdfData(defaultData)
-        return
-      }
-      try {
-        const response = await axiosInstance.get(`/api/invoices/${invoiceId}`)
-        if (!isActive) return
-        const invoice = response?.data || {}
-        const merged = {
-          ...defaultData,
-          ...(invoice?.data || {}),
-          date: normalizeDateInput(invoice?.data?.date || invoice?.date || '')
-        }
-        merged.metaFields = normalizeMetaFieldsDate(merged.metaFields, merged.date)
-        setData(merged)
-        setPdfData(merged)
-      } catch (error) {
-        if (!isActive) return
-        setData(defaultData)
-        setPdfData(defaultData)
       }
     }
 
@@ -643,7 +633,7 @@ export default function PerformaInvoiceDocument() {
       const { date, ...restOfState } = data
       const payloadDate = formatDateForSave(date)
       const payload = { _id: invoiceId, date: payloadDate, type: 'performa', ...restOfState }
-      const response = await axiosInstance.post('/api/invoices/save', payload)
+      const response = await axiosInstance.post('/v1/invoice/save', payload)
       const savedInvoice = response?.data
       if (savedInvoice?._id && !invoiceId) {
         navigate(`/performa/${savedInvoice._id}`, { replace: true })
@@ -654,221 +644,223 @@ export default function PerformaInvoiceDocument() {
   }
 
   return (
-    <MainCard
-      title="Performa"
-      secondary={(
-        <Button variant="contained" onClick={handleSave} disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save'}
-        </Button>
-      )}
-    >
-      <Grid container spacing={2} alignItems="flex-start">
-        <Grid item xs={12} md={5}>
-          <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>
-            <Stack spacing={2}>
-              <Typography variant="body2" color="textSecondary">
-                Toggle any field to show/hide it in the PDF, and edit values inline.
-              </Typography>
-
-              <SectionTitle>Header</SectionTitle>
-              <FieldToggle label="Company Name" value={data.companyName.value} visible={data.companyName.visible} onChange={updateField('companyName')} onToggle={toggleField('companyName')} />
-              <FieldToggle label="Invoice Title" value={data.invoiceTitle.value} visible={data.invoiceTitle.visible} onChange={updateField('invoiceTitle')} onToggle={toggleField('invoiceTitle')} />
-
-              <Divider />
-
-              <SectionTitle>Address Lines</SectionTitle>
-              {data.addressLines.map((line, index) => (
-                <Stack key={`addr-${index}`} direction="row" spacing={1} alignItems="center">
-                  <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleAddressLine(index)} />} label="" />
-                  <TextField label={`Address Line ${index + 1}`} value={line.value} onChange={updateAddressLine(index)} fullWidth />
-                  <IconButton aria-label="remove" onClick={() => removeAddressLine(index)} size="large">
-                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                  </IconButton>
-                </Stack>
-              ))}
-              <Button sx={{ color: theme.palette.secondary.dark }}  variant="outlined" startIcon={<IconPlus />} onClick={addAddressLine}>
-                Add Address Line
+      <MainCard
+          title="Performa"
+          secondary={(
+              <Button sx={{ backgroundColor : theme.palette.secondary.main }} variant="contained" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? 'Saving...' : 'Save'}
               </Button>
+          )}
+      >
+        <Grid container spacing={2} alignItems="flex-start">
+          <Grid item xs={12} md={7}>
+            <Box
+                sx={{
+                  position: { md: 'sticky' },
+                  top: { md: 24 },
+                  height: { xs: '70vh', md: '85vh' },
+                  border: '1px solid',
+                  borderColor: 'divider'
+                }}
+            >
+              <PdfPreview data={pdfData}/>
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={5}>
+            <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>
+              <Stack spacing={2}>
+                <Typography variant="body2" color="textSecondary">
+                  Toggle any field to show/hide it in the PDF, and edit values inline.
+                </Typography>
 
-              <Divider />
+                <SectionTitle>Header</SectionTitle>
+                <FieldToggle label="Company Name" value={data.companyName.value} visible={data.companyName.visible} onChange={updateField('companyName')} onToggle={toggleField('companyName')}/>
+                <FieldToggle label="Invoice Title" value={data.invoiceTitle.value} visible={data.invoiceTitle.visible} onChange={updateField('invoiceTitle')} onToggle={toggleField('invoiceTitle')}/>
 
-              <SectionTitle>Invoice Meta</SectionTitle>
-              {data.metaFields.map((meta, index) => {
-                const label = normalizeLabel(meta.label)
-                const isDate = label === 'DATE' || label === 'DUE DATE'
-                return (
-                <Stack key={`meta-${index}`} direction="row" spacing={1} alignItems="center">
-                  <FormControlLabel control={<Checkbox checked={meta.visible} onChange={toggleMetaField(index)} />} label="" />
-                  <TextField
-                    label={meta.label}
-                    value={meta.value}
-                    onChange={updateMetaField(index)}
-                    fullWidth
-                    type={isDate ? 'date' : 'text'}
-                    InputLabelProps={isDate ? { shrink: true } : undefined}
-                  />
-                </Stack>
-              )})}
+                <Divider/>
 
-              <Divider />
+                <SectionTitle>Address Lines</SectionTitle>
+                {data.addressLines.map((line, index) => (
+                    <Stack key={`addr-${index}`} direction="row" spacing={1} alignItems="center">
+                      <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleAddressLine(index)}/>} label=""/>
+                      <TextField label={`Address Line ${index + 1}`} value={line.value} onChange={updateAddressLine(index)} fullWidth/>
+                      <IconButton aria-label="remove" onClick={() => removeAddressLine(index)} size="large">
+                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                      </IconButton>
+                    </Stack>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={addAddressLine}>
+                  Add Address Line
+                </Button>
 
-              <SectionTitle>Customer (Ship To)</SectionTitle>
-              {data.customerLines.map((line, index) => (
-                <Stack key={`cust-${index}`} direction="row" spacing={1} alignItems="center">
-                  <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleCustomerLine(index)} />} label="" />
-                  <TextField label={`Customer Line ${index + 1}`} value={line.value} onChange={updateCustomerLine(index)} fullWidth />
-                  <IconButton aria-label="remove" onClick={() => removeCustomerLine(index)} size="large">
-                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                  </IconButton>
-                </Stack>
-              ))}
-              <Button sx={{ color: theme.palette.secondary.dark }}  variant="outlined" startIcon={<IconPlus />} onClick={addCustomerLine}>
-                Add Customer Line
-              </Button>
-              <FieldToggle
-                label="Customer Phone"
-                value={data.customerPhone.value}
-                visible={data.customerPhone.visible}
-                onChange={(event) =>
-                  setData((prev) => ({
-                    ...prev,
-                    customerPhone: { ...prev.customerPhone, value: sanitizeDigits(event.target.value) }
-                  }))
-                }
-                onToggle={toggleField('customerPhone')}
-              />
-              <FieldToggle label="Customer Email" value={data.customerEmail.value} visible={data.customerEmail.visible} onChange={updateField('customerEmail')} onToggle={toggleField('customerEmail')} />
+                <Divider/>
 
-              <Divider />
+                <SectionTitle>Invoice Meta</SectionTitle>
+                {data.metaFields.map((meta, index) => {
+                  const label = normalizeLabel(meta.label)
+                  const isDate = label === 'DATE' || label === 'DUE DATE'
+                  return (
+                      <Stack key={`meta-${index}`} direction="row" spacing={1} alignItems="center">
+                        <FormControlLabel control={<Checkbox checked={meta.visible} onChange={toggleMetaField(index)}/>} label=""/>
+                        <TextField
+                            label={meta.label}
+                            value={meta.value}
+                            onChange={updateMetaField(index)}
+                            fullWidth
+                            type={isDate ? 'date' : 'text'}
+                            InputLabelProps={isDate ? { shrink: true } : undefined}
+                        />
+                      </Stack>
+                  )
+                })}
 
-              <SectionTitle>Notify Buyer</SectionTitle>
-              {data.notifyLines.map((line, index) => (
-                <Stack key={`notify-${index}`} direction="row" spacing={1} alignItems="center">
-                  <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleNotifyLine(index)} />} label="" />
-                  <TextField label={`Notify Line ${index + 1}`} value={line.value} onChange={updateNotifyLine(index)} fullWidth />
-                  <IconButton aria-label="remove" onClick={() => removeNotifyLine(index)} size="large">
-                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                  </IconButton>
-                </Stack>
-              ))}
-              <Button sx={{ color: theme.palette.secondary.dark }}  variant="outlined" startIcon={<IconPlus />} onClick={addNotifyLine}>
-                Add Notify Line
-              </Button>
-              <FieldToggle
-                label="Notify Phone"
-                value={data.notifyPhone.value}
-                visible={data.notifyPhone.visible}
-                onChange={(event) =>
-                  setData((prev) => ({
-                    ...prev,
-                    notifyPhone: { ...prev.notifyPhone, value: sanitizeDigits(event.target.value) }
-                  }))
-                }
-                onToggle={toggleField('notifyPhone')}
-              />
-              <FieldToggle label="Notify Email" value={data.notifyEmail.value} visible={data.notifyEmail.visible} onChange={updateField('notifyEmail')} onToggle={toggleField('notifyEmail')} />
+                <Divider/>
 
-              <Divider />
+                <SectionTitle>Customer (Ship To)</SectionTitle>
+                {data.customerLines.map((line, index) => (
+                    <Stack key={`cust-${index}`} direction="row" spacing={1} alignItems="center">
+                      <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleCustomerLine(index)}/>} label=""/>
+                      <TextField label={`Customer Line ${index + 1}`} value={line.value} onChange={updateCustomerLine(index)} fullWidth/>
+                      <IconButton aria-label="remove" onClick={() => removeCustomerLine(index)} size="large">
+                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                      </IconButton>
+                    </Stack>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={addCustomerLine}>
+                  Add Customer Line
+                </Button>
+                <FieldToggle
+                    label="Customer Phone"
+                    value={data.customerPhone.value}
+                    visible={data.customerPhone.visible}
+                    onChange={(event) =>
+                        setData((prev) => ({
+                          ...prev,
+                          customerPhone: { ...prev.customerPhone, value: sanitizeDigits(event.target.value) }
+                        }))
+                    }
+                    onToggle={toggleField('customerPhone')}
+                />
+                <FieldToggle label="Customer Email" value={data.customerEmail.value} visible={data.customerEmail.visible} onChange={updateField('customerEmail')}
+                             onToggle={toggleField('customerEmail')}/>
 
-              <SectionTitle>Items</SectionTitle>
-              {data.itemRows.map((row, index) => (
-                <Box key={`item-${index}`}>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                    <Typography variant="subtitle2">Row {index + 1}</Typography>
-                    <IconButton aria-label="remove" onClick={() => removeItemRow(index)} size="large">
-                      <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                    </IconButton>
-                  </Stack>
-                  <Grid container spacing={1}>
-                    <Grid item xs={12}>
-                      <TextField label="Description" value={row.description} onChange={updateItemRow(index, 'description')} fullWidth multiline />
-                    </Grid>
-                    <Grid item xs={6}>
-                      <TextField label="Qty" value={row.qty} onChange={updateItemRow(index, 'qty')} fullWidth />
-                    </Grid>
-                    <Grid item xs={6}>
-                      <TextField label="Amount" value={row.amount} onChange={updateItemRow(index, 'amount')} fullWidth />
-                    </Grid>
-                  </Grid>
-                </Box>
-              ))}
-              <Button sx={{ color: theme.palette.secondary.dark }}  variant="outlined" startIcon={<IconPlus />} onClick={addItemRow}>
-                Add Item Row
-              </Button>
+                <Divider/>
 
-              <Divider />
+                <SectionTitle>Notify Buyer</SectionTitle>
+                {data.notifyLines.map((line, index) => (
+                    <Stack key={`notify-${index}`} direction="row" spacing={1} alignItems="center">
+                      <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleNotifyLine(index)}/>} label=""/>
+                      <TextField label={`Notify Line ${index + 1}`} value={line.value} onChange={updateNotifyLine(index)} fullWidth/>
+                      <IconButton aria-label="remove" onClick={() => removeNotifyLine(index)} size="large">
+                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                      </IconButton>
+                    </Stack>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={addNotifyLine}>
+                  Add Notify Line
+                </Button>
+                <FieldToggle
+                    label="Notify Phone"
+                    value={data.notifyPhone.value}
+                    visible={data.notifyPhone.visible}
+                    onChange={(event) =>
+                        setData((prev) => ({
+                          ...prev,
+                          notifyPhone: { ...prev.notifyPhone, value: sanitizeDigits(event.target.value) }
+                        }))
+                    }
+                    onToggle={toggleField('notifyPhone')}
+                />
+                <FieldToggle label="Notify Email" value={data.notifyEmail.value} visible={data.notifyEmail.visible} onChange={updateField('notifyEmail')} onToggle={toggleField('notifyEmail')}/>
 
-              <SectionTitle>Notes</SectionTitle>
-              <FieldToggle label="Notes" value={data.notes.value} visible={data.notes.visible} onChange={updateNotes} onToggle={toggleNotes} multiline />
-              <FieldToggle label="GSTIN" value={data.gstin.value} visible={data.gstin.visible} onChange={updateField('gstin')} onToggle={toggleField('gstin')} />
-              <FieldToggle label="Word" value={data.word.value} visible={data.word.visible} onChange={updateField('word')} onToggle={toggleField('word')} />
+                <Divider/>
 
-              <Divider />
+                <SectionTitle>Items</SectionTitle>
+                {data.itemRows.map((row, index) => (
+                    <Box key={`item-${index}`}>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                        <Typography variant="subtitle2">Row {index + 1}</Typography>
+                        <IconButton aria-label="remove" onClick={() => removeItemRow(index)} size="large">
+                          <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                        </IconButton>
+                      </Stack>
+                      <Grid container spacing={1}>
+                        <Grid item xs={12}>
+                          <TextField label="Description" value={row.description} onChange={updateItemRow(index, 'description')} fullWidth multiline/>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <TextField label="Qty" value={row.qty} onChange={updateItemRow(index, 'qty')} fullWidth/>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <TextField label="Amount" value={row.amount} onChange={updateItemRow(index, 'amount')} fullWidth/>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={addItemRow}>
+                  Add Item Row
+                </Button>
 
-              <SectionTitle>Other Comments</SectionTitle>
-              {data.commentsLines.map((line, index) => (
-                <Stack key={`comment-${index}`} direction="row" spacing={1} alignItems="center">
-                  <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleCommentsLine(index)} />} label="" />
-                  <TextField label={`Comment ${index + 1}`} value={line.value} onChange={updateCommentsLine(index)} fullWidth />
-                  <IconButton aria-label="remove" onClick={() => removeCommentsLine(index)} size="large">
-                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                  </IconButton>
-                </Stack>
-              ))}
-              <Button sx={{ color: theme.palette.secondary.dark }}  variant="outlined" startIcon={<IconPlus />} onClick={addCommentsLine}>
-                Add Comment Line
-              </Button>
+                <Divider/>
 
-              <Divider />
+                <SectionTitle>Notes</SectionTitle>
+                <FieldToggle label="Notes" value={data.notes.value} visible={data.notes.visible} onChange={updateNotes} onToggle={toggleNotes} multiline/>
+                <FieldToggle label="GSTIN" value={data.gstin.value} visible={data.gstin.visible} onChange={updateField('gstin')} onToggle={toggleField('gstin')}/>
+                <FieldToggle label="Word" value={data.word.value} visible={data.word.visible} onChange={updateField('word')} onToggle={toggleField('word')}/>
 
-              <SectionTitle>Totals</SectionTitle>
-              {data.totals.map((totalItem, index) => {
-                const label = totalItem.label
-                const computedValue =
-                  label === 'Subtotal'
-                    ? formatDisplay(subtotal)
-                    : label === 'Total'
-                      ? formatDisplay(total)
-                      : totalItem.value
-                return (
-                <Stack key={`total-${index}`} direction="row" spacing={1} alignItems="center">
-                  <FormControlLabel control={<Checkbox checked={totalItem.visible} onChange={toggleTotal(index)} />} label="" />
-                  <TextField
-                    label={label}
-                    value={computedValue}
-                    onChange={updateTotal(index)}
-                    fullWidth
-                    InputProps={{
-                      readOnly: label === 'Subtotal' || label === 'Total',
-                      startAdornment: <InputAdornment position="start">INR</InputAdornment>
-                    }}
-                    inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
-                  />
-                </Stack>
-              )})}
+                <Divider/>
 
-              <Divider />
+                <SectionTitle>Other Comments</SectionTitle>
+                {data.commentsLines.map((line, index) => (
+                    <Stack key={`comment-${index}`} direction="row" spacing={1} alignItems="center">
+                      <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleCommentsLine(index)}/>} label=""/>
+                      <TextField label={`Comment ${index + 1}`} value={line.value} onChange={updateCommentsLine(index)} fullWidth/>
+                      <IconButton aria-label="remove" onClick={() => removeCommentsLine(index)} size="large">
+                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                      </IconButton>
+                    </Stack>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={addCommentsLine}>
+                  Add Comment Line
+                </Button>
 
-              <SectionTitle>Signature</SectionTitle>
-              <FieldToggle label="Signature" value={data.signature.value} visible={data.signature.visible} onChange={updateField('signature')} onToggle={toggleField('signature')} />
-            </Stack>
-          </Box>
+                <Divider/>
+
+                <SectionTitle>Totals</SectionTitle>
+                {data.totals.map((totalItem, index) => {
+                  const label = totalItem.label
+                  const computedValue =
+                      label === 'Subtotal'
+                          ? formatDisplay(subtotal)
+                          : label === 'Total'
+                              ? formatDisplay(total)
+                              : totalItem.value
+                  return (
+                      <Stack key={`total-${index}`} direction="row" spacing={1} alignItems="center">
+                        <FormControlLabel control={<Checkbox checked={totalItem.visible} onChange={toggleTotal(index)}/>} label=""/>
+                        <TextField
+                            label={label}
+                            value={computedValue}
+                            onChange={updateTotal(index)}
+                            fullWidth
+                            InputProps={{
+                              readOnly: label === 'Subtotal' || label === 'Total',
+                              startAdornment: <InputAdornment position="start">INR</InputAdornment>
+                            }}
+                            inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
+                        />
+                      </Stack>
+                  )
+                })}
+
+                <Divider/>
+
+                <SectionTitle>Signature</SectionTitle>
+                <FieldToggle label="Signature" value={data.signature.value} visible={data.signature.visible} onChange={updateField('signature')} onToggle={toggleField('signature')}/>
+              </Stack>
+            </Box>
+          </Grid>
         </Grid>
-
-        <Grid item xs={12} md={7}>
-          <Box
-            sx={{
-              position: { md: 'sticky' },
-              top: { md: 24 },
-              height: { xs: '70vh', md: '85vh' },
-              border: '1px solid',
-              borderColor: 'divider'
-            }}
-          >
-            <PdfPreview data={pdfData} />
-          </Box>
-        </Grid>
-      </Grid>
-    </MainCard>
+      </MainCard>
   )
 }

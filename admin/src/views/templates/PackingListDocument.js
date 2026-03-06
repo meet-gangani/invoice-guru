@@ -1,18 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  Box,
-  Button,
-  Checkbox,
-  Divider,
-  FormControlLabel,
-  Grid,
-  IconButton,
-  Stack,
-  TextField,
-  Typography
-} from '@mui/material'
+import { Box, Button, Checkbox, Divider, FormControlLabel, Grid, IconButton, Stack, TextField, Typography } from '@mui/material'
 import { IconPlus, IconTrash } from '@tabler/icons'
-import { Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer'
+import { Document, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -21,16 +10,16 @@ import axiosInstance from '../../services/axiosInstance'
 const styles = StyleSheet.create({
   page: { padding: 30, fontSize: 7.5, fontFamily: 'Helvetica', color: '#000' },
   table: { border: '1pt solid black', width: '100%' },
-  
+
   // Layout Strategy: Two main vertical pillars
   flexRow: { flexDirection: 'row' },
   leftPillar: { width: '50%', borderRight: '1pt solid black' },
   rightPillar: { width: '50%' },
-  
+
   // Cell heights and borders
   cell: { padding: 4, borderBottom: '1pt solid black' },
   cellLast: { padding: 4 }, // No bottom border
-  
+
   // Nested Grid Helpers
   splitRow: { flexDirection: 'row', borderBottom: '1pt solid black' },
   innerBox: { width: '50%', padding: 4 },
@@ -39,25 +28,25 @@ const styles = StyleSheet.create({
   // Typography
   label: { fontSize: 6, fontWeight: 'bold', textTransform: 'uppercase', marginBottom: 2 },
   value: { fontSize: 8 },
-  header: { 
-    backgroundColor: '#F0F0F0', 
-    textAlign: 'center', 
-    fontWeight: 'bold', 
-    padding: 5, 
-    fontSize: 9, 
-    borderBottom: '1pt solid black' 
+  header: {
+    backgroundColor: '#F0F0F0',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    padding: 5,
+    fontSize: 9,
+    borderBottom: '1pt solid black'
   },
-  
+
   // Item Table Proportions (%)
-  c1: { width: '12%', borderRight: '1pt solid black' }, 
-  c2: { width: '16%', borderRight: '1pt solid black' }, 
-  c3: { width: '7%', borderRight: '1pt solid black' }, 
+  c1: { width: '12%', borderRight: '1pt solid black' },
+  c2: { width: '16%', borderRight: '1pt solid black' },
+  c3: { width: '7%', borderRight: '1pt solid black' },
   c4: { width: '33%', borderRight: '1pt solid black' },
-  c5: { width: '8%', borderRight: '1pt solid black' }, 
-  c6: { width: '8%', borderRight: '1pt solid black' }, 
-  c7: { width: '8%', borderRight: '1pt solid black' }, 
+  c5: { width: '8%', borderRight: '1pt solid black' },
+  c6: { width: '8%', borderRight: '1pt solid black' },
+  c7: { width: '8%', borderRight: '1pt solid black' },
   c8: { width: '8%' }
-});
+})
 
 const PackingListPdf = ({ data }) => {
   const formatDate = (value) => {
@@ -65,151 +54,151 @@ const PackingListPdf = ({ data }) => {
     const raw = String(value).split('T')[0]
     const ddmmyyyy = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/)
     if (ddmmyyyy) return raw
-    const [yyyy, mm, dd] = raw.split('-')
+    const [ yyyy, mm, dd ] = raw.split('-')
     if (!yyyy || !mm || !dd) return value
     return `${dd}-${mm}-${yyyy}`
   }
   return (
-    <Document title={"Packaging List"}>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.table}>
-          
-          {/* TITLE HEADER */}
-          <View style={styles.header}>
-            <Text>{data.title.value}</Text>
-          </View>
+      <Document title={'Packaging List'}>
+        <Page size="A4" style={styles.page}>
+          <View style={styles.table}>
 
-          {/* TOP BLOCK: Exporter/Consignee vs Ref Boxes */}
-          <View style={styles.flexRow}>
-            {/* LEFT PILLAR */}
-            <View style={styles.leftPillar}>
-              <View style={[styles.cell, { height: 90 }]}>
-                <Text style={styles.label}>Exporter</Text>
-                {data.exporterLines.filter(l => l.visible).map((l, i) => (
-                  <Text key={i} style={styles.value}>{l.value}</Text>
-                ))}
+            {/* TITLE HEADER */}
+            <View style={styles.header}>
+              <Text>{data.title.value}</Text>
+            </View>
+
+            {/* TOP BLOCK: Exporter/Consignee vs Ref Boxes */}
+            <View style={styles.flexRow}>
+              {/* LEFT PILLAR */}
+              <View style={styles.leftPillar}>
+                <View style={[ styles.cell, { height: 90 } ]}>
+                  <Text style={styles.label}>Exporter</Text>
+                  {data.exporterLines.filter(l => l.visible).map((l, i) => (
+                      <Text key={i} style={styles.value}>{l.value}</Text>
+                  ))}
+                </View>
+                <View style={[ styles.cellLast, { height: 90 } ]}>
+                  <Text style={styles.label}>Consignee</Text>
+                  <Text style={styles.value}>{data.consignee.value}</Text>
+                  <View style={{ marginTop: 15 }}>
+                    <Text style={styles.label}>Contact: {data.contact.value}</Text>
+                    <Text style={styles.label}>Tel: {data.tel.value}</Text>
+                  </View>
+                </View>
               </View>
-              <View style={[styles.cellLast, { height: 90 }]}>
-                <Text style={styles.label}>Consignee</Text>
-                <Text style={styles.value}>{data.consignee.value}</Text>
-                <View style={{ marginTop: 15 }}>
-                   <Text style={styles.label}>Contact: {data.contact.value}</Text>
-                   <Text style={styles.label}>Tel: {data.tel.value}</Text>
+
+              {/* RIGHT PILLAR (Independent horizontal lines) */}
+              <View style={styles.rightPillar}>
+                <View style={[ styles.splitRow, { height: 45 } ]}>
+                  <View style={[ styles.innerBox, styles.borderRight ]}>
+                    <Text style={styles.label}>Packing List No. & Date</Text>
+                    <Text style={styles.value}>
+                      {data.packingListNo.value} {formatDate(data.date.value)}
+                    </Text>
+                  </View>
+                  <View style={styles.innerBox}>
+                    <Text style={styles.label}>Export Ref / IEC / GSTIN</Text>
+                    <Text style={styles.value}>{data.exportRef.value}</Text>
+                    <Text style={styles.value}>
+                      {data.iec.value} {data.gstin.value}
+                    </Text>
+                  </View>
+                </View>
+                <View style={[ styles.cell, { height: 45 } ]}>
+                  <Text style={styles.label}>Buyer's Order No. & Date</Text>
+                  <Text style={styles.value}>{data.buyersOrder.value}</Text>
+                </View>
+                <View style={[ styles.cellLast, { height: 45 } ]}>
+                  <Text style={styles.label}>Notify / Buyer (if other than consignee)</Text>
+                  <Text style={styles.value}>{data.notifyBuyer.value}</Text>
                 </View>
               </View>
             </View>
 
-            {/* RIGHT PILLAR (Independent horizontal lines) */}
-            <View style={styles.rightPillar}>
-              <View style={[styles.splitRow, { height: 45 }]}>
-                <View style={[styles.innerBox, styles.borderRight]}>
-                  <Text style={styles.label}>Packing List No. & Date</Text>
-                <Text style={styles.value}>
-                    {data.packingListNo.value} {formatDate(data.date.value)}
-                  </Text>
+            {/* SHIPPING & TERMS BLOCK */}
+            <View style={[ styles.flexRow, { borderTop: '1pt solid black', borderBottom: '1pt solid black' } ]}>
+              {/* Left 50%: Three-Row Shipping Grid */}
+              <View style={styles.leftPillar}>
+                <View style={styles.splitRow}>
+                  <View style={[ styles.innerBox, styles.borderRight ]}><Text style={styles.label}>Pre-Carriage by</Text><Text>{data.preCarriageBy.value}</Text></View>
+                  <View style={styles.innerBox}><Text style={styles.label}>Place of Receipt</Text><Text>{data.placeOfReceipt.value}</Text></View>
                 </View>
-                <View style={styles.innerBox}>
-                  <Text style={styles.label}>Export Ref / IEC / GSTIN</Text>
-                  <Text style={styles.value}>{data.exportRef.value}</Text>
-                  <Text style={styles.value}>
-                    {data.iec.value} {data.gstin.value}
-                  </Text>
+                <View style={styles.splitRow}>
+                  <View style={[ styles.innerBox, styles.borderRight ]}><Text style={styles.label}>Vessel/Flight No.</Text><Text>{data.vesselFlightNo.value}</Text></View>
+                  <View style={styles.innerBox}><Text style={styles.label}>Port of Loading</Text><Text>{data.portOfLoading.value}</Text></View>
+                </View>
+                <View style={styles.flexRow}>
+                  <View style={[ styles.innerBox, styles.borderRight ]}><Text style={styles.label}>Port of Discharge</Text><Text>{data.portOfDischarge.value}</Text></View>
+                  <View style={styles.innerBox}><Text style={styles.label}>Final Destination</Text><Text>{data.finalDestination.value}</Text></View>
                 </View>
               </View>
-              <View style={[styles.cell, { height: 45 }]}>
-                <Text style={styles.label}>Buyer's Order No. & Date</Text>
-                <Text style={styles.value}>{data.buyersOrder.value}</Text>
-              </View>
-              <View style={[styles.cellLast, { height: 45 }]}>
-                <Text style={styles.label}>Notify / Buyer (if other than consignee)</Text>
-                <Text style={styles.value}>{data.notifyBuyer.value}</Text>
+
+              {/* Right 50%: Countries + Terms Box */}
+              <View style={styles.rightPillar}>
+                <View style={styles.splitRow}>
+                  <View style={[ styles.innerBox, styles.borderRight ]}><Text style={styles.label}>Country of Origin</Text><Text>{data.countryOfOrigin.value}</Text></View>
+                  <View style={styles.innerBox}><Text style={styles.label}>Country of Destination</Text><Text>{data.countryOfDestination.value}</Text></View>
+                </View>
+                <View style={{ padding: 4 }}>
+                  <Text style={styles.label}>Terms of Delivery and Payment</Text>
+                  <Text style={styles.value}>{data.terms.value}</Text>
+                </View>
               </View>
             </View>
+
+            {/* ITEM TABLE HEADER */}
+            <View style={[ styles.flexRow, { backgroundColor: '#F0F0F0', borderBottom: '1pt solid black' } ]}>
+              <Text style={[ styles.cellNoBottom, styles.c1 ]}>Marks & No.</Text>
+              <Text style={[ styles.cellNoBottom, styles.c2 ]}>No. & Pkgs</Text>
+              <Text style={[ styles.cellNoBottom, styles.c3 ]}>SR</Text>
+              <Text style={[ styles.cellNoBottom, styles.c4 ]}>Description of Goods</Text>
+              <Text style={[ styles.cellNoBottom, styles.c5 ]}>QTY</Text>
+              <Text style={[ styles.cellNoBottom, styles.c6 ]}>Net Wt</Text>
+              <Text style={[ styles.cellNoBottom, styles.c7 ]}>Gross</Text>
+              <Text style={[ styles.cellNoBottom, styles.c8 ]}>Dim</Text>
+            </View>
+
+            {/* DYNAMIC ROWS */}
+            {data.tableRows.map((row, i) => (
+                <View key={i} style={[ styles.flexRow, { borderBottom: '0.5pt solid #AAA' } ]}>
+                  <Text style={[ styles.cellNoBottom, styles.c1 ]}>{row[0]}</Text>
+                  <Text style={[ styles.cellNoBottom, styles.c2 ]}>{row[1]}</Text>
+                  <Text style={[ styles.cellNoBottom, styles.c3 ]}>{row[2] || i + 1}</Text>
+                  <Text style={[ styles.cellNoBottom, styles.c4 ]}>{row[3]}</Text>
+                  <Text style={[ styles.cellNoBottom, styles.c5 ]}>{row[4]}</Text>
+                  <Text style={[ styles.cellNoBottom, styles.c6 ]}>{row[5]}</Text>
+                  <Text style={[ styles.cellNoBottom, styles.c7 ]}>{row[6]}</Text>
+                  <Text style={[ styles.cellNoBottom, styles.c8 ]}>{row[7]}</Text>
+                </View>
+            ))}
+
+            {/* SIGNATURE FOOTER */}
+            <View style={[ styles.flexRow, { borderTop: '1pt solid black', minHeight: 80 } ]}>
+              <View style={[ styles.leftPillar, { padding: 0 } ]}>
+                <View style={styles.cell}><Text style={styles.label}>Total Pkgs: {data.totalPackages.value}</Text></View>
+                <View style={[ styles.flexRow, { borderBottom: '1pt solid black' } ]}>
+                  <View style={[ styles.innerBox, styles.borderRight ]}><Text style={styles.label}>Net Wt: {data.netWeight.value}</Text></View>
+                  <View style={styles.innerBox}><Text style={styles.label}>Gross Wt: {data.grossWeight.value}</Text></View>
+                </View>
+                <View style={{ padding: 4 }}><Text style={styles.label}>Total Weight: {data.totalWeight.value}</Text></View>
+              </View>
+              <View style={[ styles.rightPillar, { textAlign: 'center', justifyContent: 'space-between', padding: 5 } ]}>
+                <Text style={styles.label}>For {data.authorizedBy.value}</Text>
+                <Text style={[ styles.label, { marginBottom: 5 } ]}>Authorised Signatory</Text>
+              </View>
+            </View>
+
           </View>
-
-          {/* SHIPPING & TERMS BLOCK */}
-          <View style={[styles.flexRow, { borderTop: '1pt solid black', borderBottom: '1pt solid black' }]}>
-            {/* Left 50%: Three-Row Shipping Grid */}
-            <View style={styles.leftPillar}>
-              <View style={styles.splitRow}>
-                <View style={[styles.innerBox, styles.borderRight]}><Text style={styles.label}>Pre-Carriage by</Text><Text>{data.preCarriageBy.value}</Text></View>
-                <View style={styles.innerBox}><Text style={styles.label}>Place of Receipt</Text><Text>{data.placeOfReceipt.value}</Text></View>
-              </View>
-              <View style={styles.splitRow}>
-                <View style={[styles.innerBox, styles.borderRight]}><Text style={styles.label}>Vessel/Flight No.</Text><Text>{data.vesselFlightNo.value}</Text></View>
-                <View style={styles.innerBox}><Text style={styles.label}>Port of Loading</Text><Text>{data.portOfLoading.value}</Text></View>
-              </View>
-              <View style={styles.flexRow}>
-                <View style={[styles.innerBox, styles.borderRight]}><Text style={styles.label}>Port of Discharge</Text><Text>{data.portOfDischarge.value}</Text></View>
-                <View style={styles.innerBox}><Text style={styles.label}>Final Destination</Text><Text>{data.finalDestination.value}</Text></View>
-              </View>
-            </View>
-
-            {/* Right 50%: Countries + Terms Box */}
-            <View style={styles.rightPillar}>
-              <View style={styles.splitRow}>
-                <View style={[styles.innerBox, styles.borderRight]}><Text style={styles.label}>Country of Origin</Text><Text>{data.countryOfOrigin.value}</Text></View>
-                <View style={styles.innerBox}><Text style={styles.label}>Country of Destination</Text><Text>{data.countryOfDestination.value}</Text></View>
-              </View>
-              <View style={{ padding: 4 }}>
-                <Text style={styles.label}>Terms of Delivery and Payment</Text>
-                <Text style={styles.value}>{data.terms.value}</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* ITEM TABLE HEADER */}
-          <View style={[styles.flexRow, { backgroundColor: '#F0F0F0', borderBottom: '1pt solid black' }]}>
-            <Text style={[styles.cellNoBottom, styles.c1]}>Marks & No.</Text>
-            <Text style={[styles.cellNoBottom, styles.c2]}>No. & Pkgs</Text>
-            <Text style={[styles.cellNoBottom, styles.c3]}>SR</Text>
-            <Text style={[styles.cellNoBottom, styles.c4]}>Description of Goods</Text>
-            <Text style={[styles.cellNoBottom, styles.c5]}>QTY</Text>
-            <Text style={[styles.cellNoBottom, styles.c6]}>Net Wt</Text>
-            <Text style={[styles.cellNoBottom, styles.c7]}>Gross</Text>
-            <Text style={[styles.cellNoBottom, styles.c8]}>Dim</Text>
-          </View>
-
-          {/* DYNAMIC ROWS */}
-          {data.tableRows.map((row, i) => (
-            <View key={i} style={[styles.flexRow, { borderBottom: '0.5pt solid #AAA' }]}>
-              <Text style={[styles.cellNoBottom, styles.c1]}>{row[0]}</Text>
-              <Text style={[styles.cellNoBottom, styles.c2]}>{row[1]}</Text>
-              <Text style={[styles.cellNoBottom, styles.c3]}>{row[2] || i + 1}</Text>
-              <Text style={[styles.cellNoBottom, styles.c4]}>{row[3]}</Text>
-              <Text style={[styles.cellNoBottom, styles.c5]}>{row[4]}</Text>
-              <Text style={[styles.cellNoBottom, styles.c6]}>{row[5]}</Text>
-              <Text style={[styles.cellNoBottom, styles.c7]}>{row[6]}</Text>
-              <Text style={[styles.cellNoBottom, styles.c8]}>{row[7]}</Text>
-            </View>
-          ))}
-
-          {/* SIGNATURE FOOTER */}
-          <View style={[styles.flexRow, { borderTop: '1pt solid black', minHeight: 80 }]}>
-            <View style={[styles.leftPillar, { padding: 0 }]}>
-              <View style={styles.cell}><Text style={styles.label}>Total Pkgs: {data.totalPackages.value}</Text></View>
-              <View style={[styles.flexRow, { borderBottom: '1pt solid black' }]}>
-                 <View style={[styles.innerBox, styles.borderRight]}><Text style={styles.label}>Net Wt: {data.netWeight.value}</Text></View>
-                 <View style={styles.innerBox}><Text style={styles.label}>Gross Wt: {data.grossWeight.value}</Text></View>
-              </View>
-              <View style={{ padding: 4 }}><Text style={styles.label}>Total Weight: {data.totalWeight.value}</Text></View>
-            </View>
-            <View style={[styles.rightPillar, { textAlign: 'center', justifyContent: 'space-between', padding: 5 }]}>
-              <Text style={styles.label}>For {data.authorizedBy.value}</Text>
-              <Text style={[styles.label, { marginBottom: 5 }]}>Authorised Signatory</Text>
-            </View>
-          </View>
-
-        </View>
-      </Page>
-    </Document>
-  );
-};
+        </Page>
+      </Document>
+  )
+}
 
 const PdfPreview = React.memo(({ data }) => (
-  <PDFViewer style={{ width: '100%', height: '100%' }}>
-    <PackingListPdf data={data} />
-  </PDFViewer>
+    <PDFViewer style={{ width: '100%', height: '100%' }}>
+      <PackingListPdf data={data}/>
+    </PDFViewer>
 ))
 
 const defaultData = {
@@ -260,16 +249,16 @@ const defaultData = {
 }
 
 const SectionTitle = ({ children }) => (
-  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-    {children}
-  </Typography>
+    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+      {children}
+    </Typography>
 )
 
 const FieldToggle = ({ label, value, visible, onChange, onToggle, multiline }) => (
-  <Stack direction="row" spacing={1} alignItems="center">
-    <FormControlLabel control={<Checkbox checked={visible} onChange={onToggle} />} label="" />
-    <TextField label={label} value={value} onChange={onChange} fullWidth multiline={multiline} />
-  </Stack>
+    <Stack direction="row" spacing={1} alignItems="center">
+      <FormControlLabel control={<Checkbox checked={visible} onChange={onToggle}/>} label=""/>
+      <TextField label={label} value={value} onChange={onChange} fullWidth multiline={multiline}/>
+    </Stack>
 )
 
 export default function PackingListDocument() {
@@ -277,9 +266,9 @@ export default function PackingListDocument() {
   const navigate = useNavigate()
   const params = useParams()
   const invoiceId = params?.id
-  const [data, setData] = useState(defaultData)
-  const [pdfData, setPdfData] = useState(defaultData)
-  const [isSaving, setIsSaving] = useState(false)
+  const [ data, setData ] = useState(defaultData)
+  const [ pdfData, setPdfData ] = useState(defaultData)
+  const [ isSaving, setIsSaving ] = useState(false)
 
   const formatDateForSave = (value) => {
     if (!value) return ''
@@ -365,52 +354,55 @@ export default function PackingListDocument() {
   useEffect(() => {
     let isActive = true
     const loadInvoice = async () => {
-      if (!invoiceId) {
+      // if (!invoiceId) {
+      //   try {
+      //     const byTemplate = await axiosInstance.get('/v1/invoice/by-template/packing')
+      //     if (!isActive) return
+      //     const existing = byTemplate?.data
+      //     if (existing?._id) {
+      //       navigate(`/packing/${existing._id}`, { replace: true })
+      //       return
+      //     }
+      //   } catch (error) {
+      //     // ignore and fall back to default
+      //   }
+      //   setData(defaultData)
+      //   setPdfData(defaultData)
+      //   return
+      // }
+
+      if (invoiceId) {
         try {
-          const byTemplate = await axiosInstance.get('/api/invoices/by-template/packing')
+          const response = await axiosInstance.get(`/v1/invoice/${invoiceId}`)
           if (!isActive) return
-          const existing = byTemplate?.data
-          if (existing?._id) {
-            navigate(`/packaging/${existing._id}`, { replace: true })
-            return
+          const invoice = response?.data || {}
+          const normalizeDateValue = (value) => {
+            if (!value) return ''
+            if (typeof value === 'string') return value.split('T')[0]
+            if (value instanceof Date && !Number.isNaN(value.getTime())) {
+              return value.toISOString().slice(0, 10)
+            }
+            if (typeof value === 'object' && value.value) return value.value
+            return ''
           }
+          const coerceDateField = (value, fallbackVisible) => {
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+              return { ...value, value: normalizeDateValue(value.value || value) }
+            }
+            return { value: normalizeDateValue(value), visible: fallbackVisible }
+          }
+          const merged = {
+            ...defaultData,
+            ...(invoice?.data || {})
+          }
+          merged.date = coerceDateField(invoice?.data?.date ?? invoice?.date, defaultData.date.visible)
+          setData(merged)
+          setPdfData(merged)
         } catch (error) {
-          // ignore and fall back to default
+          if (!isActive) return
+          setData(defaultData)
+          setPdfData(defaultData)
         }
-        setData(defaultData)
-        setPdfData(defaultData)
-        return
-      }
-      try {
-        const response = await axiosInstance.get(`/api/invoices/${invoiceId}`)
-        if (!isActive) return
-        const invoice = response?.data || {}
-        const normalizeDateValue = (value) => {
-          if (!value) return ''
-          if (typeof value === 'string') return value.split('T')[0]
-          if (value instanceof Date && !Number.isNaN(value.getTime())) {
-            return value.toISOString().slice(0, 10)
-          }
-          if (typeof value === 'object' && value.value) return value.value
-          return ''
-        }
-        const coerceDateField = (value, fallbackVisible) => {
-          if (value && typeof value === 'object' && !Array.isArray(value)) {
-            return { ...value, value: normalizeDateValue(value.value || value) }
-          }
-          return { value: normalizeDateValue(value), visible: fallbackVisible }
-        }
-        const merged = {
-          ...defaultData,
-          ...(invoice?.data || {})
-        }
-        merged.date = coerceDateField(invoice?.data?.date ?? invoice?.date, defaultData.date.visible)
-        setData(merged)
-        setPdfData(merged)
-      } catch (error) {
-        if (!isActive) return
-        setData(defaultData)
-        setPdfData(defaultData)
       }
     }
 
@@ -426,10 +418,10 @@ export default function PackingListDocument() {
       const { date, ...restOfState } = data
       const payloadDate = formatDateForSave(date?.value || '')
       const payload = { _id: invoiceId, date: payloadDate, type: 'packing', ...restOfState }
-      const response = await axiosInstance.post('/api/invoices/save', payload)
+      const response = await axiosInstance.post('/v1/invoice/save', payload)
       const savedInvoice = response?.data
       if (savedInvoice?._id && !invoiceId) {
-        navigate(`/packaging/${savedInvoice._id}`, { replace: true })
+        navigate(`/packing/${savedInvoice._id}`, { replace: true })
       }
     } finally {
       setIsSaving(false)
@@ -437,140 +429,152 @@ export default function PackingListDocument() {
   }
 
   return (
-    <MainCard
-      title="Packaging"
-      secondary={(
-        <Button variant="contained" onClick={handleSave} disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save'}
-        </Button>
-      )}
-    >
-      <Grid container spacing={2} alignItems="flex-start">
-        <Grid item xs={12} md={5}>
-          <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>
-            <Stack spacing={2}>
-              <Typography variant="body2" color="textSecondary">
-                Toggle any field to show/hide it in the PDF, and edit values inline.
-              </Typography>
-
-              <SectionTitle>Title</SectionTitle>
-              <FieldToggle
-                label="Document Title"
-                value={data.title.value}
-                visible={data.title.visible}
-                onChange={updateField('title')}
-                onToggle={toggleField('title')}
-              />
-
-              <Divider />
-
-              <SectionTitle>Exporter</SectionTitle>
-              {data.exporterLines.map((line, index) => (
-                <Stack key={`exporter-${index}`} direction="row" spacing={1} alignItems="center">
-                  <FormControlLabel
-                    control={<Checkbox checked={line.visible} onChange={toggleExporterLine(index)} />}
-                    label=""
-                  />
-                  <TextField label={`Exporter Line ${index + 1}`} value={line.value} onChange={updateExporterLine(index)} fullWidth />
-                  <IconButton aria-label="remove" onClick={() => removeExporterLine(index)} size="large">
-                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                  </IconButton>
-                </Stack>
-              ))}
-              <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={addExporterLine}>
-                Add Exporter Line
+      <MainCard
+          title="Packaging"
+          secondary={(
+              <Button sx={{ backgroundColor : theme.palette.secondary.main }} variant="contained" onClick={handleSave} disabled={isSaving}>
+                {isSaving ? 'Saving...' : 'Save'}
               </Button>
+          )}
+      >
+        <Grid container spacing={2} alignItems="flex-start">
+          <Grid item xs={12} md={7}>
+            <Box
+                sx={{
+                  position: { md: 'sticky' },
+                  top: { md: 24 },
+                  height: { xs: '70vh', md: '85vh' },
+                  border: '1px solid',
+                  borderColor: 'divider'
+                }}
+            >
+              <PdfPreview data={pdfData}/>
+            </Box>
+          </Grid>
 
-              <Divider />
+          <Grid item xs={12} md={5}>
+            <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>
+              <Stack spacing={2}>
+                <Typography variant="body2" color="textSecondary">
+                  Toggle any field to show/hide it in the PDF, and edit values inline.
+                </Typography>
 
-              <SectionTitle>Packing Details</SectionTitle>
-              <FieldToggle label="Packing List No" value={data.packingListNo.value} visible={data.packingListNo.visible} onChange={updateField('packingListNo')} onToggle={toggleField('packingListNo')} />
-              <FieldToggle label="Date" value={data.date.value} visible={data.date.visible} onChange={updateField('date')} onToggle={toggleField('date')} />
-              <FieldToggle label="Buyer's Order No & Date" value={data.buyersOrder.value} visible={data.buyersOrder.visible} onChange={updateField('buyersOrder')} onToggle={toggleField('buyersOrder')} />
-              <FieldToggle label="Export Ref" value={data.exportRef.value} visible={data.exportRef.visible} onChange={updateField('exportRef')} onToggle={toggleField('exportRef')} />
-              <FieldToggle label="IEC" value={data.iec.value} visible={data.iec.visible} onChange={updateField('iec')} onToggle={toggleField('iec')} />
-              <FieldToggle label="GSTIN" value={data.gstin.value} visible={data.gstin.visible} onChange={updateField('gstin')} onToggle={toggleField('gstin')} />
+                <SectionTitle>Title</SectionTitle>
+                <FieldToggle
+                    label="Document Title"
+                    value={data.title.value}
+                    visible={data.title.visible}
+                    onChange={updateField('title')}
+                    onToggle={toggleField('title')}
+                />
 
-              <Divider />
+                <Divider/>
 
-              <SectionTitle>Parties</SectionTitle>
-              <FieldToggle label="Consignee" value={data.consignee.value} visible={data.consignee.visible} onChange={updateField('consignee')} onToggle={toggleField('consignee')} multiline />
-              <FieldToggle label="Notify/Buyer" value={data.notifyBuyer.value} visible={data.notifyBuyer.visible} onChange={updateField('notifyBuyer')} onToggle={toggleField('notifyBuyer')} multiline />
+                <SectionTitle>Exporter</SectionTitle>
+                {data.exporterLines.map((line, index) => (
+                    <Stack key={`exporter-${index}`} direction="row" spacing={1} alignItems="center">
+                      <FormControlLabel
+                          control={<Checkbox checked={line.visible} onChange={toggleExporterLine(index)}/>}
+                          label=""
+                      />
+                      <TextField label={`Exporter Line ${index + 1}`} value={line.value} onChange={updateExporterLine(index)} fullWidth/>
+                      <IconButton aria-label="remove" onClick={() => removeExporterLine(index)} size="large">
+                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                      </IconButton>
+                    </Stack>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={addExporterLine}>
+                  Add Exporter Line
+                </Button>
 
-              <Divider />
+                <Divider/>
 
-              <SectionTitle>Contact & Origin</SectionTitle>
-              <FieldToggle label="Contact" value={data.contact.value} visible={data.contact.visible} onChange={updateField('contact')} onToggle={toggleField('contact')} />
-              <FieldToggle label="Tel" value={data.tel.value} visible={data.tel.visible} onChange={updateField('tel')} onToggle={toggleField('tel')} />
-              <FieldToggle label="Country of Origin" value={data.countryOfOrigin.value} visible={data.countryOfOrigin.visible} onChange={updateField('countryOfOrigin')} onToggle={toggleField('countryOfOrigin')} />
-              <FieldToggle label="Country of Destination" value={data.countryOfDestination.value} visible={data.countryOfDestination.visible} onChange={updateField('countryOfDestination')} onToggle={toggleField('countryOfDestination')} />
+                <SectionTitle>Packing Details</SectionTitle>
+                <FieldToggle label="Packing List No" value={data.packingListNo.value} visible={data.packingListNo.visible} onChange={updateField('packingListNo')}
+                             onToggle={toggleField('packingListNo')}/>
+                <FieldToggle label="Date" value={data.date.value} visible={data.date.visible} onChange={updateField('date')} onToggle={toggleField('date')}/>
+                <FieldToggle label="Buyer's Order No & Date" value={data.buyersOrder.value} visible={data.buyersOrder.visible} onChange={updateField('buyersOrder')}
+                             onToggle={toggleField('buyersOrder')}/>
+                <FieldToggle label="Export Ref" value={data.exportRef.value} visible={data.exportRef.visible} onChange={updateField('exportRef')} onToggle={toggleField('exportRef')}/>
+                <FieldToggle label="IEC" value={data.iec.value} visible={data.iec.visible} onChange={updateField('iec')} onToggle={toggleField('iec')}/>
+                <FieldToggle label="GSTIN" value={data.gstin.value} visible={data.gstin.visible} onChange={updateField('gstin')} onToggle={toggleField('gstin')}/>
 
-              <Divider />
+                <Divider/>
 
-              <SectionTitle>Shipment</SectionTitle>
-              <FieldToggle label="Pre-Carriage By" value={data.preCarriageBy.value} visible={data.preCarriageBy.visible} onChange={updateField('preCarriageBy')} onToggle={toggleField('preCarriageBy')} />
-              <FieldToggle label="Place of Receipt" value={data.placeOfReceipt.value} visible={data.placeOfReceipt.visible} onChange={updateField('placeOfReceipt')} onToggle={toggleField('placeOfReceipt')} />
-              <FieldToggle label="Terms of Delivery & Payment" value={data.terms.value} visible={data.terms.visible} onChange={updateField('terms')} onToggle={toggleField('terms')} />
-              <FieldToggle label="Vessel/Flight No" value={data.vesselFlightNo.value} visible={data.vesselFlightNo.visible} onChange={updateField('vesselFlightNo')} onToggle={toggleField('vesselFlightNo')} />
-              <FieldToggle label="Port of Loading" value={data.portOfLoading.value} visible={data.portOfLoading.visible} onChange={updateField('portOfLoading')} onToggle={toggleField('portOfLoading')} />
-              <FieldToggle label="Port of Discharge" value={data.portOfDischarge.value} visible={data.portOfDischarge.visible} onChange={updateField('portOfDischarge')} onToggle={toggleField('portOfDischarge')} />
-              <FieldToggle label="Final Destination" value={data.finalDestination.value} visible={data.finalDestination.visible} onChange={updateField('finalDestination')} onToggle={toggleField('finalDestination')} />
+                <SectionTitle>Parties</SectionTitle>
+                <FieldToggle label="Consignee" value={data.consignee.value} visible={data.consignee.visible} onChange={updateField('consignee')} onToggle={toggleField('consignee')} multiline/>
+                <FieldToggle label="Notify/Buyer" value={data.notifyBuyer.value} visible={data.notifyBuyer.visible} onChange={updateField('notifyBuyer')} onToggle={toggleField('notifyBuyer')}
+                             multiline/>
 
-              <Divider />
+                <Divider/>
 
-              <SectionTitle>Items Table</SectionTitle>
-              {data.tableRows.map((row, rowIndex) => (
-                <Box key={`row-${rowIndex}`}>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                    <Typography variant="subtitle2">Row {rowIndex + 1}</Typography>
-                    <IconButton aria-label="remove" onClick={() => removeTableRow(rowIndex)} size="large">
-                      <IconTrash size="1.1rem" color={theme.palette.error.dark} />
-                    </IconButton>
-                  </Stack>
-                  <Grid container spacing={1}>
-                    {new Array(tableColumnCount).fill(null).map((_, colIndex) => (
-                      <Grid key={`cell-${rowIndex}-${colIndex}`} item xs={12} sm={6}>
-                        <TextField
-                          label={`${data.tableHeaders[colIndex]} (Row ${rowIndex + 1})`}
-                          value={row[colIndex] || ''}
-                          onChange={updateTableCell(rowIndex, colIndex)}
-                          fullWidth
-                        />
+                <SectionTitle>Contact & Origin</SectionTitle>
+                <FieldToggle label="Contact" value={data.contact.value} visible={data.contact.visible} onChange={updateField('contact')} onToggle={toggleField('contact')}/>
+                <FieldToggle label="Tel" value={data.tel.value} visible={data.tel.visible} onChange={updateField('tel')} onToggle={toggleField('tel')}/>
+                <FieldToggle label="Country of Origin" value={data.countryOfOrigin.value} visible={data.countryOfOrigin.visible} onChange={updateField('countryOfOrigin')}
+                             onToggle={toggleField('countryOfOrigin')}/>
+                <FieldToggle label="Country of Destination" value={data.countryOfDestination.value} visible={data.countryOfDestination.visible} onChange={updateField('countryOfDestination')}
+                             onToggle={toggleField('countryOfDestination')}/>
+
+                <Divider/>
+
+                <SectionTitle>Shipment</SectionTitle>
+                <FieldToggle label="Pre-Carriage By" value={data.preCarriageBy.value} visible={data.preCarriageBy.visible} onChange={updateField('preCarriageBy')}
+                             onToggle={toggleField('preCarriageBy')}/>
+                <FieldToggle label="Place of Receipt" value={data.placeOfReceipt.value} visible={data.placeOfReceipt.visible} onChange={updateField('placeOfReceipt')}
+                             onToggle={toggleField('placeOfReceipt')}/>
+                <FieldToggle label="Terms of Delivery & Payment" value={data.terms.value} visible={data.terms.visible} onChange={updateField('terms')} onToggle={toggleField('terms')}/>
+                <FieldToggle label="Vessel/Flight No" value={data.vesselFlightNo.value} visible={data.vesselFlightNo.visible} onChange={updateField('vesselFlightNo')}
+                             onToggle={toggleField('vesselFlightNo')}/>
+                <FieldToggle label="Port of Loading" value={data.portOfLoading.value} visible={data.portOfLoading.visible} onChange={updateField('portOfLoading')}
+                             onToggle={toggleField('portOfLoading')}/>
+                <FieldToggle label="Port of Discharge" value={data.portOfDischarge.value} visible={data.portOfDischarge.visible} onChange={updateField('portOfDischarge')}
+                             onToggle={toggleField('portOfDischarge')}/>
+                <FieldToggle label="Final Destination" value={data.finalDestination.value} visible={data.finalDestination.visible} onChange={updateField('finalDestination')}
+                             onToggle={toggleField('finalDestination')}/>
+
+                <Divider/>
+
+                <SectionTitle>Items Table</SectionTitle>
+                {data.tableRows.map((row, rowIndex) => (
+                    <Box key={`row-${rowIndex}`}>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                        <Typography variant="subtitle2">Row {rowIndex + 1}</Typography>
+                        <IconButton aria-label="remove" onClick={() => removeTableRow(rowIndex)} size="large">
+                          <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                        </IconButton>
+                      </Stack>
+                      <Grid container spacing={1}>
+                        {new Array(tableColumnCount).fill(null).map((_, colIndex) => (
+                            <Grid key={`cell-${rowIndex}-${colIndex}`} item xs={12} sm={6}>
+                              <TextField
+                                  label={`${data.tableHeaders[colIndex]} (Row ${rowIndex + 1})`}
+                                  value={row[colIndex] || ''}
+                                  onChange={updateTableCell(rowIndex, colIndex)}
+                                  fullWidth
+                              />
+                            </Grid>
+                        ))}
                       </Grid>
-                    ))}
-                  </Grid>
-                </Box>
-              ))}
-              <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={addTableRow}>
-                Add Table Row
-              </Button>
+                    </Box>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={addTableRow}>
+                  Add Table Row
+                </Button>
 
-              <Divider />
+                <Divider/>
 
-              <SectionTitle>Totals & Signature</SectionTitle>
-              <FieldToggle label="Total Packages" value={data.totalPackages.value} visible={data.totalPackages.visible} onChange={updateField('totalPackages')} onToggle={toggleField('totalPackages')} />
-              <FieldToggle label="Net Weight" value={data.netWeight.value} visible={data.netWeight.visible} onChange={updateField('netWeight')} onToggle={toggleField('netWeight')} />
-              <FieldToggle label="Gross Weight" value={data.grossWeight.value} visible={data.grossWeight.visible} onChange={updateField('grossWeight')} onToggle={toggleField('grossWeight')} />
-              <FieldToggle label="Total Weight" value={data.totalWeight.value} visible={data.totalWeight.visible} onChange={updateField('totalWeight')} onToggle={toggleField('totalWeight')} />
-              <FieldToggle label="Authorized By" value={data.authorizedBy.value} visible={data.authorizedBy.visible} onChange={updateField('authorizedBy')} onToggle={toggleField('authorizedBy')} />
-            </Stack>
-          </Box>
+                <SectionTitle>Totals & Signature</SectionTitle>
+                <FieldToggle label="Total Packages" value={data.totalPackages.value} visible={data.totalPackages.visible} onChange={updateField('totalPackages')}
+                             onToggle={toggleField('totalPackages')}/>
+                <FieldToggle label="Net Weight" value={data.netWeight.value} visible={data.netWeight.visible} onChange={updateField('netWeight')} onToggle={toggleField('netWeight')}/>
+                <FieldToggle label="Gross Weight" value={data.grossWeight.value} visible={data.grossWeight.visible} onChange={updateField('grossWeight')} onToggle={toggleField('grossWeight')}/>
+                <FieldToggle label="Total Weight" value={data.totalWeight.value} visible={data.totalWeight.visible} onChange={updateField('totalWeight')} onToggle={toggleField('totalWeight')}/>
+                <FieldToggle label="Authorized By" value={data.authorizedBy.value} visible={data.authorizedBy.visible} onChange={updateField('authorizedBy')} onToggle={toggleField('authorizedBy')}/>
+              </Stack>
+            </Box>
+          </Grid>
         </Grid>
-
-        <Grid item xs={12} md={7}>
-          <Box
-            sx={{
-              position: { md: 'sticky' },
-              top: { md: 24 },
-              height: { xs: '70vh', md: '85vh' },
-              border: '1px solid',
-              borderColor: 'divider'
-            }}
-          >
-            <PdfPreview data={pdfData} />
-          </Box>
-        </Grid>
-      </Grid>
-    </MainCard>
+      </MainCard>
   )
 }
