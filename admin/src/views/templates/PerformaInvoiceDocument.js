@@ -775,7 +775,7 @@ export default function PerformaInvoiceDocument() {
                           <TextField label="Qty" value={row.qty} onChange={updateItemRow(index, 'qty')} fullWidth/>
                         </Grid>
                         <Grid item xs={6}>
-                          <TextField label="Amount" value={row.amount} onChange={updateItemRow(index, 'amount')} fullWidth/>
+                          <TextField label="Amount" value={row.amount} onChange={updateItemRow(index, 'amount')} fullWidth inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}/>
                         </Grid>
                       </Grid>
                     </Box>
@@ -810,24 +810,20 @@ export default function PerformaInvoiceDocument() {
                 <Divider/>
 
                 <SectionTitle>Totals</SectionTitle>
-                {data.totals.filter((totalItem) => totalItem.label !== 'Subtotal' && totalItem.label !== 'Total').map((totalItem, index) => {
+                {data.totals.map((totalItem, index) => {
                   const label = totalItem.label
-                  const computedValue =
-                      label === 'Subtotal'
-                          ? formatDisplay(subtotal)
-                          : label === 'Total'
-                              ? formatDisplay(total)
-                              : totalItem.value
+                  if (label === 'Subtotal' || label === 'Total') {
+                    return null
+                  }
                   return (
                       <Stack key={`total-${index}`} direction="row" spacing={1} alignItems="center">
                         <FormControlLabel control={<Checkbox checked={totalItem.visible} onChange={toggleTotal(index)}/>} label=""/>
                         <TextField
                             label={label}
-                            value={computedValue}
+                            value={totalItem.value}
                             onChange={updateTotal(index)}
                             fullWidth
                             InputProps={{
-                              readOnly: label === 'Subtotal' || label === 'Total',
                               startAdornment: <InputAdornment position="start">INR</InputAdornment>
                             }}
                             inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}

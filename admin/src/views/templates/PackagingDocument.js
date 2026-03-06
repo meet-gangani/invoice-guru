@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
   page: { padding: 28, fontSize: 8, fontFamily: 'Helvetica', color: '#000' },
   table: { border: '1pt solid black', width: '100%' },
   row: { flexDirection: 'row' },
-  cell: { borderRight: '1pt solid black', borderBottom: '1pt solid black', padding: 4 },
+  cell: { borderRight: '1pt solid black', borderBottom: '1pt solid black', padding: 8 },
   cellLast: { borderBottom: '1pt solid black', padding: 4 },
   label: { fontSize: 6, fontWeight: 'bold' },
   value: { fontSize: 8 },

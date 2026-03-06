@@ -494,14 +494,18 @@ export default function ScometDocument() {
                           <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
                         </IconButton>
                       </Stack>
-                      <Grid container spacing={1}>
+                      <Grid container spacing={2}>
                         {data.tableHeaders.map((_, colIndex) => (
                             <Grid key={`cell-${rowIndex}-${colIndex}`} item xs={12} sm={6}>
-                              {normalizeHeader(data.tableHeaders[colIndex]) === 'MODE OF EXPORT' ? (
+                              {(() => {
+                                const headerLabel = data.tableHeaders[colIndex] || `Column ${colIndex + 1}`
+                                if (normalizeHeader(data.tableHeaders[colIndex]) === 'MODE OF EXPORT') {
+                                  return (
                                   <FormControl fullWidth>
                                     <Select
                                         value={row[colIndex] || ''}
                                         displayEmpty
+                                        renderValue={(selected) => selected || headerLabel}
                                         onChange={(event) => {
                                           const value = String(event.target.value).toUpperCase()
                                           setData((prev) => {
@@ -513,13 +517,18 @@ export default function ScometDocument() {
                                           })
                                         }}
                                     >
+                                      <MenuItem value="" disabled>{headerLabel}</MenuItem>
                                       <MenuItem value="AIR">AIR</MenuItem>
                                       <MenuItem value="SHIP">SHIP</MenuItem>
                                     </Select>
                                   </FormControl>
-                              ) : (
+                                  )
+                                }
+
+                                return (
                                   <TextField
-                                      label={`Row ${rowIndex + 1} Col ${colIndex + 1}`}
+                                      label={`${headerLabel} (Row ${rowIndex + 1})`}
+                                      placeholder={headerLabel}
                                       value={row[colIndex] || ''}
                                       onChange={(event) => {
                                         const rawValue = event.target.value
@@ -537,7 +546,8 @@ export default function ScometDocument() {
                                       }}
                                       fullWidth
                                   />
-                              )}
+                                )
+                              })()}
                             </Grid>
                         ))}
                       </Grid>

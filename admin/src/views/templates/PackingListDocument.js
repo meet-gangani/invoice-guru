@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
   rightPillar: { width: '50%' },
 
   // Cell heights and borders
-  cell: { padding: 4, borderBottom: '1pt solid black' },
+  cell: { padding: 8, borderBottom: '1pt solid black' },
   cellLast: { padding: 4 }, // No bottom border
 
   // Nested Grid Helpers
@@ -544,7 +544,7 @@ export default function PackingListDocument() {
                           <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
                         </IconButton>
                       </Stack>
-                      <Grid container spacing={1}>
+                      <Grid container spacing={2}>
                         {new Array(tableColumnCount).fill(null).map((_, colIndex) => (
                             <Grid key={`cell-${rowIndex}-${colIndex}`} item xs={12} sm={6}>
                               <TextField
