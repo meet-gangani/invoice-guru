@@ -9,9 +9,17 @@ exports.dashboardCards = async (req, res) => {
     const endOfToday = new Date()
     endOfToday.setHours(23, 59, 59, 999)
 
+    let filter = {}
+    if (req.companyId) {
+      filter = {
+        company: req.companyId
+      }
+    }
+
     const [ totalInvoice, todayInvoice ] = await Promise.all([
-      InvoiceStore.countDocuments(),
+      InvoiceStore.countDocuments(filter),
       InvoiceStore.countDocuments({
+        ...filter,
         date: {
           $gte: startOfToday,
           $lte: endOfToday
