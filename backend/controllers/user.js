@@ -324,7 +324,9 @@ const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body
 
-    const user = await UserStore.findById({ _id: '3f10932a-0851-4c08-b7df-247f8664c246' })
+    const typeId = req.typeId
+
+    const user = await UserStore.findById({ _id: typeId })
 
     const compareCurrentPassword = await bcrypt.compare(currentPassword, user.password)
 
@@ -332,7 +334,7 @@ const changePassword = async (req, res) => {
 
     user.password = await bcrypt.hash(newPassword, constants.security.SALT)
 
-    await UserStore.findByIdAndUpdate('3f10932a-0851-4c08-b7df-247f8664c246', { password: user.password })
+    await UserStore.findByIdAndUpdate(typeId, { password: user.password })
     sendSuccess(res, {
       message: 'Password has been updated'
     })
