@@ -4,7 +4,8 @@ import encryptStorage from './storage'
 const axiosInstance = axios.create({
   baseURL: process.env.REACT_APP_BACKEND_URL,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true', // Bypasses ngrok splash screen
   }
 })
 
