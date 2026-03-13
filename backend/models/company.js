@@ -12,6 +12,13 @@ const CompanySchema = new Schema({
   username: { type: Schema.Types.String, required: true },
   password: { type: Schema.Types.String, required: true },
   status: { type: Schema.Types.String, required: true, default: 'ACTIVE' },
+  owner: { type: Schema.Types.String, required: false, default: '' },
+  contactPerson: { type: Schema.Types.String, required: false, default: '' },
+  contactNumber: { type: Schema.Types.String, required: false, default: '' },
+  address: { type: Schema.Types.String, required: false, default: '' },
+  pinCode: { type: Schema.Types.String, required: false, default: '' },
+  stamp: { type: Schema.Types.String, required: false, default: '' },
+  sign: { type: Schema.Types.String, required: false, default: '' },
   ...defaultFields
 }, {
   ...defaultSchemaOptions

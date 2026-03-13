@@ -1,5 +1,7 @@
 const { sendError, sendSuccess } = require('./utils')
 const { CompanyStore } = require('../models')
+const fs = require('fs')
+const path = require('path')
 
 exports.createCompany = async (req, res) => {
   try {
@@ -8,7 +10,14 @@ exports.createCompany = async (req, res) => {
       logo,
       username,
       password,
-      status
+      status,
+      owner,
+      contactPerson,
+      contactNumber,
+      address,
+      pinCode,
+      stamp,
+      sign
     } = req.body
 
     if (!name || !username || !password) {
@@ -20,7 +29,14 @@ exports.createCompany = async (req, res) => {
       logo,
       username,
       password,
-      status
+      status,
+      owner,
+      contactPerson,
+      contactNumber,
+      address,
+      pinCode,
+      stamp,
+      sign
     })
     return sendSuccess(res)
   } catch (error) {
@@ -31,7 +47,20 @@ exports.createCompany = async (req, res) => {
 exports.updateCompany = async (req, res) => {
   try {
     const id = req.params.id
-    const { name, logo, username, password, status } = req.body
+    const {
+      name,
+      logo,
+      username,
+      password,
+      status,
+      owner,
+      contactPerson,
+      contactNumber,
+      address,
+      pinCode,
+      stamp,
+      sign
+    } = req.body
 
     if (!name || !username || !password) {
       return sendError(res, 'Missing required fields', null, 400)
@@ -44,7 +73,14 @@ exports.updateCompany = async (req, res) => {
           logo,
           username,
           password,
-          status
+          status,
+          owner,
+          contactPerson,
+          contactNumber,
+          address,
+          pinCode,
+          stamp,
+          sign
         },
         { new: true } // return updated document
     )
@@ -66,6 +102,40 @@ exports.getCompanies = async (req, res) => {
     return sendSuccess(res, { companies })
   } catch (error) {
     return sendError(res, 'Error while fetching company list', error)
+  }
+}
+
+exports.uploadCompanyMedia = async (req, res) => {
+  try {
+    const id = req.params.id
+    const field = req.params.field
+    const allowedFields = ['stamp', 'sign']
+
+    if (!allowedFields.includes(field)) {
+      return sendError(res, 'Invalid upload field', null, 400)
+    }
+
+    const file = req?.files?.file
+    if (!file) {
+      return sendError(res, 'No file uploaded', null, 400)
+    }
+
+    const assetsRoot = path.join(process.cwd(), 'assets')
+    const targetDir = path.join(assetsRoot, 'company', id)
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true })
+    }
+
+    const extension = path.extname(file.name || '')
+    const fileName = `${field}-${Date.now()}${extension}`
+    const filePath = path.join(targetDir, fileName)
+
+    await file.mv(filePath)
+
+    const url = `/assets/company/${id}/${fileName}`
+    return sendSuccess(res, { url })
+  } catch (error) {
+    return sendError(res, 'Error while uploading media', error)
   }
 }
 

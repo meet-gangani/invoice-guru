@@ -29,6 +29,7 @@ import {
 
 import { IconPlus, IconEdit } from "@tabler/icons";
 import { Close, Search as SearchIcon } from "@mui/icons-material";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import MainCard from "ui-component/cards/MainCard";
 import EndpointService from "../../services/endpoint.service";
 import { STATUS } from "../../utils/enum";
@@ -47,7 +48,14 @@ const createObj = {
   logo: "",
   username: "",
   password: "",
-  status: ""
+  status: "",
+  owner: "",
+  contactPerson: "",
+  contactNumber: "",
+  address: "",
+  pinCode: "",
+  stamp: "",
+  sign: ""
 };
 
 const Companies = () => {
@@ -61,6 +69,8 @@ const Companies = () => {
 
   const [createCompany, setCreateCompany] = useState(createObj);
   const [editId, setEditId] = useState(null);
+  const [uploadStampLoading, setUploadStampLoading] = useState(false);
+  const [uploadSignLoading, setUploadSignLoading] = useState(false);
 
   useEffect(() => {
     fetchCompanies();
@@ -96,6 +106,30 @@ const Companies = () => {
       console.log(error.message);
     } finally {
       setOpenModel(false);
+    }
+  };
+
+  const readFileAsDataUrl = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
+  const handleUpload = async (field, file) => {
+    if (!file) return;
+    const setLoading = field === "stamp" ? setUploadStampLoading : setUploadSignLoading;
+    try {
+      setLoading(true);
+      const dataUrl = await readFileAsDataUrl(file);
+      if (typeof dataUrl === "string") {
+        setCreateCompany((prev) => ({ ...prev, [field]: dataUrl }));
+      }
+    } catch (error) {
+      console.log(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -232,6 +266,197 @@ const Companies = () => {
                     ))}
                   </Select>
                 </FormControl>
+
+                <TextField
+                    label="Owner"
+                    value={createCompany.owner || ""}
+                    onChange={(e) =>
+                        setCreateCompany((prev) => ({
+                          ...prev,
+                          owner: e.target.value
+                        }))
+                    }
+                />
+
+                <TextField
+                    label="Contact Person"
+                    value={createCompany.contactPerson || ""}
+                    onChange={(e) =>
+                        setCreateCompany((prev) => ({
+                          ...prev,
+                          contactPerson: e.target.value
+                        }))
+                    }
+                />
+
+                <TextField
+                    label="Contact Number"
+                    value={createCompany.contactNumber || ""}
+                    onChange={(e) =>
+                        setCreateCompany((prev) => ({
+                          ...prev,
+                          contactNumber: e.target.value
+                        }))
+                    }
+                />
+
+                <TextField
+                    label="Address"
+                    multiline
+                    rows={2}
+                    value={createCompany.address || ""}
+                    onChange={(e) =>
+                        setCreateCompany((prev) => ({
+                          ...prev,
+                          address: e.target.value
+                        }))
+                    }
+                />
+
+                <TextField
+                    label="Pin Code"
+                    value={createCompany.pinCode || ""}
+                    onChange={(e) =>
+                        setCreateCompany((prev) => ({
+                          ...prev,
+                          pinCode: e.target.value
+                        }))
+                    }
+                />
+
+                <Box
+                  sx={{
+                    borderRadius: 2,
+                    height: 130,
+                    border: "2px dashed #c7d2fe",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#64748b",
+                    backgroundColor: "#f8fafc",
+                    transition: "border-color 0.2s, box-shadow 0.2s, background-color 0.2s",
+                    cursor: editId ? "pointer" : "default",
+                    "&:hover": editId
+                      ? {
+                          borderColor: "#7c9cff",
+                          boxShadow: "0 0 0 3px rgba(124, 156, 255, 0.15)",
+                          backgroundColor: "#f5f8ff"
+                        }
+                      : {}
+                  }}
+                  onClick={() => {
+                    const input = document.getElementById("stamp-upload-list");
+                    input?.click();
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    handleUpload("stamp", e.dataTransfer.files?.[0]);
+                  }}
+                >
+                  <input
+                    accept="image/png, image/jpeg, image/jpg, image/webp"
+                    style={{ display: "none" }}
+                    id="stamp-upload-list"
+                    multiple={false}
+                    type="file"
+                    disabled={false}
+                    onChange={(event) => handleUpload("stamp", event.target.files?.[0])}
+                  />
+                  {createCompany.stamp ? (
+                    <Box sx={{ width: "100%", height: "100%", p: 1 }}>
+                      <Box
+                        component="img"
+                        src={createCompany.stamp}
+                        alt="stamp preview"
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                          borderRadius: 1,
+                          backgroundColor: "white"
+                        }}
+                      />
+                    </Box>
+                  ) : (
+                    <Box sx={{ textAlign: "center", px: 2 }}>
+                      <CloudUploadIcon sx={{ fontSize: 28, color: "#94a3b8", mb: 0.5 }} />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#475569" }}>
+                        {uploadStampLoading ? "Uploading..." : "Drag & drop a file here"}
+                      </Typography>
+                      <Typography variant="caption" sx={{ display: "block", color: "#94a3b8" }}>
+                        or click to browse (PNG, JPG, WEBP)
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+
+                <Box
+                  sx={{
+                    borderRadius: 2,
+                    height: 130,
+                    border: "2px dashed #c7d2fe",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#64748b",
+                    backgroundColor: "#f8fafc",
+                    transition: "border-color 0.2s, box-shadow 0.2s, background-color 0.2s",
+                    cursor: editId ? "pointer" : "default",
+                    "&:hover": editId
+                      ? {
+                          borderColor: "#7c9cff",
+                          boxShadow: "0 0 0 3px rgba(124, 156, 255, 0.15)",
+                          backgroundColor: "#f5f8ff"
+                        }
+                      : {}
+                  }}
+                  onClick={() => {
+                    const input = document.getElementById("sign-upload-list");
+                    input?.click();
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    handleUpload("sign", e.dataTransfer.files?.[0]);
+                  }}
+                >
+                  <input
+                    accept="image/png, image/jpeg, image/jpg, image/webp"
+                    style={{ display: "none" }}
+                    id="sign-upload-list"
+                    multiple={false}
+                    type="file"
+                    disabled={false}
+                    onChange={(event) => handleUpload("sign", event.target.files?.[0])}
+                  />
+                  {createCompany.sign ? (
+                    <Box sx={{ width: "100%", height: "100%", p: 1 }}>
+                      <Box
+                        component="img"
+                        src={createCompany.sign}
+                        alt="sign preview"
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                          borderRadius: 1,
+                          backgroundColor: "white"
+                        }}
+                      />
+                    </Box>
+                  ) : (
+                    <Box sx={{ textAlign: "center", px: 2 }}>
+                      <CloudUploadIcon sx={{ fontSize: 28, color: "#94a3b8", mb: 0.5 }} />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#475569" }}>
+                        {uploadSignLoading ? "Uploading..." : "Drag & drop a file here"}
+                      </Typography>
+                      <Typography variant="caption" sx={{ display: "block", color: "#94a3b8" }}>
+                        or click to browse (PNG, JPG, WEBP)
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
 
                 <Button
                     type="submit"

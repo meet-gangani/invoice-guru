@@ -20,6 +20,8 @@ const Company = () => {
   const [loading, setLoading] = useState(true)
   const [uploadZipLoading, setUploadZipLoading] = useState(false)
   const [uploadThumbnailLoading, setUploadThumbnailLoading] = useState(false)
+  const [uploadStampLoading, setUploadStampLoading] = useState(false)
+  const [uploadSignLoading, setUploadSignLoading] = useState(false)
   const [game, setGame] = useState({
     gameName: '',
     description: '',
@@ -29,6 +31,13 @@ const Company = () => {
     technology: '',
     platform: '',
     shortDescription: '',
+    owner: '',
+    contactPerson: '',
+    contactNumber: '',
+    address: '',
+    pinCode: '',
+    stamp: '',
+    sign: '',
     categories: [],
     url: '',
     isSupportMobile: false,
@@ -159,6 +168,46 @@ const Company = () => {
     } finally {
       setUploadZipLoading(false)
     }
+  }
+
+  const readFileAsDataUrl = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = () => reject(reader.error)
+      reader.readAsDataURL(file)
+    })
+
+  const uploadCompanyImage = async (field, file) => {
+    if (!file) return
+
+    const setLoading = field === 'stamp' ? setUploadStampLoading : setUploadSignLoading
+
+    try {
+      setLoading(true)
+      const dataUrl = await readFileAsDataUrl(file)
+      if (typeof dataUrl === 'string') {
+        setGame((prev) => ({ ...prev, [field]: dataUrl }))
+        setSnackbar({
+          open: true,
+          message: `${field === 'stamp' ? 'Stamp' : 'Sign'} selected successfully!`,
+          severity: 'success'
+        })
+      }
+    } catch (error) {
+      console.log(error.message)
+      setSnackbar({
+        open: true,
+        message: `Upload failed: ${error.message}`,
+        severity: 'error'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleClearImage = (field) => {
+    setGame((prev) => ({ ...prev, [field]: '' }))
   }
 
   // Add this snackbar handling function
@@ -382,6 +431,81 @@ const Company = () => {
 
             <Paper sx={{ p: 2, mb: 3, borderColor: "#eee" }} elevation={0} variant="outlined">
               <Typography variant="subtitle1" fontWeight="500" gutterBottom>
+                Owner & Contact (Optional)
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    disabled={!isUpdateMode}
+                    variant="outlined"
+                    type="text"
+                    label="Owner"
+                    placeholder="Owner"
+                    value={game?.owner || ''}
+                    onChange={(e) =>
+                      setGame({ ...game, owner: e.target.value })
+                    }
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    disabled={!isUpdateMode}
+                    variant="outlined"
+                    type="text"
+                    label="Contact Person"
+                    placeholder="Contact Person"
+                    value={game?.contactPerson || ''}
+                    onChange={(e) =>
+                      setGame({ ...game, contactPerson: e.target.value })
+                    }
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    disabled={!isUpdateMode}
+                    variant="outlined"
+                    type="tel"
+                    label="Contact Number"
+                    placeholder="Contact Number"
+                    value={game?.contactNumber || ''}
+                    onChange={(e) =>
+                      setGame({ ...game, contactNumber: e.target.value })
+                    }
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    disabled={!isUpdateMode}
+                    variant="outlined"
+                    type="text"
+                    label="Pin Code"
+                    placeholder="Pin Code"
+                    value={game?.pinCode || ''}
+                    onChange={(e) =>
+                      setGame({ ...game, pinCode: e.target.value })
+                    }
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    disabled={!isUpdateMode}
+                    variant="outlined"
+                    type="text"
+                    label="Address"
+                    placeholder="Address"
+                    multiline
+                    rows={2}
+                    value={game?.address || ''}
+                    onChange={(e) =>
+                      setGame({ ...game, address: e.target.value })
+                    }
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+
+            <Paper sx={{ p: 2, mb: 3, borderColor: "#eee" }} elevation={0} variant="outlined">
+              <Typography variant="subtitle1" fontWeight="500" gutterBottom>
                 Detailed Description
               </Typography>
               <CKEditor
@@ -408,6 +532,261 @@ const Company = () => {
                   setGame({ ...game, description: data })
                 }}
               />
+            </Paper>
+
+            <Paper sx={{ p: 2, mb: 3, borderColor: "#eee" }} elevation={0} variant="outlined">
+              <Typography variant="subtitle1" fontWeight="500" gutterBottom>
+                Stamp & Signature (Optional)
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Stamp
+                  </Typography>
+                  <Box
+                    sx={{
+                      borderRadius: 2,
+                      height: 180,
+                      border: '2px dashed #c7d2fe',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#64748b',
+                      backgroundColor: '#f8fafc',
+                      transition: 'border-color 0.2s, box-shadow 0.2s, background-color 0.2s',
+                      cursor: isUpdateMode ? 'pointer' : 'default',
+                      '&:hover': isUpdateMode
+                        ? {
+                            borderColor: '#7c9cff',
+                            boxShadow: '0 0 0 3px rgba(124, 156, 255, 0.15)',
+                            backgroundColor: '#f5f8ff'
+                          }
+                        : {}
+                    }}
+                    onClick={() => {
+                      if (!isUpdateMode) return
+                      const input = document.getElementById('stamp-upload')
+                      input?.click()
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      if (!isUpdateMode) return
+                      uploadCompanyImage('stamp', e.dataTransfer.files?.[0])
+                    }}
+                  >
+                    {game?.stamp ? (
+                      <img
+                        src={game.stamp}
+                        style={{
+                          borderRadius: 4,
+                          width: '100%',
+                          height: 180,
+                          backgroundColor: 'white',
+                          objectFit: 'contain'
+                        }}
+                        alt="stamp"
+                      />
+                    ) : (
+                      <Box sx={{ textAlign: 'center', px: 2 }}>
+                        <CloudUploadIcon sx={{ fontSize: 28, color: '#94a3b8', mb: 0.5 }} />
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#475569' }}>
+                          Drag & drop a file here
+                        </Typography>
+                        <Typography variant="caption" sx={{ display: 'block', color: '#94a3b8' }}>
+                          or click to browse (PNG, JPG, WEBP)
+                        </Typography>
+                        <Button
+                          variant="contained"
+                          disableElevation
+                          disabled={!isUpdateMode}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            if (!isUpdateMode) return
+                            const input = document.getElementById('stamp-upload')
+                            input?.click()
+                          }}
+                          sx={{
+                            mt: 1.5,
+                            px: 3,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            backgroundColor: '#e5e7eb',
+                            color: '#94a3b8',
+                            '&:hover': { backgroundColor: '#dfe3e8' }
+                          }}
+                        >
+                          Upload Document
+                        </Button>
+                      </Box>
+                    )}
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                    <input
+                      accept="image/png, image/jpeg, image/jpg, image/webp"
+                      style={{ display: 'none' }}
+                      disabled={!isUpdateMode}
+                      id="stamp-upload"
+                      multiple={false}
+                      type="file"
+                      onChange={(event) => uploadCompanyImage('stamp', event.target.files?.[0])}
+                    />
+                    <label htmlFor="stamp-upload" style={{ width: '100%' }}>
+                      <LoadingButton
+                        loading={uploadStampLoading}
+                        variant="contained"
+                        disabled={!isUpdateMode}
+                        component="span"
+                        fullWidth
+                        sx={{
+                          color: 'white',
+                          backgroundColor: '#F7BE15',
+                          ':hover': { backgroundColor: '#e3ab0c' }
+                        }}
+                        startIcon={<CloudUploadIcon />}
+                      >
+                        {game?.stamp ? 'Change' : 'Upload'} Stamp
+                      </LoadingButton>
+                    </label>
+                    {game?.stamp && (
+                      <Button
+                        variant="outlined"
+                        color="inherit"
+                        disabled={!isUpdateMode}
+                        onClick={() => handleClearImage('stamp')}
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </Box>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Sign
+                  </Typography>
+                  <Box
+                    sx={{
+                      borderRadius: 2,
+                      height: 180,
+                      border: '2px dashed #c7d2fe',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#64748b',
+                      backgroundColor: '#f8fafc',
+                      transition: 'border-color 0.2s, box-shadow 0.2s, background-color 0.2s',
+                      cursor: isUpdateMode ? 'pointer' : 'default',
+                      '&:hover': isUpdateMode
+                        ? {
+                            borderColor: '#7c9cff',
+                            boxShadow: '0 0 0 3px rgba(124, 156, 255, 0.15)',
+                            backgroundColor: '#f5f8ff'
+                          }
+                        : {}
+                    }}
+                    onClick={() => {
+                      if (!isUpdateMode) return
+                      const input = document.getElementById('sign-upload')
+                      input?.click()
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      if (!isUpdateMode) return
+                      uploadCompanyImage('sign', e.dataTransfer.files?.[0])
+                    }}
+                  >
+                    {game?.sign ? (
+                      <img
+                        src={game.sign}
+                        style={{
+                          borderRadius: 4,
+                          width: '100%',
+                          height: 180,
+                          backgroundColor: 'white',
+                          objectFit: 'contain'
+                        }}
+                        alt="sign"
+                      />
+                    ) : (
+                      <Box sx={{ textAlign: 'center', px: 2 }}>
+                        <CloudUploadIcon sx={{ fontSize: 28, color: '#94a3b8', mb: 0.5 }} />
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#475569' }}>
+                          Drag & drop a file here
+                        </Typography>
+                        <Typography variant="caption" sx={{ display: 'block', color: '#94a3b8' }}>
+                          or click to browse (PNG, JPG, WEBP)
+                        </Typography>
+                        <Button
+                          variant="contained"
+                          disableElevation
+                          disabled={!isUpdateMode}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            if (!isUpdateMode) return
+                            const input = document.getElementById('sign-upload')
+                            input?.click()
+                          }}
+                          sx={{
+                            mt: 1.5,
+                            px: 3,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            backgroundColor: '#e5e7eb',
+                            color: '#94a3b8',
+                            '&:hover': { backgroundColor: '#dfe3e8' }
+                          }}
+                        >
+                          Upload Document
+                        </Button>
+                      </Box>
+                    )}
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                    <input
+                      accept="image/png, image/jpeg, image/jpg, image/webp"
+                      style={{ display: 'none' }}
+                      disabled={!isUpdateMode}
+                      id="sign-upload"
+                      multiple={false}
+                      type="file"
+                      onChange={(event) => uploadCompanyImage('sign', event.target.files?.[0])}
+                    />
+                    <label htmlFor="sign-upload" style={{ width: '100%' }}>
+                      <LoadingButton
+                        loading={uploadSignLoading}
+                        variant="contained"
+                        disabled={!isUpdateMode}
+                        component="span"
+                        fullWidth
+                        sx={{
+                          color: 'white',
+                          backgroundColor: '#F7BE15',
+                          ':hover': { backgroundColor: '#e3ab0c' }
+                        }}
+                        startIcon={<CloudUploadIcon />}
+                      >
+                        {game?.sign ? 'Change' : 'Upload'} Sign
+                      </LoadingButton>
+                    </label>
+                    {game?.sign && (
+                      <Button
+                        variant="outlined"
+                        color="inherit"
+                        disabled={!isUpdateMode}
+                        onClick={() => handleClearImage('sign')}
+                      >
+                        Clear
+                      </Button>
+                    )}
+                  </Box>
+                </Grid>
+              </Grid>
             </Paper>
 
             <Paper sx={{ p: 2, mb: 3, borderColor: "#eee" }} elevation={0} variant="outlined">

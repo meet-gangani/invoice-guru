@@ -827,7 +827,7 @@ export default function PerformaInvoiceDocument() {
                           <TextField label="Description" value={row.description} onChange={updateItemRow(index, 'description')} fullWidth multiline/>
                         </Grid>
                         <Grid item xs={6}>
-                          <TextField label="Qty" value={row.qty} onChange={updateItemRow(index, 'qty')} fullWidth/>
+                          <TextField label="Qty" type='number' value={row.qty} onChange={updateItemRow(index, 'qty')} fullWidth/>
                         </Grid>
                         <Grid item xs={6}>
                           <TextField label="Amount" value={row.amount} onChange={updateItemRow(index, 'amount')} fullWidth inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}/>

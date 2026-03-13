@@ -150,7 +150,7 @@ export default function LetterheadDocument() {
 
   return (
     <MainCard
-      title="Letterhead Designer"
+      title="Letter head Designer"
       secondary={(
         <Button variant="contained" sx={{ backgroundColor: theme.palette.secondary.main }} onClick={handleSave} disabled={isSaving}>
           {isSaving ? 'Saving...' : 'Save'}

@@ -57,6 +57,21 @@ export default class EndpointService {
     }
   }
 
+  static async uploadCompanyMedia(file, companyId, field) {
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const response = await axiosInstance.post(
+        `/v1/company/${companyId}/upload/${field}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      )
+      return response.data
+    } catch (error) {
+      console.log(error.message)
+    }
+  }
+
   // CUSTOMER
 
   static async getCustomerList() {
