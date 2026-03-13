@@ -41,8 +41,9 @@ const styles = StyleSheet.create({
     borderBottom: '1pt solid #111'
   },
   itemsRow: { flexDirection: 'row', borderBottom: '1pt solid #bbb', minHeight: 18, alignItems: 'stretch' },
-  colDesc: { width: '70%', padding: 4, borderRight: '1pt solid #111' },
+  colDesc: { width: '52%', padding: 4, borderRight: '1pt solid #111' },
   colQty: { width: '10%', padding: 4, borderRight: '1pt solid #111', textAlign: 'center' },
+  colRate: { width: '18%', padding: 4, borderRight: '1pt solid #111', textAlign: 'right' },
   colAmt: { width: '20%', padding: 4, textAlign: 'right' },
   notes: { marginTop: 6, color: '#c00', fontSize: 7.5 },
   gstRow: { marginTop: 6, fontWeight: 'bold' },
@@ -67,12 +68,48 @@ const PerformaPdf = ({ data }) => {
     const parsed = Number.parseFloat(cleaned)
     return Number.isFinite(parsed) ? parsed : 0
   }
+  const parseQty = (value) => {
+    const cleaned = String(value || '').replace(/[^0-9.]/g, '')
+    const parsed = Number.parseFloat(cleaned)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+
   const formatCurrency = (value) => `INR ${value.toFixed(2)}`
-  const subtotal = data.itemRows.reduce((sum, row) => sum + parseAmount(row.amount), 0)
+  const subtotal = data.itemRows.reduce((sum, row) => sum + parseQty(row.qty) * parseAmount(row.amount), 0)
   const freight = parseAmount(data.totals.find((t) => t.label === 'Freight')?.value)
   const packing = parseAmount(data.totals.find((t) => t.label === 'Packing')?.value)
   const insurance = parseAmount(data.totals.find((t) => t.label === 'Insurance')?.value)
   const total = subtotal + freight + packing + insurance
+  const numberToWords = (value) => {
+    const num = Math.floor(Number(value) || 0)
+    if (num === 0) return 'ZERO'
+    const ones = [ '', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 'ELEVEN', 'TWELVE', 'THIRTEEN', 'FOURTEEN', 'FIFTEEN', 'SIXTEEN', 'SEVENTEEN', 'EIGHTEEN', 'NINETEEN' ]
+    const tens = [ '', '', 'TWENTY', 'THIRTY', 'FORTY', 'FIFTY', 'SIXTY', 'SEVENTY', 'EIGHTY', 'NINETY' ]
+    const twoDigits = (n) => {
+      if (n < 20) return ones[n]
+      const t = Math.floor(n / 10)
+      const o = n % 10
+      return `${tens[t]}${o ? ' ' + ones[o] : ''}`
+    }
+    const threeDigits = (n) => {
+      const h = Math.floor(n / 100)
+      const r = n % 100
+      if (h && r) return `${ones[h]} HUNDRED ${twoDigits(r)}`
+      if (h) return `${ones[h]} HUNDRED`
+      return twoDigits(r)
+    }
+    const parts = []
+    const crore = Math.floor(num / 10000000)
+    const lakh = Math.floor((num / 100000) % 100)
+    const thousand = Math.floor((num / 1000) % 100)
+    const hundred = num % 1000
+    if (crore) parts.push(`${threeDigits(crore)} CRORE`)
+    if (lakh) parts.push(`${threeDigits(lakh)} LAKH`)
+    if (thousand) parts.push(`${threeDigits(thousand)} THOUSAND`)
+    if (hundred) parts.push(threeDigits(hundred))
+    return parts.join(' ')
+  }
+  const amountInWords = `${numberToWords(total)} ONLY`
   const formatDate = (value) => {
     if (!value) return ''
     const raw = String(value).split('T')[0]
@@ -159,9 +196,12 @@ const PerformaPdf = ({ data }) => {
             <View style={styles.itemsHeader}>
               <Text style={[ styles.colDesc, { color: '#fff', fontWeight: 'bold' } ]}>DESCRIPTION</Text>
               <Text style={[ styles.colQty, { color: '#fff', fontWeight: 'bold' } ]}>QTY</Text>
+              <Text style={[ styles.colRate, { color: '#fff', fontWeight: 'bold' } ]}>AMOUNT</Text>
               <Text style={[ styles.colAmt, { color: '#fff', fontWeight: 'bold' } ]}>TOTAL AMOUNT</Text>
             </View>
-            {data.itemRows.map((row, index) => (
+            {data.itemRows.map((row, index) => {
+              const lineTotal = parseQty(row.qty) * parseAmount(row.amount)
+              return (
                 <View
                     key={`item-${index}`}
                     style={[
@@ -171,9 +211,11 @@ const PerformaPdf = ({ data }) => {
                 >
                   <Text style={styles.colDesc}>{row.description || ''}</Text>
                   <Text style={styles.colQty}>{wrapUnbroken(row.qty || '')}</Text>
-                  <Text style={styles.colAmt}>{wrapUnbroken(row.amount || '')}</Text>
+                  <Text style={styles.colRate}>{row.amount || ''}</Text>
+                  <Text style={styles.colAmt}>{lineTotal ? formatCurrency(lineTotal) : ''}</Text>
                 </View>
-            ))}
+              )
+            })}
           </View>
 
           {data.notes.visible ? (
@@ -187,7 +229,7 @@ const PerformaPdf = ({ data }) => {
           {data.gstin.visible ? <Text style={styles.gstRow}>GST IN NO: {data.gstin.value || '__________'}</Text> : null}
 
           {data.word.visible ? (
-              <Text style={styles.wordRow}>Word: {data.word.value || '__________'}</Text>
+              <Text style={styles.wordRow}>Word: {data.word.value || amountInWords}</Text>
           ) : null}
 
           <View style={styles.footerRow}>
@@ -346,8 +388,14 @@ export default function PerformaInvoiceDocument() {
     return fixed.replace(/\.?0+$/, '')
   }
 
+  const parseQty = (value) => {
+    const cleaned = String(value || '').replace(/[^0-9.]/g, '')
+    const parsed = Number.parseFloat(cleaned)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+
   const subtotal = useMemo(
-      () => data.itemRows.reduce((sum, row) => sum + parseAmount(row.amount), 0),
+      () => data.itemRows.reduce((sum, row) => sum + parseQty(row.qty) * parseAmount(row.amount), 0),
       [ data.itemRows ]
   )
   const freight = useMemo(
@@ -764,7 +812,9 @@ export default function PerformaInvoiceDocument() {
                 <Divider/>
 
                 <SectionTitle>Items</SectionTitle>
-                {data.itemRows.map((row, index) => (
+                {data.itemRows.map((row, index) => {
+                  // const lineTotal = parseQty(row.qty) * parseAmount(row.amount)
+                  return (
                     <Box key={`item-${index}`}>
                       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
                         <Typography variant="subtitle2">Row {index + 1}</Typography>
@@ -772,7 +822,7 @@ export default function PerformaInvoiceDocument() {
                           <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
                         </IconButton>
                       </Stack>
-                      <Grid container spacing={1}>
+                      <Grid container spacing={1.5}>
                         <Grid item xs={12}>
                           <TextField label="Description" value={row.description} onChange={updateItemRow(index, 'description')} fullWidth multiline/>
                         </Grid>
@@ -782,9 +832,13 @@ export default function PerformaInvoiceDocument() {
                         <Grid item xs={6}>
                           <TextField label="Amount" value={row.amount} onChange={updateItemRow(index, 'amount')} fullWidth inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}/>
                         </Grid>
+                        {/* <Grid item xs={6}>
+                          <TextField label="Total Amount" value={formatDisplay(lineTotal)} fullWidth InputProps={{ readOnly: true }}/>
+                        </Grid> */}
                       </Grid>
                     </Box>
-                ))}
+                  )
+                })}
                 <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={addItemRow}>
                   Add Item Row
                 </Button>
