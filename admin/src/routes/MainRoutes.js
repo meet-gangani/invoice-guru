@@ -115,11 +115,11 @@ const MainRoutes = {
       element: <EvdDeclarationDocument/>
     },
     {
-      path: 'latter-head/:id',
+      path: 'letter-head/:id',
       element: <Letterhead/>
     },
     {
-      path: 'latter-head',
+      path: 'letter-head',
       element: <Letterhead/>
     }
   ]

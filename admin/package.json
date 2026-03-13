@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@ckeditor/ckeditor5-build-classic": "^47.6.1",
+    "@ckeditor/ckeditor5-build-classic": "^44.3.0",
     "@ckeditor/ckeditor5-react": "^11.0.1",
     "@emotion/cache": "^11.9.3",
     "@emotion/react": "^11.9.3",

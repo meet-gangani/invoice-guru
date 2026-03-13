@@ -72,10 +72,10 @@ const pages = {
       breadcrumbs: false
     },
     {
-      id: 'latter-head',
-      title: 'Latter Head',
+      id: 'letter-head',
+      title: 'Letter Head',
       type: 'item',
-      url: '/latter-head',
+      url: '/letter-head',
       icon: IconBuildingStore,
       breadcrumbs: false
     }

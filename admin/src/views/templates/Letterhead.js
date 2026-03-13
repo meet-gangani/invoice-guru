@@ -138,10 +138,10 @@ export default function LetterheadDocument() {
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      const payload = { ...formData, settings, type: 'letterhead', _id: invoiceId };
+      const payload = { ...formData, settings, type: 'letter-head', _id: invoiceId };
       const response = await axiosInstance.post('/v1/invoice/save', payload);
       if (response.data?._id && !invoiceId) {
-        navigate(`/letterhead/${response.data._id}`, { replace: true });
+        navigate(`/letter-head/${response.data._id}`, { replace: true });
       }
     } finally {
       setIsSaving(false);

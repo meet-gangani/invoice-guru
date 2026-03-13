@@ -227,8 +227,8 @@ export default function ExportValueDeclaration() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await axiosInstance.post('/v1/invoice/save', { _id: invoiceId, type: 'export_declaration', data });
-      if (res.data?._id && !invoiceId) navigate(`/export-declaration/${res.data._id}`, { replace: true });
+      const res = await axiosInstance.post('/v1/invoice/save', { _id: invoiceId, type: 'evd', data });
+      if (res.data?._id && !invoiceId) navigate(`/evd/${res.data._id}`, { replace: true });
     } finally { setIsSaving(false); }
   };
 
