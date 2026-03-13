@@ -16,15 +16,15 @@ const userSchema = new Schema({
   ...defaultSchemaOptions
 })
 
-userSchema.methods.generateAuthToken = function() {
+userSchema.methods.generateAuthToken = function () {
   let token
   token = jwt.sign(
-      {
-        _id: this._id,
-        isAdmin: true
-      },
-      constants.security.TOKEN_SECRET,
-      { expiresIn: '7d' }
+    {
+      _id: this._id,
+      isAdmin: true
+    },
+    constants.security.TOKEN_SECRET,
+    { expiresIn: '28d' }
   )
   return token
 }

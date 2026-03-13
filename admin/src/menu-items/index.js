@@ -1,4 +1,4 @@
-import { IconFileInvoice, IconDashboard, IconTemplate, IconBuilding, IconBuildingStore, IconPackages, IconChecklist, IconBuildingBank, IconUsers } from '@tabler/icons'
+import { IconFileInvoice, IconDashboard, IconTemplate, IconBuilding, IconPackages, IconChecklist, IconBuildingBank, IconUsers, IconNotes } from '@tabler/icons'
 
 const QuickView = {
   id: 'quickView',
@@ -76,7 +76,7 @@ const pages = {
       title: 'Letter Head',
       type: 'item',
       url: '/letter-head',
-      icon: IconBuildingStore,
+      icon: IconNotes,
       breadcrumbs: false
     }
   ]

@@ -49,7 +49,7 @@ const authentication = async (req, res, next) => {
 
     next()
   } catch (error) {
-    return sendError(res, 'Internal Server Error', error, 500)
+    return sendError(res, 'Internal Server Error', error, 401)
   }
 }
 

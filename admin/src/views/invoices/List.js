@@ -1,17 +1,22 @@
 import React, { useEffect, useState } from 'react'
-import { Box, CardContent, Chip, Grid, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Typography } from '@mui/material'
+import { Box, CardContent, Grid, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Typography } from '@mui/material'
 import MainCard from 'ui-component/cards/MainCard'
 import EndpointService from '../../services/endpoint.service'
-import { IconEye } from '@tabler/icons'
+import { IconBuildingBank, IconChecklist, IconCircleCheck, IconFileInvoice, IconNotes, IconPackages, IconTemplate } from '@tabler/icons'
 import { useTheme } from '@mui/material/styles'
 import { Link } from 'react-router-dom'
 import { DateTime } from 'luxon'
 
 const headCells = [
-  { id: 'index', label: 'No' },
-  { id: 'type', label: 'Type' },
-  { id: 'Date', label: 'Generated On' },
-  { id: 'View', label: 'View' }
+  { id: 'index', label: 'No', align: 'center' },
+  { id: 'customer', label: 'Customer', align: 'center' },
+  { id: 'performa', label: 'Performa', align: 'center' },
+  { id: 'commercial', label: 'Commercial', align: 'center' },
+  { id: 'packaging', label: 'Packaging', align: 'center' },
+  { id: 'scomet', label: 'Scomet', align: 'center' },
+  { id: 'evd', label: 'Evd', align: 'center' },
+  { id: 'letterHead', label: 'Letter Head', align: 'center' },
+  { id: 'Date', label: 'Date', align: 'left' }
 ]
 
 const Invoices = () => {
@@ -56,7 +61,7 @@ const Invoices = () => {
             <TableHead>
               <TableRow>
                 {headCells.map((cell) => (
-                    <TableCell key={cell.id}>{cell.label}</TableCell>
+                    <TableCell align={cell.align} key={cell.id}>{cell.label}</TableCell>
                 ))}
               </TableRow>
             </TableHead>
@@ -68,14 +73,73 @@ const Invoices = () => {
                 }
 
                 return <TableRow key={invoice._id}>
-                  <TableCell>{idx + 1}</TableCell>
-                  <TableCell>
-                    <Chip
-                        label={typeConfig.label}
-                        color={typeConfig.color}
-                        size="small"
-                    />
+                  <TableCell align="center">{idx + 1}</TableCell>
+                  <TableCell align="center">
+                    Customer {idx + 1}
+                    {/*<Chip*/}
+                    {/*    label={typeConfig.label}*/}
+                    {/*    color={typeConfig.color}*/}
+                    {/*    size="small"*/}
+                    {/*/>*/}
                   </TableCell>
+
+                  <TableCell align="center" sx={{
+                    backgroundColor : theme.palette.success.light
+                  }}>
+                    <Link to={`/${invoice.type}/${invoice._id}`}>
+                      {
+                        invoice.performaApproved ?
+                            <IconCircleCheck fontSize="inherit" color={theme.palette.success.dark}/> :
+                            <IconBuildingBank fontSize="inherit" color={theme.palette.secondary.dark}/>
+                      }
+                    </Link>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Link to={`/${invoice.type}/${invoice._id}`}>
+                      {
+                        invoice.commercialApproved ?
+                            <IconCircleCheck fontSize="inherit" color={theme.palette.success.dark}/> :
+                            <IconFileInvoice fontSize="inherit" color={theme.palette.secondary.dark}/>
+                      }
+                    </Link>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Link to={`/${invoice.type}/${invoice._id}`}>
+                      {
+                        invoice.packagingApproved ?
+                            <IconCircleCheck fontSize="inherit" color={theme.palette.success.dark}/> :
+                            <IconPackages fontSize="inherit" color={theme.palette.secondary.dark}/>
+                      }
+                    </Link>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Link to={`/${invoice.type}/${invoice._id}`}>
+                      {
+                        invoice.scometApproved ?
+                            <IconCircleCheck fontSize="inherit" color={theme.palette.success.dark}/> :
+                            <IconTemplate fontSize="inherit" color={theme.palette.secondary.dark}/>
+                      }
+                    </Link>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Link to={`/${invoice.type}/${invoice._id}`}>
+                      {
+                        invoice.evdApproved ?
+                            <IconCircleCheck fontSize="inherit" color={theme.palette.success.dark}/> :
+                            <IconChecklist fontSize="inherit" color={theme.palette.secondary.dark}/>
+                      }
+                    </Link>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Link to={`/${invoice.type}/${invoice._id}`}>
+                      {
+                        invoice.letterHeadApproved ?
+                            <IconCircleCheck fontSize="inherit" color={theme.palette.success.dark}/> :
+                            <IconNotes fontSize="inherit" color={theme.palette.secondary.dark}/>
+                      }
+                    </Link>
+                  </TableCell>
+
                   <TableCell>
                     <Stack direction="column" spacing={0.5}>
                       {invoice?.company && (
@@ -104,8 +168,8 @@ const Invoices = () => {
                       {(() => {
                         const createdOn = Number(invoice?.createdOn || 0)
                         const date = createdOn
-                          ? DateTime.fromMillis(createdOn)
-                          : DateTime.fromISO(invoice?.date || '')
+                            ? DateTime.fromMillis(createdOn)
+                            : DateTime.fromISO(invoice?.date || '')
                         return date.isValid ? (
                             <Typography variant="body3" color="text.secondary">
                               {date.toFormat('dd MMMM yyyy hh:mm a')}
@@ -114,11 +178,6 @@ const Invoices = () => {
                       })()}
 
                     </Stack>
-                  </TableCell>
-                  <TableCell>
-                    <Link to={`/${invoice.type}/${invoice._id}`}>
-                      <IconEye fontSize="inherit" color={theme.palette.secondary.dark}/>
-                    </Link>
                   </TableCell>
                 </TableRow>
               })}
