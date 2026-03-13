@@ -1,4 +1,4 @@
-import { IconFileInvoice, IconDashboard, IconTemplate, IconBuilding, IconTruckDelivery, IconBuildingStore, IconPackages, IconChecklist, IconBuildingBank, IconUsers } from '@tabler/icons'
+import { IconFileInvoice, IconDashboard, IconTemplate, IconBuilding, IconBuildingStore, IconPackages, IconChecklist, IconBuildingBank, IconUsers } from '@tabler/icons'
 
 const QuickView = {
   id: 'quickView',
@@ -68,7 +68,7 @@ const pages = {
       title: 'EVD Declaration',
       type: 'item',
       url: '/evd',
-      icon: IconTemplate,
+      icon: IconChecklist,
       breadcrumbs: false
     },
     {
@@ -76,7 +76,7 @@ const pages = {
       title: 'Latter Head',
       type: 'item',
       url: '/latter-head',
-      icon: IconTemplate,
+      icon: IconBuildingStore,
       breadcrumbs: false
     }
   ]
