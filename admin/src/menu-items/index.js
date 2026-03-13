@@ -32,22 +32,6 @@ const pages = {
   type: 'group',
   children: [
     {
-      id: 'packaging',
-      title: 'Packaging',
-      type: 'item',
-      url: '/packing',
-      icon: IconPackages,
-      breadcrumbs: false
-    },
-    {
-      id: 'delivery',
-      title: 'Delivery',
-      type: 'item',
-      url: '/delivery',
-      icon: IconFileInvoice,
-      breadcrumbs: false
-    },
-    {
       id: 'performa',
       title: 'Performa',
       type: 'item',
@@ -56,12 +40,43 @@ const pages = {
       breadcrumbs: false
     },
     {
+      id: 'delivery',
+      title: 'Commercial',
+      type: 'item',
+      url: '/delivery',
+      icon: IconFileInvoice,
+      breadcrumbs: false
+    },
+    {
+      id: 'packaging',
+      title: 'Packaging',
+      type: 'item',
+      url: '/packing',
+      icon: IconPackages,
+      breadcrumbs: false
+    },
+    {
       id: 'scomet',
       title: 'Scomet Declaration',
       type: 'item',
       url: '/scomet',
       icon: IconTemplate,
-      // icon: IconChecklist,
+      breadcrumbs: false
+    },
+    {
+      id: 'evd',
+      title: 'EVD Declaration',
+      type: 'item',
+      url: '/evd',
+      icon: IconTemplate,
+      breadcrumbs: false
+    },
+    {
+      id: 'latter-head',
+      title: 'Latter Head',
+      type: 'item',
+      url: '/latter-head',
+      icon: IconTemplate,
       breadcrumbs: false
     }
   ]

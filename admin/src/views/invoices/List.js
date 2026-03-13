@@ -39,7 +39,8 @@ const Invoices = () => {
     scomet: { label: 'SCOMET', color: 'secondary' },
     delivery: { label: 'DELIVERY', color: 'success' },
     packing: { label: 'PACKING', color: 'warning' },
-    performa: { label: 'PERFORMA', color: 'primary' }
+    performa: { label: 'PERFORMA', color: 'primary' },
+    evd: { label: 'EVD', color: 'info' }
   }
 
   return (
@@ -101,7 +102,10 @@ const Invoices = () => {
                       )}
 
                       {(() => {
-                        const date = DateTime.fromISO(invoice?.date || '')
+                        const createdOn = Number(invoice?.createdOn || 0)
+                        const date = createdOn
+                          ? DateTime.fromMillis(createdOn)
+                          : DateTime.fromISO(invoice?.date || '')
                         return date.isValid ? (
                             <Typography variant="body3" color="text.secondary">
                               {date.toFormat('dd MMMM yyyy hh:mm a')}

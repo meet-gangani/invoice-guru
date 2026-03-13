@@ -17,6 +17,8 @@ const ScometDocument = Loadable(lazy(() => import('views/templates/ScometDocumen
 const PackingListDocument = Loadable(lazy(() => import('views/templates/PackingListDocument')))
 const PerformaInvoiceDocument = Loadable(lazy(() => import('views/templates/PerformaInvoiceDocument')))
 const PackagingDocument = Loadable(lazy(() => import('views/templates/PackagingDocument')))
+const EvdDeclarationDocument = Loadable(lazy(() => import('views/templates/EvdDeclarationDocument')))
+const Letterhead = Loadable(lazy(() => import('views/templates/Letterhead')))
 
 const RequireAdmin = ({ children }) => {
   const token = encryptStorage.getItem('token')
@@ -94,6 +96,22 @@ const MainRoutes = {
     {
       path: 'delivery',
       element: <PackagingDocument/>
+    },
+    {
+      path: 'evd/:id',
+      element: <EvdDeclarationDocument/>
+    },
+    {
+      path: 'evd',
+      element: <EvdDeclarationDocument/>
+    },
+    {
+      path: 'latter-head/:id',
+      element: <Letterhead/>
+    },
+    {
+      path: 'latter-head',
+      element: <Letterhead/>
     }
   ]
 }
