@@ -9,6 +9,7 @@ const DashboardDefault = Loadable(lazy(() => import('views/dashboard/Default')))
 
 const Companies = Loadable(lazy(() => import('views/company/List')))
 const Company = Loadable(lazy(() => import('views/company/company')))
+const Customers = Loadable(lazy(() => import('views/customers/List')))
 
 const Invoices = Loadable(lazy(() => import('views/invoices/List')))
 const Invoice = Loadable(lazy(() => import('views/invoices/invoice')))
@@ -62,6 +63,14 @@ const MainRoutes = {
       element: (
           <RequireAdmin>
             <Companies/>
+          </RequireAdmin>
+      )
+    },
+    {
+      path: 'customers',
+      element: (
+          <RequireAdmin>
+            <Customers/>
           </RequireAdmin>
       )
     },

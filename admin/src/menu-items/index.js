@@ -1,4 +1,4 @@
-import { IconFileInvoice, IconDashboard, IconTemplate, IconBuilding, IconTruckDelivery, IconBuildingStore, IconPackages, IconChecklist, IconBuildingBank } from '@tabler/icons'
+import { IconFileInvoice, IconDashboard, IconTemplate, IconBuilding, IconTruckDelivery, IconBuildingStore, IconPackages, IconChecklist, IconBuildingBank, IconUsers } from '@tabler/icons'
 
 const QuickView = {
   id: 'quickView',
@@ -92,6 +92,15 @@ const Website = {
       type: 'item',
       url: '/company',
       icon: IconBuilding,
+      breadcrumbs: false,
+      adminOnly: true
+    },
+    {
+      id: 'customers',
+      title: 'Customers',
+      type: 'item',
+      url: '/customers',
+      icon: IconUsers,
       breadcrumbs: false,
       adminOnly: true
     }

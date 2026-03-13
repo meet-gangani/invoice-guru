@@ -56,6 +56,39 @@ export default class EndpointService {
       console.log(error.message)
     }
   }
+
+  // CUSTOMER
+
+  static async getCustomerList() {
+    try {
+      const response = await axiosInstance.get('/v1/customer')
+
+      return response.data
+    } catch (error) {
+      console.log(error.message)
+      return []
+    }
+  }
+
+  static async createCustomer(data) {
+    try {
+      const response = await axiosInstance.post('/v1/customer/create', data)
+
+      return response.data
+    } catch (error) {
+      console.log(error.message)
+    }
+  }
+
+  static async updateCustomer(customerId, data) {
+    try {
+      const response = await axiosInstance.put(`/v1/customer/${customerId}`, data)
+
+      return response.data
+    } catch (error) {
+      console.log(error.message)
+    }
+  }
   // MISC
 
 }
