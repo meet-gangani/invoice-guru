@@ -45,11 +45,21 @@ exports.getInvoices = async (req, res) => {
       }
     }
 
-    const invoices = await InvoiceStore.find(filter).sort({ createdOn: -1 }).populate({
-      path: 'company',
-      model: 'company',
-      select: '_id name logo'
-    }).lean()
+    const invoices = await InvoiceStore.find(filter)
+    .sort({ createdOn: -1 })
+    .populate([
+      {
+        path: 'company',
+        model: 'company',
+        select: '_id name logo'
+      },
+      {
+        path: 'customer',
+        model: 'customer',
+        select: '_id name'
+      }
+    ])
+    .lean();
 
     return sendSuccess(res, { invoices })
   } catch (error) {

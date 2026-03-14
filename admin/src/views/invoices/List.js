@@ -14,7 +14,7 @@ const headCells = [
   { id: 'commercial', label: 'Commercial', align: 'center' },
   { id: 'packaging', label: 'Packaging', align: 'center' },
   { id: 'scomet', label: 'Scomet', align: 'center' },
-  { id: 'evd', label: 'Evd', align: 'center' },
+  { id: 'evd', label: 'EVD', align: 'center' },
   { id: 'letterHead', label: 'Letter Head', align: 'center' },
   { id: 'Date', label: 'Date', align: 'left' }
 ]
@@ -75,7 +75,7 @@ const Invoices = () => {
               return <TableRow key={invoice._id}>
                 <TableCell align="center">{idx + 1}</TableCell>
                 <TableCell align="center">
-                  Customer {idx + 1}
+                  {invoice?.customer?.name || '-'}
                   {/*<Chip*/}
                   {/*    label={typeConfig.label}*/}
                   {/*    color={typeConfig.color}*/}
