@@ -157,6 +157,9 @@ export default function LetterheadDocument() {
   const { id: invoiceId } = useParams();
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [hasSaved, setHasSaved] = useState(false);
   const [formData, setFormData] = useState(defaultData);
 
   const updateField = (field) => (event) => {
@@ -226,6 +229,7 @@ export default function LetterheadDocument() {
   };
 
   useEffect(() => {
+    setHasSaved(false);
     if (!invoiceId) return;
     let isActive = true;
     axiosInstance.get(`/v1/invoice/${invoiceId}`).then((res) => {
@@ -263,6 +267,8 @@ export default function LetterheadDocument() {
       }
 
       setFormData(merged);
+      setIsApproved(Boolean(invoice?.letterHeadApproved));
+      setHasSaved(false);
     }).catch(() => {});
     return () => { isActive = false; };
   }, [invoiceId]);
@@ -280,8 +286,27 @@ export default function LetterheadDocument() {
       if (response.data?._id && !invoiceId) {
         navigate(`/letter-head/${response.data._id}`, { replace: true });
       }
+      setHasSaved(true);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleApprovalChange = async (nextApproved) => {
+    if (!invoiceId) return;
+    try {
+      setIsApproving(true);
+      const payload = {
+        _id: invoiceId,
+        date: formData.date.value,
+        template: 'letterHead',
+        letterHead: { ...formData },
+        letterHeadApproved: nextApproved
+      };
+      const response = await axiosInstance.post('/v1/invoice/save', payload);
+      setIsApproved(Boolean(response.data?.letterHeadApproved ?? nextApproved));
+    } finally {
+      setIsApproving(false);
     }
   };
 
@@ -289,9 +314,29 @@ export default function LetterheadDocument() {
     <MainCard
       title="Letter head Designer"
       secondary={(
-        <Button variant="contained" sx={{ backgroundColor: theme.palette.secondary.main }} onClick={handleSave} disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save'}
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button variant="contained" sx={{ backgroundColor: theme.palette.secondary.main }} onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save'}
+          </Button>
+          {!isApproved ? (
+            <Button
+              variant="outlined"
+              onClick={() => handleApprovalChange(true)}
+              disabled={!invoiceId || !hasSaved || isApproving || isSaving}
+            >
+              {isApproving ? 'Confirming...' : 'Confirm'}
+            </Button>
+          ) : (
+            <Button
+              color="warning"
+              variant="outlined"
+              onClick={() => handleApprovalChange(false)}
+              disabled={isApproving || isSaving}
+            >
+              {isApproving ? 'Updating...' : 'Mark as Draft'}
+            </Button>
+          )}
+        </Stack>
       )}
     >
       <Grid container spacing={2}>

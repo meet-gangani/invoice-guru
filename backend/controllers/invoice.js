@@ -100,6 +100,14 @@ const normalizeTemplateKey = (value) => {
 }
 
 const TEMPLATE_FIELDS = [ 'performa', 'commercial', 'packaging', 'scomet', 'evd', 'letterHead' ]
+const APPROVAL_FIELD_MAP = {
+  performa: 'performaApproved',
+  commercial: 'commercialApproved',
+  packaging: 'packagingApproved',
+  scomet: 'scometApproved',
+  evd: 'evdApproved',
+  letterHead: 'letterHeadApproved'
+}
 
 exports.saveInvoice = async (req, res) => {
   try {
@@ -107,6 +115,9 @@ exports.saveInvoice = async (req, res) => {
     const explicitField = TEMPLATE_FIELDS.find((field) => Object.prototype.hasOwnProperty.call(req.body || {}, field))
     const resolvedTemplateKey = normalizeTemplateKey(type || template || templateKey || explicitField) || 'scomet'
     const payloadData = data ?? (explicitField ? req.body[explicitField] : rest)
+    const approvalField = APPROVAL_FIELD_MAP[resolvedTemplateKey]
+    const hasApprovalFlag = approvalField && Object.prototype.hasOwnProperty.call(req.body || {}, approvalField)
+    const approvalValue = hasApprovalFlag ? Boolean(req.body[approvalField]) : undefined
 
     const parseDateInput = (value) => {
       if (!value) return new Date()
@@ -133,6 +144,7 @@ exports.saveInvoice = async (req, res) => {
       invoice[resolvedTemplateKey] = payloadData
       if (rest.company) invoice.company = rest.company
       if (rest.customer) invoice.customer = rest.customer
+      if (hasApprovalFlag) invoice[approvalField] = approvalValue
       await invoice.save()
     } else {
       let payload = {
@@ -148,6 +160,10 @@ exports.saveInvoice = async (req, res) => {
 
       if (rest.customer) {
         payload.customer = rest.customer
+      }
+
+      if (hasApprovalFlag) {
+        payload[approvalField] = approvalValue
       }
 
       invoice = await InvoiceStore.create(payload)

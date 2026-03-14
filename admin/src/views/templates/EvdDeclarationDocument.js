@@ -213,14 +213,20 @@ export default function ExportValueDeclaration() {
   });
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [hasSaved, setHasSaved] = useState(false);
   const [loading, setLoading] = useState(!!invoiceId);
 
   useEffect(() => {
+    setHasSaved(false);
     if (invoiceId) {
       axiosInstance.get(`/v1/invoice/${invoiceId}`).then(res => {
         const invoice = res.data || {};
         const templateData = invoice?.evd || invoice?.data;
         if (templateData) setData(templateData);
+        setIsApproved(Boolean(invoice?.evdApproved));
+        setHasSaved(false);
         setLoading(false);
       }).catch(() => setLoading(false));
     }
@@ -232,7 +238,26 @@ export default function ExportValueDeclaration() {
       const payloadDate = data?.date || '';
       const res = await axiosInstance.post('/v1/invoice/save', { _id: invoiceId, date: payloadDate, template: 'evd', evd: data });
       if (res.data?._id && !invoiceId) navigate(`/evd/${res.data._id}`, { replace: true });
+      setHasSaved(true);
     } finally { setIsSaving(false); }
+  };
+
+  const handleApprovalChange = async (nextApproved) => {
+    if (!invoiceId) return;
+    setIsApproving(true);
+    try {
+      const payloadDate = data?.date || '';
+      const res = await axiosInstance.post('/v1/invoice/save', {
+        _id: invoiceId,
+        date: payloadDate,
+        template: 'evd',
+        evd: data,
+        evdApproved: nextApproved
+      });
+      setIsApproved(Boolean(res.data?.evdApproved ?? nextApproved));
+    } finally {
+      setIsApproving(false);
+    }
   };
 
   const updateField = (index, key, val) => {
@@ -245,9 +270,29 @@ export default function ExportValueDeclaration() {
 
   return (
     <MainCard title="Export Value Declaration" secondary={
-      <Button variant="contained" color="secondary" startIcon={<IconDeviceFloppy />} onClick={handleSave} disabled={isSaving}>
-        {isSaving ? 'Saving...' : 'Save'}
-      </Button>
+      <Stack direction="row" spacing={1}>
+        <Button variant="contained" color="secondary" startIcon={<IconDeviceFloppy />} onClick={handleSave} disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save'}
+        </Button>
+        {!isApproved ? (
+          <Button
+            variant="outlined"
+            onClick={() => handleApprovalChange(true)}
+            disabled={!invoiceId || !hasSaved || isApproving || isSaving}
+          >
+            {isApproving ? 'Confirming...' : 'Confirm'}
+          </Button>
+        ) : (
+          <Button
+            color="warning"
+            variant="outlined"
+            onClick={() => handleApprovalChange(false)}
+            disabled={isApproving || isSaving}
+          >
+            {isApproving ? 'Updating...' : 'Mark as Draft'}
+          </Button>
+        )}
+      </Stack>
     }>
       <Grid container spacing={2}>
         <Grid item xs={12} md={7}>

@@ -389,6 +389,9 @@ export default function PackingListDocument() {
   const [ data, setData ] = useState(defaultData)
   const [ pdfData, setPdfData ] = useState(defaultData)
   const [ isSaving, setIsSaving ] = useState(false)
+  const [ isApproving, setIsApproving ] = useState(false)
+  const [ isApproved, setIsApproved ] = useState(false)
+  const [ hasSaved, setHasSaved ] = useState(false)
 
   const formatDateForSave = (value) => {
     if (!value) return ''
@@ -472,6 +475,7 @@ export default function PackingListDocument() {
   }, [ data ])
 
   useEffect(() => {
+    setHasSaved(false)
     let isActive = true
     const loadInvoice = async () => {
       // if (!invoiceId) {
@@ -519,10 +523,14 @@ export default function PackingListDocument() {
           merged.date = coerceDateField(templateData?.date ?? invoice?.date, defaultData.date.visible)
           setData(merged)
           setPdfData(merged)
+          setIsApproved(Boolean(invoice?.packagingApproved))
+          setHasSaved(false)
         } catch (error) {
           if (!isActive) return
           setData(defaultData)
           setPdfData(defaultData)
+          setIsApproved(false)
+          setHasSaved(false)
         }
       }
     }
@@ -544,8 +552,30 @@ export default function PackingListDocument() {
       if (savedInvoice?._id && !invoiceId) {
         navigate(`/packing/${savedInvoice._id}`, { replace: true })
       }
+      setHasSaved(true)
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleApprovalChange = async (nextApproved) => {
+    if (!invoiceId) return
+    try {
+      setIsApproving(true)
+      const { date, ...restOfState } = data
+      const payloadDate = formatDateForSave(date?.value || '')
+      const payload = {
+        _id: invoiceId,
+        date: payloadDate,
+        template: 'packaging',
+        packaging: restOfState,
+        packagingApproved: nextApproved
+      }
+      const response = await axiosInstance.post('/v1/invoice/save', payload)
+      const savedInvoice = response?.data
+      setIsApproved(Boolean(savedInvoice?.packagingApproved ?? nextApproved))
+    } finally {
+      setIsApproving(false)
     }
   }
 
@@ -553,9 +583,29 @@ export default function PackingListDocument() {
       <MainCard
           title="Packaging"
           secondary={(
-              <Button sx={{ backgroundColor : theme.palette.secondary.main }} variant="contained" onClick={handleSave} disabled={isSaving}>
-                {isSaving ? 'Saving...' : 'Save'}
-              </Button>
+              <Stack direction="row" spacing={1}>
+                <Button sx={{ backgroundColor : theme.palette.secondary.main }} variant="contained" onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save'}
+                </Button>
+                {!isApproved ? (
+                  <Button
+                    variant="outlined"
+                    onClick={() => handleApprovalChange(true)}
+                    disabled={!invoiceId || !hasSaved || isApproving || isSaving}
+                  >
+                    {isApproving ? 'Confirming...' : 'Confirm'}
+                  </Button>
+                ) : (
+                  <Button
+                    color="warning"
+                    variant="outlined"
+                    onClick={() => handleApprovalChange(false)}
+                    disabled={isApproving || isSaving}
+                  >
+                    {isApproving ? 'Updating...' : 'Mark as Draft'}
+                  </Button>
+                )}
+              </Stack>
           )}
       >
         <Grid container spacing={2} alignItems="flex-start">
