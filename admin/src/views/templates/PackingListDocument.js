@@ -53,6 +53,10 @@ const styles = StyleSheet.create({
 })
 
 const PackingListPdf = ({ data }) => {
+  const isVisible = (field) => Boolean(field?.visible)
+  const visibleValue = (field) => (isVisible(field) ? field.value : '')
+  const showPackingListMeta = isVisible(data.packingListNo) || isVisible(data.date)
+  const showExportRefGroup = isVisible(data.exportRef) || isVisible(data.iec) || isVisible(data.gstin)
   const formatDate = (value) => {
     if (!value) return ''
     const raw = String(value).split('T')[0]
@@ -77,7 +81,7 @@ const PackingListPdf = ({ data }) => {
 
             {/* TITLE HEADER */}
             <View style={styles.header}>
-              <Text>{data.title.value}</Text>
+              <Text>{visibleValue(data.title)}</Text>
             </View>
 
             {/* TOP BLOCK: Exporter/Consignee vs Ref Boxes */}
@@ -91,11 +95,19 @@ const PackingListPdf = ({ data }) => {
                   ))}
                 </View>
                 <View style={[ styles.cellLast, { height: 90 } ]}>
-                  <Text style={styles.label}>Consignee</Text>
-                  <Text style={styles.value}>{data.consignee.value}</Text>
+                  {isVisible(data.consignee) ? (
+                      <>
+                        <Text style={styles.label}>Consignee</Text>
+                        <Text style={styles.value}>{data.consignee.value}</Text>
+                      </>
+                  ) : null}
                   <View style={{ marginTop: 15 }}>
-                    <Text style={styles.label}>Contact: {data.contact.value}</Text>
-                    <Text style={styles.label}>Tel: {data.tel.value}</Text>
+                    {isVisible(data.contact) ? (
+                        <Text style={styles.label}>Contact: {data.contact.value}</Text>
+                    ) : null}
+                    {isVisible(data.tel) ? (
+                        <Text style={styles.label}>Tel: {data.tel.value}</Text>
+                    ) : null}
                   </View>
                 </View>
               </View>
@@ -104,26 +116,42 @@ const PackingListPdf = ({ data }) => {
               <View style={styles.rightPillar}>
                 <View style={[ styles.splitRow, { height: 45 } ]}>
                   <View style={[ styles.innerBox, styles.borderRight ]}>
-                    <Text style={styles.label}>Packing List No. & Date</Text>
-                    <Text style={styles.value}>
-                      {data.packingListNo.value} {formatDate(data.date.value)}
-                    </Text>
+                    {showPackingListMeta ? (
+                        <>
+                          <Text style={styles.label}>Packing List No. & Date</Text>
+                          <Text style={styles.value}>
+                            {visibleValue(data.packingListNo)} {isVisible(data.date) ? formatDate(data.date.value) : ''}
+                          </Text>
+                        </>
+                    ) : null}
                   </View>
                   <View style={styles.innerBox}>
-                    <Text style={styles.label}>Export Ref / IEC / GSTIN</Text>
-                    <Text style={styles.value}>{wrapCell(data.exportRef.value, 14)}</Text>
-                    <Text style={styles.value}>
-                      {wrapCell(`${data.iec.value} ${data.gstin.value}`, 14)}
-                    </Text>
+                    {showExportRefGroup ? (
+                        <>
+                          <Text style={styles.label}>Export Ref / IEC / GSTIN</Text>
+                          <Text style={styles.value}>{wrapCell(visibleValue(data.exportRef), 14)}</Text>
+                          <Text style={styles.value}>
+                            {wrapCell(`${visibleValue(data.iec)} ${visibleValue(data.gstin)}`.trim(), 14)}
+                          </Text>
+                        </>
+                    ) : null}
                   </View>
                 </View>
                 <View style={[ styles.cell, { height: 45 } ]}>
-                  <Text style={styles.label}>Buyer's Order No. & Date</Text>
-                  <Text style={styles.value}>{data.buyersOrder.value}</Text>
+                  {isVisible(data.buyersOrder) ? (
+                      <>
+                        <Text style={styles.label}>Buyer's Order No. & Date</Text>
+                        <Text style={styles.value}>{visibleValue(data.buyersOrder)}</Text>
+                      </>
+                  ) : null}
                 </View>
                 <View style={[ styles.cellLast, { height: 45 } ]}>
-                  <Text style={styles.label}>Notify / Buyer (if other than consignee)</Text>
-                  <Text style={styles.value}>{data.notifyBuyer.value}</Text>
+                  {isVisible(data.notifyBuyer) ? (
+                      <>
+                        <Text style={styles.label}>Notify / Buyer (if other than consignee)</Text>
+                        <Text style={styles.value}>{visibleValue(data.notifyBuyer)}</Text>
+                      </>
+                  ) : null}
                 </View>
               </View>
             </View>
@@ -133,28 +161,88 @@ const PackingListPdf = ({ data }) => {
               {/* Left 50%: Three-Row Shipping Grid */}
               <View style={styles.leftPillar}>
                 <View style={styles.splitRow}>
-                  <View style={[ styles.innerBox, styles.borderRight ]}><Text style={styles.label}>Pre-Carriage by</Text><Text>{data.preCarriageBy.value}</Text></View>
-                  <View style={styles.innerBox}><Text style={styles.label}>Place of Receipt</Text><Text>{data.placeOfReceipt.value}</Text></View>
+                  <View style={[ styles.innerBox, styles.borderRight ]}>
+                    {isVisible(data.preCarriageBy) ? (
+                        <>
+                          <Text style={styles.label}>Pre-Carriage by</Text>
+                          <Text>{data.preCarriageBy.value}</Text>
+                        </>
+                    ) : null}
+                  </View>
+                  <View style={styles.innerBox}>
+                    {isVisible(data.placeOfReceipt) ? (
+                        <>
+                          <Text style={styles.label}>Place of Receipt</Text>
+                          <Text>{data.placeOfReceipt.value}</Text>
+                        </>
+                    ) : null}
+                  </View>
                 </View>
                 <View style={styles.splitRow}>
-                  <View style={[ styles.innerBox, styles.borderRight ]}><Text style={styles.label}>Vessel/Flight No.</Text><Text>{data.vesselFlightNo.value}</Text></View>
-                  <View style={styles.innerBox}><Text style={styles.label}>Port of Loading</Text><Text>{data.portOfLoading.value}</Text></View>
+                  <View style={[ styles.innerBox, styles.borderRight ]}>
+                    {isVisible(data.vesselFlightNo) ? (
+                        <>
+                          <Text style={styles.label}>Vessel/Flight No.</Text>
+                          <Text>{data.vesselFlightNo.value}</Text>
+                        </>
+                    ) : null}
+                  </View>
+                  <View style={styles.innerBox}>
+                    {isVisible(data.portOfLoading) ? (
+                        <>
+                          <Text style={styles.label}>Port of Loading</Text>
+                          <Text>{data.portOfLoading.value}</Text>
+                        </>
+                    ) : null}
+                  </View>
                 </View>
                 <View style={styles.flexRow}>
-                  <View style={[ styles.innerBox, styles.borderRight ]}><Text style={styles.label}>Port of Discharge</Text><Text>{data.portOfDischarge.value}</Text></View>
-                  <View style={styles.innerBox}><Text style={styles.label}>Final Destination</Text><Text>{data.finalDestination.value}</Text></View>
+                  <View style={[ styles.innerBox, styles.borderRight ]}>
+                    {isVisible(data.portOfDischarge) ? (
+                        <>
+                          <Text style={styles.label}>Port of Discharge</Text>
+                          <Text>{data.portOfDischarge.value}</Text>
+                        </>
+                    ) : null}
+                  </View>
+                  <View style={styles.innerBox}>
+                    {isVisible(data.finalDestination) ? (
+                        <>
+                          <Text style={styles.label}>Final Destination</Text>
+                          <Text>{data.finalDestination.value}</Text>
+                        </>
+                    ) : null}
+                  </View>
                 </View>
               </View>
 
               {/* Right 50%: Countries + Terms Box */}
               <View style={styles.rightPillar}>
                 <View style={styles.splitRow}>
-                  <View style={[ styles.innerBox, styles.borderRight ]}><Text style={styles.label}>Country of Origin</Text><Text>{data.countryOfOrigin.value}</Text></View>
-                  <View style={styles.innerBox}><Text style={styles.label}>Country of Destination</Text><Text>{data.countryOfDestination.value}</Text></View>
+                  <View style={[ styles.innerBox, styles.borderRight ]}>
+                    {isVisible(data.countryOfOrigin) ? (
+                        <>
+                          <Text style={styles.label}>Country of Origin</Text>
+                          <Text>{data.countryOfOrigin.value}</Text>
+                        </>
+                    ) : null}
+                  </View>
+                  <View style={styles.innerBox}>
+                    {isVisible(data.countryOfDestination) ? (
+                        <>
+                          <Text style={styles.label}>Country of Destination</Text>
+                          <Text>{data.countryOfDestination.value}</Text>
+                        </>
+                    ) : null}
+                  </View>
                 </View>
                 <View style={{ padding: 4 }}>
-                  <Text style={styles.label}>Terms of Delivery and Payment</Text>
-                  <Text style={styles.value}>{data.terms.value}</Text>
+                  {isVisible(data.terms) ? (
+                      <>
+                        <Text style={styles.label}>Terms of Delivery and Payment</Text>
+                        <Text style={styles.value}>{data.terms.value}</Text>
+                      </>
+                  ) : null}
                 </View>
               </View>
             </View>
@@ -188,16 +276,36 @@ const PackingListPdf = ({ data }) => {
             {/* SIGNATURE FOOTER */}
             <View style={[ styles.flexRow, { borderTop: '1pt solid black', minHeight: 80 } ]}>
               <View style={[ styles.leftPillar, { padding: 0 } ]}>
-                <View style={styles.cell}><Text style={styles.label}>Total Pkgs: {data.totalPackages.value}</Text></View>
-                <View style={[ styles.flexRow, { borderBottom: '1pt solid black' } ]}>
-                  <View style={[ styles.innerBox, styles.borderRight ]}><Text style={styles.label}>Net Wt: {data.netWeight.value}</Text></View>
-                  <View style={styles.innerBox}><Text style={styles.label}>Gross Wt: {data.grossWeight.value}</Text></View>
+                <View style={styles.cell}>
+                  {isVisible(data.totalPackages) ? (
+                      <Text style={styles.label}>Total Pkgs: {data.totalPackages.value}</Text>
+                  ) : null}
                 </View>
-                <View style={{ padding: 4 }}><Text style={styles.label}>Total Weight: {data.totalWeight.value}</Text></View>
+                <View style={[ styles.flexRow, { borderBottom: '1pt solid black' } ]}>
+                  <View style={[ styles.innerBox, styles.borderRight ]}>
+                    {isVisible(data.netWeight) ? (
+                        <Text style={styles.label}>Net Wt: {data.netWeight.value}</Text>
+                    ) : null}
+                  </View>
+                  <View style={styles.innerBox}>
+                    {isVisible(data.grossWeight) ? (
+                        <Text style={styles.label}>Gross Wt: {data.grossWeight.value}</Text>
+                    ) : null}
+                  </View>
+                </View>
+                <View style={{ padding: 4 }}>
+                  {isVisible(data.totalWeight) ? (
+                      <Text style={styles.label}>Total Weight: {data.totalWeight.value}</Text>
+                  ) : null}
+                </View>
               </View>
               <View style={[ styles.rightPillar, { textAlign: 'center', justifyContent: 'space-between', padding: 5 } ]}>
-                <Text style={styles.label}>For {data.authorizedBy.value}</Text>
-                <Text style={[ styles.label, { marginBottom: 5 } ]}>Authorised Signatory</Text>
+                {isVisible(data.authorizedBy) ? (
+                    <>
+                      <Text style={styles.label}>For {data.authorizedBy.value}</Text>
+                      <Text style={[ styles.label, { marginBottom: 5 } ]}>Authorised Signatory</Text>
+                    </>
+                ) : null}
               </View>
             </View>
 

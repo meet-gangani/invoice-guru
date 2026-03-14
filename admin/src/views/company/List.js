@@ -133,6 +133,15 @@ const Companies = () => {
     }
   };
 
+  const handleRemoveUpload = (field) => {
+    setCreateCompany((prev) => ({ ...prev, [field]: "" }));
+    const inputId = field === "stamp" ? "stamp-upload-list" : "sign-upload-list";
+    const input = document.getElementById(inputId);
+    if (input) {
+      input.value = "";
+    }
+  };
+
   const filteredCompanies = companies.filter((company) =>
       company.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -197,275 +206,210 @@ const Companies = () => {
 
           <DialogContent>
             <form onSubmit={handleSubmit}>
-              <Stack spacing={3} mt={1}>
-                <TextField
+              <Grid container spacing={2} mt={1}>
+                {/* Basic Info - Two Column Layout */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
                     required
                     label="Company Name"
                     value={createCompany.name}
-                    onChange={(e) =>
-                        setCreateCompany((prev) => ({
-                          ...prev,
-                          name: e.target.value
-                        }))
-                    }
-                />
-
-                <TextField
+                    onChange={(e) => setCreateCompany((prev) => ({ ...prev, name: e.target.value }))}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
                     required
                     label="Logo URL"
                     value={createCompany.logo}
-                    onChange={(e) =>
-                        setCreateCompany((prev) => ({
-                          ...prev,
-                          logo: e.target.value
-                        }))
-                    }
-                />
-
-                <TextField
+                    onChange={(e) => setCreateCompany((prev) => ({ ...prev, logo: e.target.value }))}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
                     required
                     type="email"
-                    label="email"
+                    label="Email"
                     value={createCompany.username}
-                    onChange={(e) =>
-                        setCreateCompany((prev) => ({
-                          ...prev,
-                          username: e.target.value
-                        }))
-                    }
-                />
-
-                <TextField
+                    onChange={(e) => setCreateCompany((prev) => ({ ...prev, username: e.target.value }))}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
                     required={!editId}
                     label="Password"
                     value={createCompany.password}
-                    onChange={(e) =>
-                        setCreateCompany((prev) => ({
-                          ...prev,
-                          password: e.target.value
-                        }))
-                    }
-                />
+                    onChange={(e) => setCreateCompany((prev) => ({ ...prev, password: e.target.value }))}
+                  />
+                </Grid>
 
-                <FormControl required>
-                  <InputLabel>Status</InputLabel>
-                  <Select
+                {/* Status and Owner */}
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth required>
+                    <InputLabel>Status</InputLabel>
+                    <Select
                       value={createCompany.status}
                       label="Status"
-                      onChange={(e) =>
-                          setCreateCompany((prev) => ({
-                            ...prev,
-                            status: e.target.value
-                          }))
-                      }
-                  >
-                    {STATUS.map((status) => (
-                        <MenuItem key={status.value} value={status.value}>
-                          {status.label}
-                        </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <TextField
+                      onChange={(e) => setCreateCompany((prev) => ({ ...prev, status: e.target.value }))}
+                    >
+                      {STATUS.map((status) => (
+                        <MenuItem key={status.value} value={status.value}>{status.label}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
                     label="Owner"
                     value={createCompany.owner || ""}
-                    onChange={(e) =>
-                        setCreateCompany((prev) => ({
-                          ...prev,
-                          owner: e.target.value
-                        }))
-                    }
-                />
+                    onChange={(e) => setCreateCompany((prev) => ({ ...prev, owner: e.target.value }))}
+                  />
+                </Grid>
 
-                <TextField
+                {/* Contact Details */}
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
                     label="Contact Person"
                     value={createCompany.contactPerson || ""}
-                    onChange={(e) =>
-                        setCreateCompany((prev) => ({
-                          ...prev,
-                          contactPerson: e.target.value
-                        }))
-                    }
-                />
-
-                <TextField
+                    onChange={(e) => setCreateCompany((prev) => ({ ...prev, contactPerson: e.target.value }))}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
                     label="Contact Number"
                     value={createCompany.contactNumber || ""}
-                    onChange={(e) =>
-                        setCreateCompany((prev) => ({
-                          ...prev,
-                          contactNumber: e.target.value
-                        }))
-                    }
-                />
+                    onChange={(e) => setCreateCompany((prev) => ({ ...prev, contactNumber: e.target.value }))}
+                  />
+                </Grid>
 
-                <TextField
+                {/* Address & Pincode */}
+                <Grid item xs={12} sm={8}>
+                  <TextField
+                    fullWidth
                     label="Address"
-                    multiline
-                    rows={2}
                     value={createCompany.address || ""}
-                    onChange={(e) =>
-                        setCreateCompany((prev) => ({
-                          ...prev,
-                          address: e.target.value
-                        }))
-                    }
-                />
-
-                <TextField
+                    onChange={(e) => setCreateCompany((prev) => ({ ...prev, address: e.target.value }))}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <TextField
+                    fullWidth
                     label="Pin Code"
                     value={createCompany.pinCode || ""}
-                    onChange={(e) =>
-                        setCreateCompany((prev) => ({
-                          ...prev,
-                          pinCode: e.target.value
-                        }))
-                    }
-                />
-
-                <Box
-                  sx={{
-                    borderRadius: 2,
-                    height: 130,
-                    border: "2px dashed #c7d2fe",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#64748b",
-                    backgroundColor: "#f8fafc",
-                    transition: "border-color 0.2s, box-shadow 0.2s, background-color 0.2s",
-                    cursor: editId ? "pointer" : "default",
-                    "&:hover": editId
-                      ? {
-                          borderColor: "#7c9cff",
-                          boxShadow: "0 0 0 3px rgba(124, 156, 255, 0.15)",
-                          backgroundColor: "#f5f8ff"
-                        }
-                      : {}
-                  }}
-                  onClick={() => {
-                    const input = document.getElementById("stamp-upload-list");
-                    input?.click();
-                  }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    handleUpload("stamp", e.dataTransfer.files?.[0]);
-                  }}
-                >
-                  <input
-                    accept="image/png, image/jpeg, image/jpg, image/webp"
-                    style={{ display: "none" }}
-                    id="stamp-upload-list"
-                    multiple={false}
-                    type="file"
-                    disabled={false}
-                    onChange={(event) => handleUpload("stamp", event.target.files?.[0])}
+                    onChange={(e) => setCreateCompany((prev) => ({ ...prev, pinCode: e.target.value }))}
                   />
-                  {createCompany.stamp ? (
-                    <Box sx={{ width: "100%", height: "100%", p: 1 }}>
-                      <Box
-                        component="img"
-                        src={createCompany.stamp}
-                        alt="stamp preview"
-                        sx={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "contain",
-                          borderRadius: 1,
-                          backgroundColor: "white"
-                        }}
-                      />
-                    </Box>
-                  ) : (
-                    <Box sx={{ textAlign: "center", px: 2 }}>
-                      <CloudUploadIcon sx={{ fontSize: 28, color: "#94a3b8", mb: 0.5 }} />
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#475569" }}>
-                        {uploadStampLoading ? "Uploading..." : "Drag & drop a file here"}
-                      </Typography>
-                      <Typography variant="caption" sx={{ display: "block", color: "#94a3b8" }}>
-                        or click to browse (PNG, JPG, WEBP)
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
+                </Grid>
 
-                <Box
-                  sx={{
-                    borderRadius: 2,
-                    height: 130,
-                    border: "2px dashed #c7d2fe",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#64748b",
-                    backgroundColor: "#f8fafc",
-                    transition: "border-color 0.2s, box-shadow 0.2s, background-color 0.2s",
-                    cursor: editId ? "pointer" : "default",
-                    "&:hover": editId
-                      ? {
-                          borderColor: "#7c9cff",
-                          boxShadow: "0 0 0 3px rgba(124, 156, 255, 0.15)",
-                          backgroundColor: "#f5f8ff"
-                        }
-                      : {}
-                  }}
-                  onClick={() => {
-                    const input = document.getElementById("sign-upload-list");
-                    input?.click();
-                  }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    handleUpload("sign", e.dataTransfer.files?.[0]);
-                  }}
-                >
-                  <input
-                    accept="image/png, image/jpeg, image/jpg, image/webp"
-                    style={{ display: "none" }}
-                    id="sign-upload-list"
-                    multiple={false}
-                    type="file"
-                    disabled={false}
-                    onChange={(event) => handleUpload("sign", event.target.files?.[0])}
-                  />
-                  {createCompany.sign ? (
-                    <Box sx={{ width: "100%", height: "100%", p: 1 }}>
-                      <Box
-                        component="img"
-                        src={createCompany.sign}
-                        alt="sign preview"
-                        sx={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "contain",
-                          borderRadius: 1,
-                          backgroundColor: "white"
-                        }}
-                      />
-                    </Box>
-                  ) : (
-                    <Box sx={{ textAlign: "center", px: 2 }}>
-                      <CloudUploadIcon sx={{ fontSize: 28, color: "#94a3b8", mb: 0.5 }} />
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#475569" }}>
-                        {uploadSignLoading ? "Uploading..." : "Drag & drop a file here"}
-                      </Typography>
-                      <Typography variant="caption" sx={{ display: "block", color: "#94a3b8" }}>
-                        or click to browse (PNG, JPG, WEBP)
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
+                {/* Image Upload Area (Stamp) */}
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#5e35b1' }}>Company Stamp</Typography>
+                  <Box
+                    sx={{
+                      borderRadius: '12px',
+                      height: 140,
+                      border: "2px dashed",
+                      borderColor: theme.palette.primary.light,
+                      display: "flex",
+                      flexDirection: 'column',
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "#f9faff",
+                      cursor: "pointer",
+                      position: 'relative',
+                      overflow: 'hidden',
+                      "&:hover": { backgroundColor: "#f0f2ff", borderColor: theme.palette.primary.main }
+                    }}
+                    onClick={() => document.getElementById("stamp-upload-list")?.click()}
+                  >
+                    <input id="stamp-upload-list" type="file" hidden onChange={(e) => handleUpload("stamp", e.target.files?.[0])} />
+                    
+                    {createCompany.stamp ? (
+                      <>
+                        <Box component="img" src={createCompany.stamp} sx={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                        <IconButton 
+                          size="small" 
+                          sx={{ position: 'absolute', top: 5, right: 5, bgcolor: 'rgba(255,0,0,0.1)' }}
+                          onClick={(e) => { e.stopPropagation(); handleRemoveUpload("stamp"); }}
+                        >
+                          <Close fontSize="small" color="error" />
+                        </IconButton>
+                      </>
+                    ) : (
+                      <>
+                        <CloudUploadIcon sx={{ fontSize: 32, color: theme.palette.primary.main, mb: 1 }} />
+                        <Typography variant="body2" color="textSecondary">Drop stamp here or click</Typography>
+                      </>
+                    )}
+                  </Box>
+                </Grid>
 
-                <Button
+                {/* Image Upload Area (Sign) */}
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 500, color: '#5e35b1' }}>Authorized Sign</Typography>
+                  <Box
+                    sx={{
+                      borderRadius: '12px',
+                      height: 140,
+                      border: "2px dashed",
+                      borderColor: theme.palette.primary.light,
+                      display: "flex",
+                      flexDirection: 'column',
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "#f9faff",
+                      cursor: "pointer",
+                      position: 'relative',
+                      overflow: 'hidden',
+                      "&:hover": { backgroundColor: "#f0f2ff", borderColor: theme.palette.primary.main }
+                    }}
+                    onClick={() => document.getElementById("sign-upload-list")?.click()}
+                  >
+                    <input id="sign-upload-list" type="file" hidden onChange={(e) => handleUpload("sign", e.target.files?.[0])} />
+                    
+                    {createCompany.sign ? (
+                      <>
+                        <Box component="img" src={createCompany.sign} sx={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                        <IconButton 
+                          size="small" 
+                          sx={{ position: 'absolute', top: 5, right: 5, bgcolor: 'rgba(255,0,0,0.1)' }}
+                          onClick={(e) => { e.stopPropagation(); handleRemoveUpload("sign"); }}
+                        >
+                          <Close fontSize="small" color="error" />
+                        </IconButton>
+                      </>
+                    ) : (
+                      <>
+                        <CloudUploadIcon sx={{ fontSize: 32, color: theme.palette.primary.main, mb: 1 }} />
+                        <Typography variant="body2" color="textSecondary">Drop sign here or click</Typography>
+                      </>
+                    )}
+                  </Box>
+                </Grid>
+
+                {/* Action Button */}
+                <Grid item xs={12} mt={2}>
+                  <Button
+                    fullWidth
                     type="submit"
                     variant="contained"
-                    sx={{ backgroundColor: theme.palette.secondary.main }}
-                >
-                  {editId ? "Update Company" : "Add New Company"}
-                </Button>
-              </Stack>
+                    size="large"
+                    sx={{ 
+                      py: 1.5,
+                      borderRadius: '8px',
+                      backgroundColor: theme.palette.secondary.main,
+                      boxShadow: theme.shadows[4]
+                    }}
+                  >
+                    {editId ? "Update Company Information" : "Create New Company"}
+                  </Button>
+                </Grid>
+              </Grid>
             </form>
           </DialogContent>
         </Dialog>

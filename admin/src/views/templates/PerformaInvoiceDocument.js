@@ -439,6 +439,24 @@ export default function PerformaInvoiceDocument() {
     }))
   }
 
+  const clearCustomerFromForm = () => {
+    setData((prev) => ({
+      ...prev,
+      customerLines: (prev.customerLines?.length ? prev.customerLines : [ { value: '', visible: true } ]).map((line) => ({
+        ...line,
+        value: ''
+      })),
+      notifyLines: (prev.notifyLines?.length ? prev.notifyLines : [ { value: '', visible: true } ]).map((line) => ({
+        ...line,
+        value: ''
+      })),
+      customerPhone: { ...prev.customerPhone, value: '' },
+      customerEmail: { ...prev.customerEmail, value: '' },
+      notifyPhone: { ...prev.notifyPhone, value: '' },
+      notifyEmail: { ...prev.notifyEmail, value: '' }
+    }))
+  }
+
   const openAddCustomerDialog = (name = '') => {
     setNewCustomerDraft({
       name: name || '',
@@ -943,6 +961,7 @@ export default function PerformaInvoiceDocument() {
                       setNewCustomerDraft(null)
                       setSelectedCustomerId('')
                       setCustomerValue(null)
+                      clearCustomerFromForm()
                     }}
                     renderInput={(params) => (
                         <TextField {...params} label="Customer" placeholder="Search or type customer name"/>
