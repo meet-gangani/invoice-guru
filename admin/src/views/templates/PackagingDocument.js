@@ -485,10 +485,14 @@ export default function PackagingDocument() {
           const response = await axiosInstance.get(`/v1/invoice/${invoiceId}`)
           if (!isActive) return
           const invoice = response?.data || {}
+          const templateData = invoice?.commercial || invoice?.data || {}
+          const templateDateValue = templateData?.date && typeof templateData.date === 'object'
+            ? templateData.date.value
+            : templateData?.date
           const merged = {
             ...defaultData,
-            ...(invoice?.data || {}),
-            date: { ...(defaultData.date || {}), value: invoice?.date || invoice?.data?.date || '' }
+            ...templateData,
+            date: { ...(defaultData.date || {}), value: invoice?.date || templateDateValue || '' }
           }
           setData(merged)
           setPdfData(merged)
@@ -511,7 +515,7 @@ export default function PackagingDocument() {
       setIsSaving(true)
       const { date, ...restOfState } = data
       const payloadDate = formatDateForSave(date?.value || '')
-      const payload = { _id: invoiceId, date: payloadDate, type: 'delivery', ...restOfState }
+      const payload = { _id: invoiceId, date: payloadDate, template: 'commercial', commercial: restOfState }
       const response = await axiosInstance.post('/v1/invoice/save', payload)
       const savedInvoice = response?.data
       if (savedInvoice?._id && !invoiceId) {

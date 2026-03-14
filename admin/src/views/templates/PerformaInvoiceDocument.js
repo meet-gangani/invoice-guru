@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Box, Button, Checkbox, Divider, FormControlLabel, Grid, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material'
+import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, Grid, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material'
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete'
 import { IconPlus, IconTrash } from '@tabler/icons'
 import { Document, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
@@ -351,6 +352,15 @@ export default function PerformaInvoiceDocument() {
   const [ data, setData ] = useState(defaultData)
   const [ pdfData, setPdfData ] = useState(defaultData)
   const [ isSaving, setIsSaving ] = useState(false)
+  const [ customers, setCustomers ] = useState([])
+  const [ selectedCustomerId, setSelectedCustomerId ] = useState('')
+  const [ customerValue, setCustomerValue ] = useState(null)
+  const [ customerInputValue, setCustomerInputValue ] = useState('')
+  const [ newCustomerDraft, setNewCustomerDraft ] = useState(null)
+  const [ isCreatingCustomer, setIsCreatingCustomer ] = useState(false)
+  const [ isAddCustomerOpen, setIsAddCustomerOpen ] = useState(false)
+
+  const customerFilter = createFilterOptions()
 
   const normalizeLabel = (value = '') => value.trim().toUpperCase()
   const formatDateForSave = (value) => {
@@ -364,7 +374,7 @@ export default function PerformaInvoiceDocument() {
     if (!value) return ''
     const raw = String(value).split('T')[0]
     const match = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/)
-    if (!match) return value
+    if (!match) return raw
     const [ , dd, mm, yyyy ] = match
     return `${yyyy}-${mm}-${dd}`
   }
@@ -392,6 +402,54 @@ export default function PerformaInvoiceDocument() {
     const cleaned = String(value || '').replace(/[^0-9.]/g, '')
     const parsed = Number.parseFloat(cleaned)
     return Number.isFinite(parsed) ? parsed : 0
+  }
+
+  const splitToLines = (value) => {
+    if (!value) return []
+    const raw = String(value).trim()
+    if (!raw) return []
+    const byNewLine = raw.split('\n').map((line) => line.trim()).filter(Boolean)
+    if (byNewLine.length > 1) return byNewLine
+    return [ raw ]
+  }
+
+  const buildLines = (values) => values.filter(Boolean).map((value) => ({ value, visible: true }))
+
+  const applyCustomerToForm = (customer) => {
+    if (!customer) return
+    const shipLines = buildLines([
+      customer.name,
+      ...splitToLines(customer.shipTo || customer.address),
+      customer.pinCode ? `PIN: ${customer.pinCode}` : ''
+    ])
+    const billLines = buildLines([
+      customer.name,
+      ...splitToLines(customer.billTo || customer.address),
+      customer.pinCode ? `PIN: ${customer.pinCode}` : ''
+    ])
+
+    setData((prev) => ({
+      ...prev,
+      customerLines: shipLines.length ? shipLines : prev.customerLines,
+      notifyLines: billLines.length ? billLines : prev.notifyLines,
+      customerPhone: { ...prev.customerPhone, value: customer.contact || '' },
+      customerEmail: { ...prev.customerEmail, value: customer.mail || '' },
+      notifyPhone: { ...prev.notifyPhone, value: customer.contact || '' },
+      notifyEmail: { ...prev.notifyEmail, value: customer.mail || '' }
+    }))
+  }
+
+  const openAddCustomerDialog = (name = '') => {
+    setNewCustomerDraft({
+      name: name || '',
+      mail: '',
+      address: '',
+      pinCode: '',
+      shipTo: '',
+      billTo: '',
+      contact: ''
+    })
+    setIsAddCustomerOpen(true)
   }
 
   const subtotal = useMemo(
@@ -622,6 +680,67 @@ export default function PerformaInvoiceDocument() {
     return () => clearTimeout(handle)
   }, [ data ])
 
+  const fetchCustomers = async () => {
+    try {
+      const response = await axiosInstance.get('/v1/customer')
+      const list = response?.data?.customers || []
+      setCustomers(list)
+      return list
+    } catch (error) {
+      setCustomers([])
+      return []
+    }
+  }
+
+  useEffect(() => {
+    let isActive = true
+    const loadCustomers = async () => {
+      const list = await fetchCustomers()
+      if (!isActive) return
+      if (list.length === 0) {
+        setCustomers([])
+      }
+    }
+    loadCustomers()
+    return () => {
+      isActive = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!selectedCustomerId || !customers.length) {
+      setCustomerValue(null)
+      return
+    }
+    const match = customers.find((item) => item._id === selectedCustomerId)
+    if (match) {
+      setCustomerValue(match)
+      applyCustomerToForm(match)
+    }
+  }, [ selectedCustomerId, customers ])
+
+  const handleCreateCustomer = async () => {
+    if (!newCustomerDraft?.name || !newCustomerDraft?.mail) return
+    try {
+      setIsCreatingCustomer(true)
+      await axiosInstance.post('/v1/customer/create', newCustomerDraft)
+      const nextCustomers = await fetchCustomers()
+      const match = nextCustomers.find(
+          (item) => item.name === newCustomerDraft.name && item.mail === newCustomerDraft.mail
+      ) || nextCustomers.find((item) => item.name === newCustomerDraft.name)
+      if (match) {
+        setSelectedCustomerId(match._id)
+        setCustomerValue(match)
+        setCustomerInputValue(match.name || '')
+        applyCustomerToForm(match)
+      }
+      setNewCustomerDraft(null)
+      setIsAddCustomerOpen(false)
+    } finally {
+      setIsCreatingCustomer(false)
+    }
+  }
+
   const normalizeMetaFieldsDate = (metaFields, dateValue) => {
     if (!Array.isArray(metaFields)) return metaFields
     return metaFields.map((meta) => {
@@ -641,12 +760,15 @@ export default function PerformaInvoiceDocument() {
           const response = await axiosInstance.get(`/v1/invoice/${invoiceId}`)
           if (!isActive) return
           const invoice = response?.data || {}
+          const templateData = invoice?.performa || invoice?.data || {}
           const merged = {
             ...defaultData,
-            ...(invoice?.data || {}),
-            date: normalizeDateInput(invoice?.data?.date || invoice?.date || '')
+            ...templateData,
+            date: normalizeDateInput(templateData?.date || invoice?.date || '')
           }
           merged.metaFields = normalizeMetaFieldsDate(merged.metaFields, merged.date)
+          setSelectedCustomerId(invoice?.customer || '')
+          setCustomerInputValue('')
           setData(merged)
           setPdfData(merged)
         } catch (error) {
@@ -668,7 +790,13 @@ export default function PerformaInvoiceDocument() {
       setIsSaving(true)
       const { date, ...restOfState } = data
       const payloadDate = formatDateForSave(date)
-      const payload = { _id: invoiceId, date: payloadDate, type: 'performa', ...restOfState }
+      const payload = {
+        _id: invoiceId,
+        date: payloadDate,
+        template: 'performa',
+        performa: restOfState,
+        customer: selectedCustomerId || undefined
+      }
       const response = await axiosInstance.post('/v1/invoice/save', payload)
       const savedInvoice = response?.data
       if (savedInvoice?._id && !invoiceId) {
@@ -749,6 +877,178 @@ export default function PerformaInvoiceDocument() {
                       </Stack>
                   )
                 })}
+
+                <Divider/>
+
+                <SectionTitle>Customer Selection</SectionTitle>
+                <Autocomplete
+                    fullWidth
+                    freeSolo
+                    selectOnFocus
+                    clearOnBlur
+                    handleHomeEndKeys
+                    options={customers}
+                    value={customerValue}
+                    inputValue={customerInputValue}
+                    onInputChange={(_event, newInputValue) => {
+                      setCustomerInputValue(newInputValue)
+                    }}
+                    isOptionEqualToValue={(option, value) => option?._id === value?._id}
+                    getOptionLabel={(option) => {
+                      if (typeof option === 'string') return option
+                      if (option?.inputValue) return option.inputValue
+                      return option?.name || option?.mail || ''
+                    }}
+                    filterOptions={(options, params) => {
+                      const filtered = customerFilter(options, params)
+                      const inputValue = params.inputValue.trim()
+                      const isExisting = options.some((option) =>
+                          (option.name || '').toLowerCase() === inputValue.toLowerCase()
+                      )
+                      if (inputValue !== '' && !isExisting) {
+                        filtered.push({
+                          inputValue,
+                          name: `Add "${inputValue}"`
+                        })
+                      }
+                      return filtered
+                    }}
+                    onChange={(_event, newValue) => {
+                      if (typeof newValue === 'string') {
+                        const name = newValue.trim()
+                        if (!name) return
+                        setSelectedCustomerId('')
+                        setCustomerValue(null)
+                        openAddCustomerDialog(name)
+                        return
+                      }
+
+                      if (newValue && newValue.inputValue) {
+                        const name = newValue.inputValue.trim()
+                        if (!name) return
+                        setSelectedCustomerId('')
+                        setCustomerValue(null)
+                        openAddCustomerDialog(name)
+                        return
+                      }
+
+                      if (newValue && newValue._id) {
+                        setNewCustomerDraft(null)
+                        setSelectedCustomerId(newValue._id)
+                        setCustomerValue(newValue)
+                        applyCustomerToForm(newValue)
+                        return
+                      }
+
+                      setNewCustomerDraft(null)
+                      setSelectedCustomerId('')
+                      setCustomerValue(null)
+                    }}
+                    renderInput={(params) => (
+                        <TextField {...params} label="Customer" placeholder="Search or type customer name"/>
+                    )}
+                />
+
+                <Dialog
+                    open={isAddCustomerOpen}
+                    onClose={() => {
+                      setIsAddCustomerOpen(false)
+                      setNewCustomerDraft(null)
+                    }}
+                    fullWidth
+                    maxWidth="sm"
+                >
+                  <DialogTitle sx={{ fontSize: '20px', fontWeight: 600, pt: 3 }}>
+                    Add Customer
+                  </DialogTitle>
+                  <DialogContent>
+                    <form
+                        onSubmit={(event) => {
+                          event.preventDefault()
+                          handleCreateCustomer()
+                        }}
+                    >
+                      <Stack spacing={3} mt={1}>
+                        <TextField
+                            required
+                            label="Name"
+                            value={newCustomerDraft?.name || ''}
+                            onChange={(event) =>
+                                setNewCustomerDraft((prev) => ({ ...prev, name: event.target.value }))
+                            }
+                        />
+
+                        <TextField
+                            label="Address"
+                            multiline
+                            minRows={2}
+                            value={newCustomerDraft?.address || ''}
+                            onChange={(event) =>
+                                setNewCustomerDraft((prev) => ({ ...prev, address: event.target.value }))
+                            }
+                        />
+
+                        <TextField
+                            required
+                            type="email"
+                            label="Mail"
+                            value={newCustomerDraft?.mail || ''}
+                            onChange={(event) =>
+                                setNewCustomerDraft((prev) => ({ ...prev, mail: event.target.value }))
+                            }
+                        />
+
+                        <TextField
+                            type="tel"
+                            label="Contact"
+                            value={newCustomerDraft?.contact || ''}
+                            onChange={(event) =>
+                                setNewCustomerDraft((prev) => ({ ...prev, contact: event.target.value }))
+                            }
+                        />
+
+                        <TextField
+                            type="text"
+                            label="Pin Code"
+                            inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                            value={newCustomerDraft?.pinCode || ''}
+                            onChange={(event) =>
+                                setNewCustomerDraft((prev) => ({ ...prev, pinCode: event.target.value }))
+                            }
+                        />
+
+                        <TextField
+                            label="Ship To"
+                            multiline
+                            minRows={2}
+                            value={newCustomerDraft?.shipTo || ''}
+                            onChange={(event) =>
+                                setNewCustomerDraft((prev) => ({ ...prev, shipTo: event.target.value }))
+                            }
+                        />
+
+                        <TextField
+                            label="Bill To"
+                            multiline
+                            minRows={2}
+                            value={newCustomerDraft?.billTo || ''}
+                            onChange={(event) =>
+                                setNewCustomerDraft((prev) => ({ ...prev, billTo: event.target.value }))
+                            }
+                        />
+
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            sx={{ backgroundColor: theme.palette.secondary.main }}
+                            disabled={!newCustomerDraft?.name || !newCustomerDraft?.mail || isCreatingCustomer}
+                        >
+                          {isCreatingCustomer ? 'Adding...' : 'Add New Customer'}
+                        </Button>
+                      </Stack>
+                    </form>
+                  </DialogContent>
+                </Dialog>
 
                 <Divider/>
 

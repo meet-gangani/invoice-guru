@@ -40,14 +40,6 @@ const Invoices = () => {
     }
   }
 
-  const TYPE_CONFIG = {
-    scomet: { label: 'SCOMET', color: 'secondary' },
-    delivery: { label: 'DELIVERY', color: 'success' },
-    packing: { label: 'PACKING', color: 'warning' },
-    performa: { label: 'PERFORMA', color: 'primary' },
-    evd: { label: 'EVD', color: 'info' }
-  }
-
   return (
     <MainCard title="Invoices" content={false}>
       <CardContent>
@@ -67,11 +59,6 @@ const Invoices = () => {
           </TableHead>
           <TableBody>
             {invoices.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((invoice, idx) => {
-              const typeConfig = TYPE_CONFIG[invoice?.type] || {
-                label: invoice?.type?.toUpperCase(),
-                color: 'default'
-              }
-
               return <TableRow key={invoice._id}>
                 <TableCell align="center">{idx + 1}</TableCell>
                 <TableCell align="center">
@@ -84,7 +71,7 @@ const Invoices = () => {
                 </TableCell>
 
                 <TableCell align="center">
-                  <Link to={`/${invoice.type}/${invoice._id}`}>
+                  <Link to={`/performa/${invoice._id}`}>
                     {
                       invoice.performaApproved ?
                         <IconCircleCheck fontSize="inherit" color={theme.palette.success.dark} /> :
@@ -93,7 +80,7 @@ const Invoices = () => {
                   </Link>
                 </TableCell>
                 <TableCell align="center">
-                  <Link to={`/${invoice.type}/${invoice._id}`}>
+                  <Link to={`/delivery/${invoice._id}`}>
                     {
                       invoice.commercialApproved ?
                         <IconCircleCheck fontSize="inherit" color={theme.palette.success.dark} /> :
@@ -102,7 +89,7 @@ const Invoices = () => {
                   </Link>
                 </TableCell>
                 <TableCell align="center">
-                  <Link to={`/${invoice.type}/${invoice._id}`}>
+                  <Link to={`/packing/${invoice._id}`}>
                     {
                       invoice.packagingApproved ?
                         <IconCircleCheck fontSize="inherit" color={theme.palette.success.dark} /> :
@@ -111,7 +98,7 @@ const Invoices = () => {
                   </Link>
                 </TableCell>
                 <TableCell align="center">
-                  <Link to={`/${invoice.type}/${invoice._id}`}>
+                  <Link to={`/scomet/${invoice._id}`}>
                     {
                       invoice.scometApproved ?
                         <IconCircleCheck fontSize="inherit" color={theme.palette.success.dark} /> :
@@ -120,7 +107,7 @@ const Invoices = () => {
                   </Link>
                 </TableCell>
                 <TableCell align="center">
-                  <Link to={`/${invoice.type}/${invoice._id}`}>
+                  <Link to={`/evd/${invoice._id}`}>
                     {
                       invoice.evdApproved ?
                         <IconCircleCheck fontSize="inherit" color={theme.palette.success.dark} /> :
@@ -129,7 +116,7 @@ const Invoices = () => {
                   </Link>
                 </TableCell>
                 <TableCell align="center">
-                  <Link to={`/${invoice.type}/${invoice._id}`}>
+                  <Link to={`/letter-head/${invoice._id}`}>
                     {
                       invoice.letterHeadApproved ?
                         <IconCircleCheck fontSize="inherit" color={theme.palette.success.dark} /> :

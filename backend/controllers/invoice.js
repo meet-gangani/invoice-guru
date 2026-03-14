@@ -80,15 +80,33 @@ exports.getInvoiceById = async (req, res) => {
   }
 }
 
+const TEMPLATE_FIELD_MAP = {
+  performa: 'performa',
+  commercial: 'commercial',
+  packaging: 'packaging',
+  scomet: 'scomet',
+  evd: 'evd',
+  letterHead: 'letterHead',
+  delivery: 'commercial',
+  packing: 'packaging',
+  'letter-head': 'letterHead',
+  letterhead: 'letterHead'
+}
+
+const normalizeTemplateKey = (value) => {
+  if (!value) return null
+  const key = String(value).trim()
+  return TEMPLATE_FIELD_MAP[key] || null
+}
+
+const TEMPLATE_FIELDS = [ 'performa', 'commercial', 'packaging', 'scomet', 'evd', 'letterHead' ]
+
 exports.saveInvoice = async (req, res) => {
   try {
-    const { _id, date, data, template, type, ...rest } = req.body || {}
-    const payloadData = data || rest
-    const payloadType =
-        type ||
-        template ||
-        payloadData?.type ||
-        payloadData?.template || 'scomet'
+    const { _id, date, data, template, type, templateKey, ...rest } = req.body || {}
+    const explicitField = TEMPLATE_FIELDS.find((field) => Object.prototype.hasOwnProperty.call(req.body || {}, field))
+    const resolvedTemplateKey = normalizeTemplateKey(type || template || templateKey || explicitField) || 'scomet'
+    const payloadData = data ?? (explicitField ? req.body[explicitField] : rest)
 
     const parseDateInput = (value) => {
       if (!value) return new Date()
@@ -108,19 +126,28 @@ exports.saveInvoice = async (req, res) => {
     let invoice = null
     if (_id) {
       invoice = await InvoiceStore.findById(_id)
+      if (!invoice) {
+        return sendError(res, 'Invoice not found', new Error('Invoice not found'), 404)
+      }
       invoice.date = payloadDate
-      invoice.type = payloadType
-      invoice.data = payloadData
+      invoice[resolvedTemplateKey] = payloadData
+      if (rest.company) invoice.company = rest.company
+      if (rest.customer) invoice.customer = rest.customer
       await invoice.save()
     } else {
       let payload = {
         date: payloadDate,
-        type: payloadType,
-        data: payloadData
+        [resolvedTemplateKey]: payloadData
       }
 
       if (req.companyId) {
         payload.company = req.companyId
+      } else if (rest.company) {
+        payload.company = rest.company
+      }
+
+      if (rest.customer) {
+        payload.customer = rest.customer
       }
 
       invoice = await InvoiceStore.create(payload)
@@ -138,7 +165,16 @@ exports.getInvoiceByType = async (req, res) => {
     if (!template) {
       return sendError(res, 'Type is required', new Error('Type is required'), 400)
     }
-    const invoice = await InvoiceStore.findOne({ type: template })
+    const templateKey = normalizeTemplateKey(template)
+    if (!templateKey) {
+      return sendError(res, 'Invalid type', new Error('Invalid type'), 400)
+    }
+    const invoice = await InvoiceStore.findOne({
+      $or: [
+        { [templateKey]: { $exists: true, $ne: null } },
+        { type: template }
+      ]
+    })
     if (!invoice) {
       return sendSuccess(res, null, 200)
     }

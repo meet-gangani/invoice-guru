@@ -218,7 +218,9 @@ export default function ExportValueDeclaration() {
   useEffect(() => {
     if (invoiceId) {
       axiosInstance.get(`/v1/invoice/${invoiceId}`).then(res => {
-        if (res.data?.data) setData(res.data.data);
+        const invoice = res.data || {};
+        const templateData = invoice?.evd || invoice?.data;
+        if (templateData) setData(templateData);
         setLoading(false);
       }).catch(() => setLoading(false));
     }
@@ -227,7 +229,8 @@ export default function ExportValueDeclaration() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await axiosInstance.post('/v1/invoice/save', { _id: invoiceId, type: 'evd', data });
+      const payloadDate = data?.date || '';
+      const res = await axiosInstance.post('/v1/invoice/save', { _id: invoiceId, date: payloadDate, template: 'evd', evd: data });
       if (res.data?._id && !invoiceId) navigate(`/evd/${res.data._id}`, { replace: true });
     } finally { setIsSaving(false); }
   };

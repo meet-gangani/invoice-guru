@@ -261,7 +261,7 @@ export default function ScometDocument() {
     if (!value) return ''
     const raw = String(value).split('T')[0]
     const match = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/)
-    if (!match) return value
+    if (!match) return raw
     const [ , dd, mm, yyyy ] = match
     return `${yyyy}-${mm}-${dd}`
   }
@@ -332,10 +332,11 @@ export default function ScometDocument() {
           const response = await axiosInstance.get(`/v1/invoice/${invoiceId}`)
           if (!isActive) return
           const invoice = response?.data || {}
+          const templateData = invoice?.scomet || invoice?.data || {}
           const merged = {
             ...defaultData,
-            ...(invoice?.data || {}),
-            date: normalizeDateInput(invoice?.data?.date || invoice?.date || '')
+            ...templateData,
+            date: normalizeDateInput(templateData?.date || invoice?.date || '')
           }
           merged.tableRows = normalizeTableRows(merged.tableRows)
           hydrateData(merged)
@@ -357,7 +358,7 @@ export default function ScometDocument() {
       setIsSaving(true)
       const { date, ...restOfState } = data
       const payloadDate = formatDateForSave(date)
-      const payload = { _id: invoiceId, date: payloadDate, type: 'scomet', ...restOfState }
+      const payload = { _id: invoiceId, date: payloadDate, template: 'scomet', scomet: restOfState }
       const response = await axiosInstance.post('/v1/invoice/save', payload)
       const savedInvoice = response?.data
       if (savedInvoice?._id && !invoiceId) {

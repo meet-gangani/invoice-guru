@@ -65,7 +65,7 @@ const pages = {
     },
     {
       id: 'evd',
-      title: 'EVD Declaration',
+      title: 'EVD',
       type: 'item',
       url: '/evd',
       icon: IconChecklist,

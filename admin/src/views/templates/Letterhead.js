@@ -135,10 +135,27 @@ export default function LetterheadDocument() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  useEffect(() => {
+    if (!invoiceId) return;
+    let isActive = true;
+    axiosInstance.get(`/v1/invoice/${invoiceId}`).then((res) => {
+      if (!isActive) return;
+      const invoice = res.data || {};
+      const templateData = invoice?.letterHead || invoice?.data;
+      if (templateData) {
+        setFormData((prev) => ({ ...prev, ...templateData }));
+        if (templateData.settings) {
+          setSettings((prev) => ({ ...prev, ...templateData.settings }));
+        }
+      }
+    }).catch(() => {});
+    return () => { isActive = false; };
+  }, [invoiceId]);
+
   const handleSave = async () => {
     try {
       setIsSaving(true);
-      const payload = { ...formData, settings, type: 'letter-head', _id: invoiceId };
+      const payload = { _id: invoiceId, date: formData.date, template: 'letterHead', letterHead: { ...formData, settings } };
       const response = await axiosInstance.post('/v1/invoice/save', payload);
       if (response.data?._id && !invoiceId) {
         navigate(`/letter-head/${response.data._id}`, { replace: true });
