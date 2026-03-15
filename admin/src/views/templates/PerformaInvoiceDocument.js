@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, Grid, IconButton, InputAdornment, Stack, TextField, Typography } from '@mui/material'
-import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete'
+import { Box, Button, Checkbox, Dialog, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Select, Stack, TextField, Typography } from '@mui/material'
+import { createFilterOptions } from '@mui/material/Autocomplete'
 import { IconPlus, IconTrash } from '@tabler/icons'
 import { Document, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
@@ -77,7 +77,7 @@ const PerformaPdf = ({ data }) => {
     return Number.isFinite(parsed) ? parsed : 0
   }
 
-  const formatCurrency = (value) => `INR ${value.toFixed(2)}`
+  const formatCurrency = (value) => `${data.currency} ${value.toFixed(2)}`
   const subtotal = data.itemRows.reduce((sum, row) => sum + parseQty(row.qty) * parseAmount(row.amount), 0)
   const freight = parseAmount(data.totals.find((t) => t.label === 'Freight')?.value)
   const packing = parseAmount(data.totals.find((t) => t.label === 'Packing')?.value)
@@ -252,7 +252,7 @@ const PerformaPdf = ({ data }) => {
                         ? formatCurrency(subtotal)
                         : label === 'Total'
                             ? formatCurrency(total)
-                            : totalItem.value || 'INR 0.00'
+                            : totalItem.value
                 return totalItem.visible ? (
                     <View
                         key={`total-${idx}`}
@@ -282,6 +282,7 @@ const PdfPreview = React.memo(({ data }) => (
 ))
 
 const defaultData = {
+  currency: 'INR',
   companyName: { value: 'UNIQUE WAVES', visible: true },
   invoiceTitle: { value: 'PERFORMA INVOICE', visible: true },
   date: '',
@@ -370,7 +371,11 @@ export default function PerformaInvoiceDocument() {
   const [companyValue, setCompanyValue] = useState(null)
   const [companyInputValue, setCompanyInputValue] = useState("")
 
-  const customerFilter = createFilterOptions()
+  const currencyList = [
+    "AUD","BGN","BRL","CAD","CHF","CNY","CZK","DKK","EUR","GBP","HKD",
+    "HUF","IDR","ILS","INR","ISK","JPY","KRW","MXN","MYR","NOK","NZD",
+    "PHP","PLN","RON","SEK","SGD","THB","TRY","USD","ZAR"
+  ]
 
   const normalizeLabel = (value = '') => value.trim().toUpperCase()
   const formatDateForSave = (value) => {
@@ -390,28 +395,12 @@ export default function PerformaInvoiceDocument() {
   }
   const sanitizeAlphaNumUpper = (value) => value.replace(/[^a-z0-9]/gi, '').toUpperCase()
   const sanitizeDigits = (value) => value.replace(/\D/g, '')
-  const parseAmount = (value) => {
-    const cleaned = String(value || '').replace(/[^0-9.]/g, '')
-    const parsed = Number.parseFloat(cleaned)
-    return Number.isFinite(parsed) ? parsed : 0
-  }
+
   const sanitizeAmountInput = (value) => {
     const cleaned = String(value || '').replace(/[^0-9.]/g, '')
     const parts = cleaned.split('.')
     if (parts.length <= 1) return cleaned
     return `${parts[0]}.${parts.slice(1).join('')}`
-  }
-  const formatDisplay = (value) => {
-    const parsed = Number.parseFloat(value || 0)
-    if (!Number.isFinite(parsed)) return '0'
-    const fixed = parsed.toFixed(2)
-    return fixed.replace(/\.?0+$/, '')
-  }
-
-  const parseQty = (value) => {
-    const cleaned = String(value || '').replace(/[^0-9.]/g, '')
-    const parsed = Number.parseFloat(cleaned)
-    return Number.isFinite(parsed) ? parsed : 0
   }
 
   const splitToLines = (value) => {
@@ -507,24 +496,6 @@ export default function PerformaInvoiceDocument() {
     })
     setIsAddCustomerOpen(true)
   }
-
-  const subtotal = useMemo(
-      () => data.itemRows.reduce((sum, row) => sum + parseQty(row.qty) * parseAmount(row.amount), 0),
-      [ data.itemRows ]
-  )
-  const freight = useMemo(
-      () => parseAmount(data.totals.find((t) => t.label === 'Freight')?.value),
-      [ data.totals ]
-  )
-  const packing = useMemo(
-      () => parseAmount(data.totals.find((t) => t.label === 'Packing')?.value),
-      [ data.totals ]
-  )
-  const insurance = useMemo(
-      () => parseAmount(data.totals.find((t) => t.label === 'Insurance')?.value),
-      [ data.totals ]
-  )
-  const total = useMemo(() => subtotal + freight + packing + insurance, [ subtotal, freight, packing, insurance ])
 
   const updateField = (field) => (event) => {
     setData((prev) => ({ ...prev, [field]: { ...prev[field], value: event.target.value } }))
@@ -844,6 +815,7 @@ export default function PerformaInvoiceDocument() {
           const merged = {
             ...defaultData,
             ...templateData,
+            currency: invoice.currency,
             date: normalizeDateInput(templateData?.date || invoice?.date || '')
           }
           merged.metaFields = normalizeMetaFieldsDate(merged.metaFields, merged.date)
@@ -884,7 +856,8 @@ export default function PerformaInvoiceDocument() {
         template: 'performa',
         performa: restOfState,
         company: selectedCompanyId || undefined,
-        customer: selectedCustomerId || undefined
+        customer: selectedCustomerId || undefined,
+        currency: data.currency
       }
       const response = await axiosInstance.post('/v1/invoice/save', payload)
       const savedInvoice = response?.data
@@ -910,7 +883,8 @@ export default function PerformaInvoiceDocument() {
         performa: restOfState,
         company: selectedCompanyId || undefined,
         customer: selectedCustomerId || undefined,
-        performaApproved: nextApproved
+        performaApproved: nextApproved,
+        currency: data.currency
       }
       const response = await axiosInstance.post('/v1/invoice/save', payload)
       const savedInvoice = response?.data
@@ -925,6 +899,27 @@ export default function PerformaInvoiceDocument() {
           title="Performa"
           secondary={(
               <Stack direction="row" spacing={1}>
+                <FormControl size="small" sx={{ minWidth: 110 }}>
+                  <InputLabel id="currency-select-label">Currency</InputLabel>
+                  <Select
+                    labelId="currency-select-label"
+                    value={data.currency}
+                    label="Currency"
+                    onChange={(event) =>
+                      setData((prev) => ({
+                        ...prev,
+                        currency: event.target.value
+                      }))
+                    }
+                  >
+                    {currencyList.map((currency) => (
+                      <MenuItem key={currency} value={currency}>
+                        {currency}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
                 <Button sx={{ backgroundColor : theme.palette.secondary.main }} variant="contained" onClick={handleSave} disabled={isSaving}>
                   {isSaving ? 'Saving...' : 'Save'}
                 </Button>
@@ -970,7 +965,6 @@ export default function PerformaInvoiceDocument() {
                   Toggle any field to show/hide it in the PDF, and edit values inline.
                 </Typography>
 
-                <SectionTitle>Header</SectionTitle>
                 <SectionTitle>Company Selection</SectionTitle>
                 <EntityAutocomplete
                   label="Company"
@@ -1317,7 +1311,7 @@ export default function PerformaInvoiceDocument() {
                             onChange={updateTotal(index)}
                             fullWidth
                             InputProps={{
-                              startAdornment: <InputAdornment position="start">INR</InputAdornment>
+                              startAdornment: <InputAdornment position="start">{data.currency}</InputAdornment>
                             }}
                             inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
                         />

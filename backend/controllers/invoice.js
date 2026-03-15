@@ -123,7 +123,7 @@ const APPROVAL_FIELD_MAP = {
 
 exports.saveInvoice = async (req, res) => {
   try {
-    const { _id, date, data, template, type, templateKey, ...rest } = req.body || {}
+    const { _id, date, data, template, type, templateKey, currency, ...rest } = req.body || {}
     const explicitField = TEMPLATE_FIELDS.find((field) => Object.prototype.hasOwnProperty.call(req.body || {}, field))
     const resolvedTemplateKey = normalizeTemplateKey(type || template || templateKey || explicitField) || 'scomet'
     const payloadData = data ?? (explicitField ? req.body[explicitField] : rest)
@@ -156,12 +156,17 @@ exports.saveInvoice = async (req, res) => {
       invoice[resolvedTemplateKey] = payloadData
       if (rest.company) invoice.company = rest.company
       if (rest.customer) invoice.customer = rest.customer
+      if (currency) invoice.currency = currency
       if (hasApprovalFlag) invoice[approvalField] = approvalValue
       await invoice.save()
     } else {
       let payload = {
         date: payloadDate,
         [resolvedTemplateKey]: payloadData
+      }
+
+      if (currency) {
+        payload.currency = currency
       }
 
       if (req.companyId) {

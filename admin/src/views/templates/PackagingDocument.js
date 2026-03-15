@@ -50,7 +50,7 @@ const ExportCommercialPdf = ({ data }) => {
     const parsed = Number.parseFloat(cleaned)
     return Number.isFinite(parsed) ? parsed : 0
   }
-  const formatCurrency = (value, prefix = 'EUR') => `${prefix} ${value.toFixed(2)}`
+  const formatCurrency = (value) => `${data.currency} ${value.toFixed(2)}`
 
   const amountColIndex = tableHeaders.findIndex((h) => normalizeHeader(h) === 'AMOUNT')
   const amountIndex = amountColIndex >= 0 ? amountColIndex : Math.max(0, tableHeaders.length - 1)
@@ -544,11 +544,11 @@ export default function PackagingDocument() {
     return (numeric / rate).toFixed(2)
   }
 
-  const fetchEurToInrRate = async () => {
+  const fetchEurToInrRate = async (currency) => {
     if (eurToInrRate) return eurToInrRate
     if (rateRequestRef.current) return rateRequestRef.current
 
-    rateRequestRef.current = fetch('https://api.frankfurter.dev/v1/latest?amount=1&from=EUR&to=INR')
+    rateRequestRef.current = fetch(`https://api.frankfurter.dev/v1/latest?amount=1&from=${currency}&to=INR`)
         .then((response) => response.json())
         .then((payload) => {
           const rate = Number(payload?.rates?.INR)
@@ -685,6 +685,7 @@ export default function PackagingDocument() {
           const merged = {
             ...defaultData,
             ...templateData,
+            currency: invoice?.currency || defaultData.currency,
             date: { ...(defaultData.date || {}), value: invoice?.date || templateDateValue || '' }
           }
           setData(merged)
@@ -973,7 +974,7 @@ export default function PackagingDocument() {
                                             nextRows[rowIndex] = nextRow
                                             return { ...prev, tableRows: nextRows }
                                           })
-                                          const rate = await fetchEurToInrRate()
+                                          const rate = await fetchEurToInrRate(data.currency)
                                           if (!rate) return
                                           const inrValue = convertEurToInr(value, rate)
                                           setTableAmountInr((prev) => {
@@ -983,7 +984,7 @@ export default function PackagingDocument() {
                                           })
                                         }}
                                         fullWidth
-                                        InputProps={{ startAdornment: <InputAdornment position="start">EUR</InputAdornment> }}
+                                        InputProps={{ startAdornment: <InputAdornment position="start">{data.currency}</InputAdornment> }}
                                         inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
                                     />
                                   </Grid>
@@ -998,7 +999,7 @@ export default function PackagingDocument() {
                                             next[rowIndex] = value
                                             return next
                                           })
-                                          const rate = await fetchEurToInrRate()
+                                          const rate = await fetchEurToInrRate(data.currency)
                                           if (!rate) return
                                           const eurValue = convertInrToEur(value, rate)
                                           setData((prev) => {
@@ -1051,7 +1052,7 @@ export default function PackagingDocument() {
                           ...prev,
                           packingCharge: { ...prev.packingCharge, value }
                         }))
-                        const rate = await fetchEurToInrRate()
+                        const rate = await fetchEurToInrRate(data.currency)
                         if (!rate) return
                         const inrValue = convertEurToInr(value, rate)
                         setData((prev) => ({
@@ -1059,7 +1060,7 @@ export default function PackagingDocument() {
                           packingChargeInr: { ...prev.packingChargeInr, value: inrValue }
                         }))
                       }}
-                      InputProps={{ startAdornment: <InputAdornment position="start">EUR</InputAdornment> }}
+                      InputProps={{ startAdornment: <InputAdornment position="start">{data.currency}</InputAdornment> }}
                       inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
                       sx={{ flex: 1 }}
                   />
@@ -1072,7 +1073,7 @@ export default function PackagingDocument() {
                           ...prev,
                           packingChargeInr: { ...prev.packingChargeInr, value }
                         }))
-                        const rate = await fetchEurToInrRate()
+                        const rate = await fetchEurToInrRate(data.currency)
                         if (!rate) return
                         const eurValue = convertInrToEur(value, rate)
                         setData((prev) => ({
@@ -1096,7 +1097,7 @@ export default function PackagingDocument() {
                           ...prev,
                           forwarding: { ...prev.forwarding, value }
                         }))
-                        const rate = await fetchEurToInrRate()
+                        const rate = await fetchEurToInrRate(data.currency)
                         if (!rate) return
                         const inrValue = convertEurToInr(value, rate)
                         setData((prev) => ({
@@ -1104,7 +1105,7 @@ export default function PackagingDocument() {
                           forwardingInr: { ...prev.forwardingInr, value: inrValue }
                         }))
                       }}
-                      InputProps={{ startAdornment: <InputAdornment position="start">EUR</InputAdornment> }}
+                      InputProps={{ startAdornment: <InputAdornment position="start">{data.currency}</InputAdornment> }}
                       inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
                       sx={{ flex: 1 }}
                   />
@@ -1117,7 +1118,7 @@ export default function PackagingDocument() {
                           ...prev,
                           forwardingInr: { ...prev.forwardingInr, value }
                         }))
-                        const rate = await fetchEurToInrRate()
+                        const rate = await fetchEurToInrRate(data.currency)
                         if (!rate) return
                         const eurValue = convertInrToEur(value, rate)
                         setData((prev) => ({
@@ -1141,7 +1142,7 @@ export default function PackagingDocument() {
                           ...prev,
                           insurance: { ...prev.insurance, value }
                         }))
-                        const rate = await fetchEurToInrRate()
+                        const rate = await fetchEurToInrRate(data.currency)
                         if (!rate) return
                         const inrValue = convertEurToInr(value, rate)
                         setData((prev) => ({
@@ -1149,7 +1150,7 @@ export default function PackagingDocument() {
                           insuranceInr: { ...prev.insuranceInr, value: inrValue }
                         }))
                       }}
-                      InputProps={{ startAdornment: <InputAdornment position="start">EUR</InputAdornment> }}
+                      InputProps={{ startAdornment: <InputAdornment position="start">{data.currency}</InputAdornment> }}
                       inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
                       sx={{ flex: 1 }}
                   />
@@ -1162,7 +1163,7 @@ export default function PackagingDocument() {
                           ...prev,
                           insuranceInr: { ...prev.insuranceInr, value }
                         }))
-                        const rate = await fetchEurToInrRate()
+                        const rate = await fetchEurToInrRate(data.currency)
                         if (!rate) return
                         const eurValue = convertInrToEur(value, rate)
                         setData((prev) => ({
