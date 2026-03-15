@@ -10,6 +10,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import MainCard from 'ui-component/cards/MainCard';
 import { useTheme } from '@mui/material/styles';
 import axiosInstance from '../../services/axiosInstance'; 
+import EndpointService from '../../services/endpoint.service';
+import EntityAutocomplete from 'components/EntityAutocomplete';
 
 const pdfStyles = StyleSheet.create({
   page: { 
@@ -217,6 +219,57 @@ export default function ExportValueDeclaration() {
   const [isApproved, setIsApproved] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
   const [loading, setLoading] = useState(!!invoiceId);
+  const [companies, setCompanies] = useState([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState('');
+  const [companyValue, setCompanyValue] = useState(null);
+  const [companyInputValue, setCompanyInputValue] = useState('');
+
+  const applyCompanyToForm = (company) => {
+    if (!company) return;
+    setData((prev) => ({
+      ...prev,
+      brandName: company.name || prev.brandName,
+      contact1: company.contactNumber || prev.contact1,
+      contact2: company.username || prev.contact2
+    }));
+  };
+
+  const clearCompanyFromForm = () => {
+    setData((prev) => ({
+      ...prev,
+      brandName: '',
+      contact1: '',
+      contact2: ''
+    }));
+  };
+
+  const fetchCompany = async () => {
+    try {
+      const response = await EndpointService.getCompanyAccessibleList();
+      const list = response?.companies || [];
+      setCompanies(list);
+    } catch (error) {
+      setCompanies([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompany();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCompanyId || !companies.length) {
+      setCompanyValue(null);
+      setCompanyInputValue('');
+      return;
+    }
+    const match = companies.find((item) => item._id === selectedCompanyId);
+    if (match) {
+      setCompanyValue(match);
+      setCompanyInputValue(match.name || '');
+      applyCompanyToForm(match);
+    }
+  }, [selectedCompanyId, companies]);
 
   useEffect(() => {
     setHasSaved(false);
@@ -225,6 +278,9 @@ export default function ExportValueDeclaration() {
         const invoice = res.data || {};
         const templateData = invoice?.evd || invoice?.data;
         if (templateData) setData(templateData);
+        const invoiceCompanyId =
+          typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || '';
+        setSelectedCompanyId(invoiceCompanyId);
         setIsApproved(Boolean(invoice?.evdApproved));
         setHasSaved(false);
         setLoading(false);
@@ -236,7 +292,13 @@ export default function ExportValueDeclaration() {
     setIsSaving(true);
     try {
       const payloadDate = data?.date || '';
-      const res = await axiosInstance.post('/v1/invoice/save', { _id: invoiceId, date: payloadDate, template: 'evd', evd: data });
+      const res = await axiosInstance.post('/v1/invoice/save', {
+        _id: invoiceId,
+        date: payloadDate,
+        template: 'evd',
+        evd: data,
+        company: selectedCompanyId || undefined
+      });
       if (res.data?._id && !invoiceId) navigate(`/evd/${res.data._id}`, { replace: true });
       setHasSaved(true);
     } finally { setIsSaving(false); }
@@ -252,6 +314,7 @@ export default function ExportValueDeclaration() {
         date: payloadDate,
         template: 'evd',
         evd: data,
+        company: selectedCompanyId || undefined,
         evdApproved: nextApproved
       });
       setIsApproved(Boolean(res.data?.evdApproved ?? nextApproved));
@@ -302,6 +365,58 @@ export default function ExportValueDeclaration() {
         </Grid>
         <Grid item xs={12} md={5}>
           <Box sx={{ maxHeight: '85vh', overflowY: 'auto', p: 1 }}>
+            <Box sx={{ p: 2, mb: 2, border: '1px solid #eee', borderRadius: 1 }}>
+              <Typography variant="caption" fontWeight="bold">Company</Typography>
+              <Box sx={{ mt: 1 }}>
+                <EntityAutocomplete
+                  label="Company"
+                  options={companies}
+                  value={companyValue}
+                  inputValue={companyInputValue}
+                  allowAdd={false}
+                  onInputChange={setCompanyInputValue}
+                  onChange={(newValue) => {
+                    if (newValue?._id) {
+                      setSelectedCompanyId(newValue._id);
+                      setCompanyValue(newValue);
+                      applyCompanyToForm(newValue);
+                      return;
+                    }
+                    if (!newValue) {
+                      setSelectedCompanyId('');
+                      setCompanyValue(null);
+                      clearCompanyFromForm();
+                    }
+                  }}
+                />
+              </Box>
+            </Box>
+            <Box sx={{ p: 2, mb: 2, border: '1px solid #eee', borderRadius: 1 }}>
+              <Typography variant="caption" fontWeight="bold">Header Details</Typography>
+              <Stack spacing={1.5} sx={{ mt: 1 }}>
+                <TextField
+                  label="Brand Name"
+                  fullWidth
+                  size="small"
+                  value={data.brandName}
+                  onChange={(e) => setData({ ...data, brandName: e.target.value })}
+                />
+                <TextField
+                  label="Contact Line 1"
+                  fullWidth
+                  size="small"
+                  value={data.contact1}
+                  onChange={(e) => setData({ ...data, contact1: e.target.value })}
+                />
+                <TextField
+                  label="Contact Line 2"
+                  fullWidth
+                  size="small"
+                  value={data.contact2}
+                  onChange={(e) => setData({ ...data, contact2: e.target.value })}
+                />
+              </Stack>
+            </Box>
             {data.fields.map((field, index) => (
               <Box key={field.id} sx={{ p: 2, mb: 1, border: '1px solid #eee', borderRadius: 1 }}>
                 <Stack direction="row" justifyContent="space-between" mb={1}>

@@ -361,6 +361,7 @@ export default function PerformaInvoiceDocument() {
   const [ companies, setCompanies ] = useState([])
 
   const [ selectedCustomerId, setSelectedCustomerId ] = useState('')
+  const [ selectedCompanyId, setSelectedCompanyId ] = useState('')
   const [ customerValue, setCustomerValue ] = useState(null)
   const [ customerInputValue, setCustomerInputValue ] = useState('')
   const [ newCustomerDraft, setNewCustomerDraft ] = useState(null)
@@ -423,6 +424,34 @@ export default function PerformaInvoiceDocument() {
   }
 
   const buildLines = (values) => values.filter(Boolean).map((value) => ({ value, visible: true }))
+
+  const applyCompanyToForm = (company) => {
+    if (!company) return
+    const addressLines = buildLines([
+      ...splitToLines(company.address),
+      company.pinCode ? `PIN: ${company.pinCode}` : '',
+      company.contactPerson || '',
+      company.contactNumber || '',
+      company.username || ''
+    ])
+
+    setData((prev) => ({
+      ...prev,
+      companyName: { ...prev.companyName, value: company.name || '' },
+      addressLines: addressLines.length ? addressLines : prev.addressLines
+    }))
+  }
+
+  const clearCompanyFromForm = () => {
+    setData((prev) => ({
+      ...prev,
+      companyName: { ...prev.companyName, value: '' },
+      addressLines: (prev.addressLines?.length ? prev.addressLines : [ { value: '', visible: true } ]).map((line) => ({
+        ...line,
+        value: ''
+      }))
+    }))
+  }
 
   const applyCustomerToForm = (customer) => {
     if (!customer) return
@@ -744,14 +773,30 @@ export default function PerformaInvoiceDocument() {
   useEffect(() => {
     if (!selectedCustomerId || !customers.length) {
       setCustomerValue(null)
+      setCustomerInputValue('')
       return
     }
     const match = customers.find((item) => item._id === selectedCustomerId)
     if (match) {
       setCustomerValue(match)
+      setCustomerInputValue(match.name || match.mail || '')
       applyCustomerToForm(match)
     }
   }, [ selectedCustomerId, customers ])
+
+  useEffect(() => {
+    if (!selectedCompanyId || !companies.length) {
+      setCompanyValue(null)
+      setCompanyInputValue('')
+      return
+    }
+    const match = companies.find((item) => item._id === selectedCompanyId)
+    if (match) {
+      setCompanyValue(match)
+      setCompanyInputValue(match.name || '')
+      applyCompanyToForm(match)
+    }
+  }, [ selectedCompanyId, companies ])
 
   const handleCreateCustomer = async () => {
     if (!newCustomerDraft?.name || !newCustomerDraft?.mail) return
@@ -802,8 +847,12 @@ export default function PerformaInvoiceDocument() {
             date: normalizeDateInput(templateData?.date || invoice?.date || '')
           }
           merged.metaFields = normalizeMetaFieldsDate(merged.metaFields, merged.date)
-          setSelectedCustomerId(invoice?.customer || '')
-          setCustomerInputValue('')
+          const invoiceCompanyId =
+              typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || ''
+          const invoiceCustomerId =
+              typeof invoice?.customer === 'string' ? invoice.customer : invoice?.customer?._id || ''
+          setSelectedCompanyId(invoiceCompanyId)
+          setSelectedCustomerId(invoiceCustomerId)
           setData(merged)
           setPdfData(merged)
           setIsApproved(Boolean(invoice?.performaApproved))
@@ -834,6 +883,7 @@ export default function PerformaInvoiceDocument() {
         date: payloadDate,
         template: 'performa',
         performa: restOfState,
+        company: selectedCompanyId || undefined,
         customer: selectedCustomerId || undefined
       }
       const response = await axiosInstance.post('/v1/invoice/save', payload)
@@ -858,6 +908,7 @@ export default function PerformaInvoiceDocument() {
         date: payloadDate,
         template: 'performa',
         performa: restOfState,
+        company: selectedCompanyId || undefined,
         customer: selectedCustomerId || undefined,
         performaApproved: nextApproved
       }
@@ -931,11 +982,17 @@ export default function PerformaInvoiceDocument() {
                   onChange={(newValue) => {
 
                     if (newValue?._id) {
+                      setSelectedCompanyId(newValue._id)
                       setCompanyValue(newValue)
+                      applyCompanyToForm(newValue)
+                      return
                     }
 
                     if (!newValue) {
+                      setSelectedCompanyId('')
                       setCompanyValue(null)
+                      clearCompanyFromForm()
+                      return
                     }
 
                   }}

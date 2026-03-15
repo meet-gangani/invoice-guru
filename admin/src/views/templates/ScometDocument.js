@@ -6,6 +6,8 @@ import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
 import { useNavigate, useParams } from 'react-router-dom'
 import axiosInstance from '../../services/axiosInstance'
+import EndpointService from '../../services/endpoint.service'
+import EntityAutocomplete from 'components/EntityAutocomplete'
 
 const styles = StyleSheet.create({
   page: {
@@ -238,6 +240,10 @@ export default function ScometDocument() {
   const [ isApproving, setIsApproving ] = useState(false)
   const [ isApproved, setIsApproved ] = useState(false)
   const [ hasSaved, setHasSaved ] = useState(false)
+  const [ companies, setCompanies ] = useState([])
+  const [ selectedCompanyId, setSelectedCompanyId ] = useState('')
+  const [ companyValue, setCompanyValue ] = useState(null)
+  const [ companyInputValue, setCompanyInputValue ] = useState('')
 
   const hydrateData = (nextData) => {
     setData(nextData)
@@ -294,12 +300,82 @@ export default function ScometDocument() {
     return headers.map((header) => (normalizeHeader(header) === 'MODE OF EXPORT' ? 'AIR' : ''))
   }
 
+  const splitToLines = (value) => {
+    if (!value) return []
+    const raw = String(value).trim()
+    if (!raw) return []
+    const byNewLine = raw.split('\n').map((line) => line.trim()).filter(Boolean)
+    if (byNewLine.length > 1) return byNewLine
+    return [ raw ]
+  }
+
+  const buildLines = (values) => values.filter(Boolean)
+
+  const applyCompanyToForm = (company) => {
+    if (!company) return
+    const contactLines = buildLines([
+      company.contactNumber || '',
+      company.username || ''
+    ])
+    const addressLines = buildLines([
+      ...splitToLines(company.address),
+      company.pinCode ? `PIN: ${company.pinCode}` : ''
+    ])
+    setData((prev) => ({
+      ...prev,
+      brandName: company.name || '',
+      contactLines: contactLines.length ? contactLines : prev.contactLines,
+      addressLines: addressLines.length ? addressLines : prev.addressLines,
+      signatureLine: company.name ? `FOR ${company.name}` : prev.signatureLine,
+      footerLine: company.address || prev.footerLine
+    }))
+  }
+
+  const clearCompanyFromForm = () => {
+    setData((prev) => ({
+      ...prev,
+      brandName: '',
+      contactLines: [ '' ],
+      addressLines: [ '' ],
+      signatureLine: '',
+      footerLine: ''
+    }))
+  }
+
   useEffect(() => {
     const handle = setTimeout(() => {
       setPdfData(data)
     }, 500)
     return () => clearTimeout(handle)
   }, [ data ])
+
+  const fetchCompany = async () => {
+    try {
+      const response = await EndpointService.getCompanyAccessibleList()
+      const list = response?.companies || []
+      setCompanies(list)
+    } catch (error) {
+      setCompanies([])
+    }
+  }
+
+  useEffect(() => {
+    fetchCompany()
+  }, [])
+
+  useEffect(() => {
+    if (!selectedCompanyId || !companies.length) {
+      setCompanyValue(null)
+      setCompanyInputValue('')
+      return
+    }
+    const match = companies.find((item) => item._id === selectedCompanyId)
+    if (match) {
+      setCompanyValue(match)
+      setCompanyInputValue(match.name || '')
+      applyCompanyToForm(match)
+    }
+  }, [ selectedCompanyId, companies ])
 
   const normalizeTableRows = (rows = []) => {
     if (!Array.isArray(rows)) return [ createEmptyRow() ]
@@ -337,12 +413,15 @@ export default function ScometDocument() {
           if (!isActive) return
           const invoice = response?.data || {}
           const templateData = invoice?.scomet || invoice?.data || {}
+          const invoiceCompanyId =
+              typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || ''
           const merged = {
             ...defaultData,
             ...templateData,
             date: normalizeDateInput(templateData?.date || invoice?.date || '')
           }
           merged.tableRows = normalizeTableRows(merged.tableRows)
+          setSelectedCompanyId(invoiceCompanyId)
           hydrateData(merged)
           setIsApproved(Boolean(invoice?.scometApproved))
           setHasSaved(false)
@@ -366,7 +445,13 @@ export default function ScometDocument() {
       setIsSaving(true)
       const { date, ...restOfState } = data
       const payloadDate = formatDateForSave(date)
-      const payload = { _id: invoiceId, date: payloadDate, template: 'scomet', scomet: restOfState }
+      const payload = {
+        _id: invoiceId,
+        date: payloadDate,
+        template: 'scomet',
+        scomet: restOfState,
+        company: selectedCompanyId || undefined
+      }
       const response = await axiosInstance.post('/v1/invoice/save', payload)
       const savedInvoice = response?.data
       if (savedInvoice?._id && !invoiceId) {
@@ -389,6 +474,7 @@ export default function ScometDocument() {
         date: payloadDate,
         template: 'scomet',
         scomet: restOfState,
+        company: selectedCompanyId || undefined,
         scometApproved: nextApproved
       }
       const response = await axiosInstance.post('/v1/invoice/save', payload)
@@ -450,6 +536,29 @@ export default function ScometDocument() {
                 </Typography>
 
                 <SectionTitle>Header</SectionTitle>
+                <EntityAutocomplete
+                  label="Company"
+                  options={companies}
+                  value={companyValue}
+                  inputValue={companyInputValue}
+                  allowAdd={false}
+                  onInputChange={setCompanyInputValue}
+                  onChange={(newValue) => {
+                    if (newValue?._id) {
+                      setSelectedCompanyId(newValue._id)
+                      setCompanyValue(newValue)
+                      applyCompanyToForm(newValue)
+                      return
+                    }
+
+                    if (!newValue) {
+                      setSelectedCompanyId('')
+                      setCompanyValue(null)
+                      clearCompanyFromForm()
+                    }
+                  }}
+                />
+                <Divider/>
                 <TextField label="Brand Name" value={data.brandName} onChange={updateField('brandName')} fullWidth/>
                 {data.contactLines.map((line, index) => (
                     <Stack key={`contact-${index}`} direction="row" spacing={1} alignItems="center">

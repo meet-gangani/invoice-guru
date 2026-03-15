@@ -6,6 +6,8 @@ import { useTheme } from '@mui/material/styles';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IconPlus, IconTrash } from '@tabler/icons';
 import axiosInstance from '../../services/axiosInstance';
+import EndpointService from '../../services/endpoint.service';
+import EntityAutocomplete from 'components/EntityAutocomplete';
 
 // --- PDF STYLES (MATCHING YOUR IMAGE) ---
 const pdfStyles = StyleSheet.create({
@@ -161,6 +163,10 @@ export default function LetterheadDocument() {
   const [isApproved, setIsApproved] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
   const [formData, setFormData] = useState(defaultData);
+  const [companies, setCompanies] = useState([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState('');
+  const [companyValue, setCompanyValue] = useState(null);
+  const [companyInputValue, setCompanyInputValue] = useState('');
 
   const updateField = (field) => (event) => {
     setFormData((prev) => ({ ...prev, [field]: { ...prev[field], value: event.target.value } }));
@@ -228,6 +234,55 @@ export default function LetterheadDocument() {
     return defaultData.bodyLines;
   };
 
+  const applyCompanyToForm = (company) => {
+    if (!company) return;
+    setFormData((prev) => ({
+      ...prev,
+      brandName: { ...prev.brandName, value: company.name || '' },
+      phone: { ...prev.phone, value: company.contactNumber || prev.phone.value },
+      website: { ...prev.website, value: company.username || prev.website.value },
+      footerAddress: { ...prev.footerAddress, value: company.address || prev.footerAddress.value }
+    }));
+  };
+
+  const clearCompanyFromForm = () => {
+    setFormData((prev) => ({
+      ...prev,
+      brandName: { ...prev.brandName, value: '' },
+      phone: { ...prev.phone, value: '' },
+      website: { ...prev.website, value: '' },
+      footerAddress: { ...prev.footerAddress, value: '' }
+    }));
+  };
+
+  const fetchCompany = async () => {
+    try {
+      const response = await EndpointService.getCompanyAccessibleList();
+      const list = response?.companies || [];
+      setCompanies(list);
+    } catch (error) {
+      setCompanies([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompany();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCompanyId || !companies.length) {
+      setCompanyValue(null);
+      setCompanyInputValue('');
+      return;
+    }
+    const match = companies.find((item) => item._id === selectedCompanyId);
+    if (match) {
+      setCompanyValue(match);
+      setCompanyInputValue(match.name || '');
+      applyCompanyToForm(match);
+    }
+  }, [selectedCompanyId, companies]);
+
   useEffect(() => {
     setHasSaved(false);
     if (!invoiceId) return;
@@ -236,6 +291,8 @@ export default function LetterheadDocument() {
       if (!isActive) return;
       const invoice = res.data || {};
       const templateData = invoice?.letterHead || invoice?.data || {};
+      const invoiceCompanyId =
+        typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || '';
       const merged = {
         brandName: normalizeField(templateData.brandName, defaultData.brandName),
         slogan: normalizeField(templateData.slogan, defaultData.slogan),
@@ -266,6 +323,7 @@ export default function LetterheadDocument() {
         }
       }
 
+      setSelectedCompanyId(invoiceCompanyId);
       setFormData(merged);
       setIsApproved(Boolean(invoice?.letterHeadApproved));
       setHasSaved(false);
@@ -280,7 +338,8 @@ export default function LetterheadDocument() {
         _id: invoiceId,
         date: formData.date.value,
         template: 'letterHead',
-        letterHead: { ...formData }
+        letterHead: { ...formData },
+        company: selectedCompanyId || undefined
       };
       const response = await axiosInstance.post('/v1/invoice/save', payload);
       if (response.data?._id && !invoiceId) {
@@ -301,6 +360,7 @@ export default function LetterheadDocument() {
         date: formData.date.value,
         template: 'letterHead',
         letterHead: { ...formData },
+        company: selectedCompanyId || undefined,
         letterHeadApproved: nextApproved
       };
       const response = await axiosInstance.post('/v1/invoice/save', payload);
@@ -354,6 +414,28 @@ export default function LetterheadDocument() {
           <Box sx={{ maxHeight: '85vh', overflowY: 'auto', pr: 1 }}>
             <Stack spacing={3}>
               <Typography variant="h5">Header Details</Typography>
+              <EntityAutocomplete
+                label="Company"
+                options={companies}
+                value={companyValue}
+                inputValue={companyInputValue}
+                allowAdd={false}
+                onInputChange={setCompanyInputValue}
+                onChange={(newValue) => {
+                  if (newValue?._id) {
+                    setSelectedCompanyId(newValue._id);
+                    setCompanyValue(newValue);
+                    applyCompanyToForm(newValue);
+                    return;
+                  }
+                  if (!newValue) {
+                    setSelectedCompanyId('');
+                    setCompanyValue(null);
+                    clearCompanyFromForm();
+                  }
+                }}
+              />
+              <Divider />
               <FieldToggle label="Company Name" value={formData.brandName.value} visible={formData.brandName.visible} onChange={updateField('brandName')} onToggle={toggleField('brandName')} />
               <FieldToggle label="Slogan" value={formData.slogan.value} visible={formData.slogan.visible} onChange={updateField('slogan')} onToggle={toggleField('slogan')} />
 

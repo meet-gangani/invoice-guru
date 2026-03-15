@@ -6,6 +6,8 @@ import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
 import { useNavigate, useParams } from 'react-router-dom'
 import axiosInstance from '../../services/axiosInstance'
+import EndpointService from '../../services/endpoint.service'
+import EntityAutocomplete from 'components/EntityAutocomplete'
 
 const styles = StyleSheet.create({
   page: { padding: 30, fontSize: 7.5, fontFamily: 'Helvetica', color: '#000' },
@@ -392,6 +394,14 @@ export default function PackingListDocument() {
   const [ isApproving, setIsApproving ] = useState(false)
   const [ isApproved, setIsApproved ] = useState(false)
   const [ hasSaved, setHasSaved ] = useState(false)
+  const [ customers, setCustomers ] = useState([])
+  const [ companies, setCompanies ] = useState([])
+  const [ selectedCustomerId, setSelectedCustomerId ] = useState('')
+  const [ selectedCompanyId, setSelectedCompanyId ] = useState('')
+  const [ customerValue, setCustomerValue ] = useState(null)
+  const [ customerInputValue, setCustomerInputValue ] = useState('')
+  const [ companyValue, setCompanyValue ] = useState(null)
+  const [ companyInputValue, setCompanyInputValue ] = useState('')
 
   const formatDateForSave = (value) => {
     if (!value) return ''
@@ -465,6 +475,78 @@ export default function PackingListDocument() {
     })
   }
 
+  const splitToLines = (value) => {
+    if (!value) return []
+    const raw = String(value).trim()
+    if (!raw) return []
+    const byNewLine = raw.split('\n').map((line) => line.trim()).filter(Boolean)
+    if (byNewLine.length > 1) return byNewLine
+    return [ raw ]
+  }
+
+  const buildLines = (values) => values.filter(Boolean)
+
+  const applyCompanyToForm = (company) => {
+    if (!company) return
+    const exporterLines = buildLines([
+      company.name || '',
+      ...splitToLines(company.address),
+      company.pinCode ? `PIN: ${company.pinCode}` : '',
+      company.contactPerson || '',
+      company.contactNumber || '',
+      company.username || ''
+    ]).map((value) => ({ value, visible: true }))
+
+    setData((prev) => ({
+      ...prev,
+      exporterLines: exporterLines.length ? exporterLines : prev.exporterLines,
+      authorizedBy: { ...prev.authorizedBy, value: company.name || '' }
+    }))
+  }
+
+  const clearCompanyFromForm = () => {
+    setData((prev) => ({
+      ...prev,
+      exporterLines: (prev.exporterLines?.length ? prev.exporterLines : [ { value: '', visible: true } ]).map((line) => ({
+        ...line,
+        value: ''
+      })),
+      authorizedBy: { ...prev.authorizedBy, value: '' }
+    }))
+  }
+
+  const applyCustomerToForm = (customer) => {
+    if (!customer) return
+    const consigneeLines = buildLines([
+      customer.name,
+      ...splitToLines(customer.shipTo || customer.address),
+      customer.pinCode ? `PIN: ${customer.pinCode}` : ''
+    ])
+    const notifyLines = buildLines([
+      customer.name,
+      ...splitToLines(customer.billTo || customer.address),
+      customer.pinCode ? `PIN: ${customer.pinCode}` : ''
+    ])
+
+    setData((prev) => ({
+      ...prev,
+      consignee: { ...prev.consignee, value: consigneeLines.join('\n') },
+      notifyBuyer: { ...prev.notifyBuyer, value: notifyLines.join('\n') },
+      contact: { ...prev.contact, value: customer.contact || '' },
+      tel: { ...prev.tel, value: customer.contact || '' }
+    }))
+  }
+
+  const clearCustomerFromForm = () => {
+    setData((prev) => ({
+      ...prev,
+      consignee: { ...prev.consignee, value: '' },
+      notifyBuyer: { ...prev.notifyBuyer, value: '' },
+      contact: { ...prev.contact, value: '' },
+      tel: { ...prev.tel, value: '' }
+    }))
+  }
+
   const tableColumnCount = useMemo(() => Math.max(1, data.tableHeaders.length), [ data.tableHeaders.length ])
 
   useEffect(() => {
@@ -473,6 +555,68 @@ export default function PackingListDocument() {
     }, 500)
     return () => clearTimeout(handle)
   }, [ data ])
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await axiosInstance.get('/v1/customer')
+      const list = response?.data?.customers || []
+      setCustomers(list)
+      return list
+    } catch (error) {
+      setCustomers([])
+      return []
+    }
+  }
+
+  const fetchCompany = async () => {
+    try {
+      const response = await EndpointService.getCompanyAccessibleList()
+      const list = response?.companies || []
+      setCompanies(list)
+    } catch (error) {
+      setCompanies([])
+    }
+  }
+
+  useEffect(() => {
+    const loadCustomers = async () => {
+      const list = await fetchCustomers()
+      if (list.length === 0) {
+        setCustomers([])
+      }
+    }
+
+    loadCustomers()
+    fetchCompany()
+  }, [])
+
+  useEffect(() => {
+    if (!selectedCustomerId || !customers.length) {
+      setCustomerValue(null)
+      setCustomerInputValue('')
+      return
+    }
+    const match = customers.find((item) => item._id === selectedCustomerId)
+    if (match) {
+      setCustomerValue(match)
+      setCustomerInputValue(match.name || match.mail || '')
+      applyCustomerToForm(match)
+    }
+  }, [ selectedCustomerId, customers ])
+
+  useEffect(() => {
+    if (!selectedCompanyId || !companies.length) {
+      setCompanyValue(null)
+      setCompanyInputValue('')
+      return
+    }
+    const match = companies.find((item) => item._id === selectedCompanyId)
+    if (match) {
+      setCompanyValue(match)
+      setCompanyInputValue(match.name || '')
+      applyCompanyToForm(match)
+    }
+  }, [ selectedCompanyId, companies ])
 
   useEffect(() => {
     setHasSaved(false)
@@ -521,6 +665,12 @@ export default function PackingListDocument() {
             ...templateData
           }
           merged.date = coerceDateField(templateData?.date ?? invoice?.date, defaultData.date.visible)
+          const invoiceCompanyId =
+              typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || ''
+          const invoiceCustomerId =
+              typeof invoice?.customer === 'string' ? invoice.customer : invoice?.customer?._id || ''
+          setSelectedCompanyId(invoiceCompanyId)
+          setSelectedCustomerId(invoiceCustomerId)
           setData(merged)
           setPdfData(merged)
           setIsApproved(Boolean(invoice?.packagingApproved))
@@ -546,7 +696,14 @@ export default function PackingListDocument() {
       setIsSaving(true)
       const { date, ...restOfState } = data
       const payloadDate = formatDateForSave(date?.value || '')
-      const payload = { _id: invoiceId, date: payloadDate, template: 'packaging', packaging: restOfState }
+      const payload = {
+        _id: invoiceId,
+        date: payloadDate,
+        template: 'packaging',
+        packaging: restOfState,
+        company: selectedCompanyId || undefined,
+        customer: selectedCustomerId || undefined
+      }
       const response = await axiosInstance.post('/v1/invoice/save', payload)
       const savedInvoice = response?.data
       if (savedInvoice?._id && !invoiceId) {
@@ -569,6 +726,8 @@ export default function PackingListDocument() {
         date: payloadDate,
         template: 'packaging',
         packaging: restOfState,
+        company: selectedCompanyId || undefined,
+        customer: selectedCustomerId || undefined,
         packagingApproved: nextApproved
       }
       const response = await axiosInstance.post('/v1/invoice/save', payload)
@@ -639,6 +798,58 @@ export default function PackingListDocument() {
                     visible={data.title.visible}
                     onChange={updateField('title')}
                     onToggle={toggleField('title')}
+                />
+
+                <Divider/>
+
+                <SectionTitle>Company Selection</SectionTitle>
+                <EntityAutocomplete
+                  label="Company"
+                  options={companies}
+                  value={companyValue}
+                  inputValue={companyInputValue}
+                  allowAdd={false}
+                  onInputChange={setCompanyInputValue}
+                  onChange={(newValue) => {
+                    if (newValue?._id) {
+                      setSelectedCompanyId(newValue._id)
+                      setCompanyValue(newValue)
+                      applyCompanyToForm(newValue)
+                      return
+                    }
+
+                    if (!newValue) {
+                      setSelectedCompanyId('')
+                      setCompanyValue(null)
+                      clearCompanyFromForm()
+                    }
+                  }}
+                />
+
+                <Divider/>
+
+                <SectionTitle>Customer Selection</SectionTitle>
+                <EntityAutocomplete
+                  label="Customer"
+                  options={customers}
+                  value={customerValue}
+                  inputValue={customerInputValue}
+                  allowAdd={false}
+                  onInputChange={setCustomerInputValue}
+                  onChange={(newValue) => {
+                    if (newValue?._id) {
+                      setSelectedCustomerId(newValue._id)
+                      setCustomerValue(newValue)
+                      applyCustomerToForm(newValue)
+                      return
+                    }
+
+                    if (!newValue) {
+                      setSelectedCustomerId('')
+                      setCustomerValue(null)
+                      clearCustomerFromForm()
+                    }
+                  }}
                 />
 
                 <Divider/>

@@ -6,6 +6,8 @@ import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
 import { useNavigate, useParams } from 'react-router-dom'
 import axiosInstance from '../../services/axiosInstance'
+import EndpointService from '../../services/endpoint.service'
+import EntityAutocomplete from 'components/EntityAutocomplete'
 
 const styles = StyleSheet.create({
   page: { padding: 28, fontSize: 8, fontFamily: 'Helvetica', color: '#000' },
@@ -412,12 +414,99 @@ export default function PackagingDocument() {
   const [ isApproving, setIsApproving ] = useState(false)
   const [ isApproved, setIsApproved ] = useState(false)
   const [ hasSaved, setHasSaved ] = useState(false)
+  const [ companies, setCompanies ] = useState([])
+  const [ customers, setCustomers ] = useState([])
+  const [ selectedCompanyId, setSelectedCompanyId ] = useState('')
+  const [ selectedCustomerId, setSelectedCustomerId ] = useState('')
+  const [ companyValue, setCompanyValue ] = useState(null)
+  const [ customerValue, setCustomerValue ] = useState(null)
+  const [ companyInputValue, setCompanyInputValue ] = useState('')
+  const [ customerInputValue, setCustomerInputValue ] = useState('')
   const [ eurToInrRate, setEurToInrRate ] = useState(null)
   const rateRequestRef = useRef(null)
   const [ tableAmountInr, setTableAmountInr ] = useState(() => (defaultData.tableRows || []).map(() => ''))
 
   const updateField = (field) => (event) => {
     setData((prev) => ({ ...prev, [field]: { ...prev[field], value: event.target.value } }))
+  }
+
+  const applyCompanyToForm = (company) => {
+    if (!company) return
+
+    const companyLines = [
+      company.name,
+      company.addressLine1,
+      company.addressLine2,
+      company.addressLine3,
+      company.contactNumber ? `TEL.: ${company.contactNumber}` : '',
+      company.username,
+      company.gstin ? `GSTIN: ${company.gstin}` : ''
+    ].filter(Boolean)
+
+    setData((prev) => ({
+      ...prev,
+      exporterLines: companyLines.length
+        ? companyLines.map((value) => ({ value, visible: true }))
+        : prev.exporterLines,
+      signature: {
+        ...prev.signature,
+        value: company.name || prev.signature.value
+      }
+    }))
+  }
+
+  const applyCustomerToForm = (customer) => {
+    if (!customer) return
+
+    const consigneeParts = [
+      customer.name,
+      customer.addressLine1,
+      customer.addressLine2,
+      customer.addressLine3,
+      customer.country
+    ].filter(Boolean)
+
+    setData((prev) => ({
+      ...prev,
+      consignee: {
+        ...prev.consignee,
+        value: consigneeParts.join(', ')
+      },
+      contact: {
+        ...prev.contact,
+        value: customer.contactPerson || customer.name || prev.contact.value
+      },
+      tel: {
+        ...prev.tel,
+        value: customer.contactNumber || prev.tel.value
+      },
+      countryOfDestination: {
+        ...prev.countryOfDestination,
+        value: customer.country || prev.countryOfDestination.value
+      },
+      finalDestination: {
+        ...prev.finalDestination,
+        value: customer.country || prev.finalDestination.value
+      },
+      notifyBuyer: {
+        ...prev.notifyBuyer,
+        value: customer.name || prev.notifyBuyer.value
+      }
+    }))
+  }
+
+  const fetchCompaniesAndCustomers = async () => {
+    try {
+      const [ companyResponse, customerResponse ] = await Promise.all([
+        EndpointService.getCompanyAccessibleList(),
+        EndpointService.getCustomerList()
+      ])
+      setCompanies(companyResponse?.companies || [])
+      setCustomers(customerResponse?.customers || [])
+    } catch (error) {
+      setCompanies([])
+      setCustomers([])
+    }
   }
 
   const toggleField = (field) => (event) => {
@@ -560,6 +649,10 @@ export default function PackagingDocument() {
   }
 
   useEffect(() => {
+    fetchCompaniesAndCustomers()
+  }, [])
+
+  useEffect(() => {
     const handle = setTimeout(() => {
       setPdfData(data)
     }, 500)
@@ -596,12 +689,16 @@ export default function PackagingDocument() {
           }
           setData(merged)
           setPdfData(merged)
+          setSelectedCompanyId(typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || '')
+          setSelectedCustomerId(typeof invoice?.customer === 'string' ? invoice.customer : invoice?.customer?._id || '')
           setIsApproved(Boolean(invoice?.commercialApproved))
           setHasSaved(false)
         } catch (error) {
           if (!isActive) return
           setData(defaultData)
           setPdfData(defaultData)
+          setSelectedCompanyId('')
+          setSelectedCustomerId('')
           setIsApproved(false)
           setHasSaved(false)
         }
@@ -614,12 +711,49 @@ export default function PackagingDocument() {
     }
   }, [ invoiceId ])
 
+  useEffect(() => {
+    if (!selectedCompanyId || !companies.length) {
+      setCompanyValue(null)
+      setCompanyInputValue('')
+      return
+    }
+
+    const match = companies.find((item) => item._id === selectedCompanyId)
+    if (match) {
+      setCompanyValue(match)
+      setCompanyInputValue(match.name || '')
+      applyCompanyToForm(match)
+    }
+  }, [ selectedCompanyId, companies ])
+
+  useEffect(() => {
+    if (!selectedCustomerId || !customers.length) {
+      setCustomerValue(null)
+      setCustomerInputValue('')
+      return
+    }
+
+    const match = customers.find((item) => item._id === selectedCustomerId)
+    if (match) {
+      setCustomerValue(match)
+      setCustomerInputValue(match.name || '')
+      applyCustomerToForm(match)
+    }
+  }, [ selectedCustomerId, customers ])
+
   const handleSave = async () => {
     try {
       setIsSaving(true)
       const { date, ...restOfState } = data
       const payloadDate = formatDateForSave(date?.value || '')
-      const payload = { _id: invoiceId, date: payloadDate, template: 'commercial', commercial: restOfState }
+      const payload = {
+        _id: invoiceId,
+        date: payloadDate,
+        template: 'commercial',
+        commercial: restOfState,
+        company: selectedCompanyId || undefined,
+        customer: selectedCustomerId || undefined
+      }
       const response = await axiosInstance.post('/v1/invoice/save', payload)
       const savedInvoice = response?.data
       if (savedInvoice?._id && !invoiceId) {
@@ -642,6 +776,8 @@ export default function PackagingDocument() {
         date: payloadDate,
         template: 'commercial',
         commercial: restOfState,
+        company: selectedCompanyId || undefined,
+        customer: selectedCustomerId || undefined,
         commercialApproved: nextApproved
       }
       const response = await axiosInstance.post('/v1/invoice/save', payload)
@@ -703,6 +839,50 @@ export default function PackagingDocument() {
                 <Typography variant="body2" color="textSecondary">
                   Toggle any field to show/hide it in the PDF, and edit values inline.
                 </Typography>
+
+                <SectionTitle>Selections</SectionTitle>
+                <EntityAutocomplete
+                  label="Company"
+                  options={companies}
+                  value={companyValue}
+                  inputValue={companyInputValue}
+                  allowAdd={false}
+                  onInputChange={setCompanyInputValue}
+                  onChange={(newValue) => {
+                    if (newValue?._id) {
+                      setSelectedCompanyId(newValue._id)
+                      setCompanyValue(newValue)
+                      applyCompanyToForm(newValue)
+                      return
+                    }
+
+                    setSelectedCompanyId('')
+                    setCompanyValue(null)
+                    setCompanyInputValue('')
+                  }}
+                />
+                <EntityAutocomplete
+                  label="Customer"
+                  options={customers}
+                  value={customerValue}
+                  inputValue={customerInputValue}
+                  allowAdd={false}
+                  onInputChange={setCustomerInputValue}
+                  onChange={(newValue) => {
+                    if (newValue?._id) {
+                      setSelectedCustomerId(newValue._id)
+                      setCustomerValue(newValue)
+                      applyCustomerToForm(newValue)
+                      return
+                    }
+
+                    setSelectedCustomerId('')
+                    setCustomerValue(null)
+                    setCustomerInputValue('')
+                  }}
+                />
+
+                <Divider/>
 
                 <SectionTitle>Title</SectionTitle>
                 <FieldToggle label="Document Title" value={data.title.value} visible={data.title.visible} onChange={updateField('title')} onToggle={toggleField('title')}/>
