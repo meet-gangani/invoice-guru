@@ -8,6 +8,7 @@ import { useTheme } from '@mui/material/styles'
 import { useNavigate, useParams } from 'react-router-dom'
 import axiosInstance from '../../services/axiosInstance'
 import EndpointService from '../../services/endpoint.service'
+import EntityAutocomplete from 'components/EntityAutocomplete'
 
 const styles = StyleSheet.create({
   page: {
@@ -365,6 +366,8 @@ export default function PerformaInvoiceDocument() {
   const [ newCustomerDraft, setNewCustomerDraft ] = useState(null)
   const [ isCreatingCustomer, setIsCreatingCustomer ] = useState(false)
   const [ isAddCustomerOpen, setIsAddCustomerOpen ] = useState(false)
+  const [companyValue, setCompanyValue] = useState(null)
+  const [companyInputValue, setCompanyInputValue] = useState("")
 
   const customerFilter = createFilterOptions()
 
@@ -717,17 +720,18 @@ export default function PerformaInvoiceDocument() {
   }
 
   const fetchCompany = async () => {
-    const response = await EndpointService.getCompanyAccessibleList()
-
-    const list = response?.data || []
-    setCompanies(list)
+    try{
+      const response = await EndpointService.getCompanyAccessibleList()
+      const list = response?.companies || []
+      setCompanies(list)
+    } catch (error) {
+      setCompanies([])
+    }
   }
 
   useEffect(() => {
-    let isActive = true
     const loadCustomers = async () => {
       const list = await fetchCustomers()
-      if (!isActive) return
       if (list.length === 0) {
         setCustomers([])
       }
@@ -735,9 +739,6 @@ export default function PerformaInvoiceDocument() {
 
     loadCustomers()
     fetchCompany()
-    return () => {
-      isActive = false
-    }
   }, [])
 
   useEffect(() => {
@@ -920,73 +921,24 @@ export default function PerformaInvoiceDocument() {
 
                 <SectionTitle>Header</SectionTitle>
                 <SectionTitle>Company Selection</SectionTitle>
-                <Autocomplete
-                    fullWidth
-                    freeSolo
-                    selectOnFocus
-                    clearOnBlur
-                    handleHomeEndKeys
-                    options={companies}
-                    value={customerValue}
-                    inputValue={customerInputValue}
-                    onInputChange={(_event, newInputValue) => {
-                      setCustomerInputValue(newInputValue)
-                    }}
-                    isOptionEqualToValue={(option, value) => option?._id === value?._id}
-                    getOptionLabel={(option) => {
-                      if (typeof option === 'string') return option
-                      if (option?.inputValue) return option.inputValue
-                      return option?.name || option?.mail || ''
-                    }}
-                    filterOptions={(options, params) => {
-                      const filtered = customerFilter(options, params)
-                      const inputValue = params.inputValue.trim()
-                      const isExisting = options.some((option) =>
-                          (option.name || '').toLowerCase() === inputValue.toLowerCase()
-                      )
-                      if (inputValue !== '' && !isExisting) {
-                        filtered.push({
-                          inputValue,
-                          name: `Add "${inputValue}"`
-                        })
-                      }
-                      return filtered
-                    }}
-                    onChange={(_event, newValue) => {
-                      if (typeof newValue === 'string') {
-                        const name = newValue.trim()
-                        if (!name) return
-                        setSelectedCustomerId('')
-                        setCustomerValue(null)
-                        openAddCustomerDialog(name)
-                        return
-                      }
+                <EntityAutocomplete
+                  label="Company"
+                  options={companies}
+                  value={companyValue}
+                  inputValue={companyInputValue}
+                  allowAdd={false}
+                  onInputChange={setCompanyInputValue}
+                  onChange={(newValue) => {
 
-                      if (newValue && newValue.inputValue) {
-                        const name = newValue.inputValue.trim()
-                        if (!name) return
-                        setSelectedCustomerId('')
-                        setCustomerValue(null)
-                        openAddCustomerDialog(name)
-                        return
-                      }
+                    if (newValue?._id) {
+                      setCompanyValue(newValue)
+                    }
 
-                      if (newValue && newValue._id) {
-                        setNewCustomerDraft(null)
-                        setSelectedCustomerId(newValue._id)
-                        setCustomerValue(newValue)
-                        applyCustomerToForm(newValue)
-                        return
-                      }
+                    if (!newValue) {
+                      setCompanyValue(null)
+                    }
 
-                      setNewCustomerDraft(null)
-                      setSelectedCustomerId('')
-                      setCustomerValue(null)
-                      clearCustomerFromForm()
-                    }}
-                    renderInput={(params) => (
-                        <TextField {...params} label="Company" placeholder="Search or type company"/>
-                    )}
+                  }}
                 />
 
                 <FieldToggle label="Company Name" value={data.companyName.value} visible={data.companyName.visible} onChange={updateField('companyName')} onToggle={toggleField('companyName')}/>
@@ -1032,73 +984,46 @@ export default function PerformaInvoiceDocument() {
                 <Divider/>
 
                 <SectionTitle>Customer Selection</SectionTitle>
-                <Autocomplete
-                    fullWidth
-                    freeSolo
-                    selectOnFocus
-                    clearOnBlur
-                    handleHomeEndKeys
-                    options={customers}
-                    value={customerValue}
-                    inputValue={customerInputValue}
-                    onInputChange={(_event, newInputValue) => {
-                      setCustomerInputValue(newInputValue)
-                    }}
-                    isOptionEqualToValue={(option, value) => option?._id === value?._id}
-                    getOptionLabel={(option) => {
-                      if (typeof option === 'string') return option
-                      if (option?.inputValue) return option.inputValue
-                      return option?.name || option?.mail || ''
-                    }}
-                    filterOptions={(options, params) => {
-                      const filtered = customerFilter(options, params)
-                      const inputValue = params.inputValue.trim()
-                      const isExisting = options.some((option) =>
-                          (option.name || '').toLowerCase() === inputValue.toLowerCase()
-                      )
-                      if (inputValue !== '' && !isExisting) {
-                        filtered.push({
-                          inputValue,
-                          name: `Add "${inputValue}"`
-                        })
-                      }
-                      return filtered
-                    }}
-                    onChange={(_event, newValue) => {
-                      if (typeof newValue === 'string') {
-                        const name = newValue.trim()
-                        if (!name) return
-                        setSelectedCustomerId('')
-                        setCustomerValue(null)
-                        openAddCustomerDialog(name)
-                        return
-                      }
+                <EntityAutocomplete
+                  label="Customer"
+                  options={customers}
+                  value={customerValue}
+                  inputValue={customerInputValue}
+                  allowAdd={true}
+                  onInputChange={setCustomerInputValue}
+                  onChange={(newValue) => {
 
-                      if (newValue && newValue.inputValue) {
-                        const name = newValue.inputValue.trim()
-                        if (!name) return
-                        setSelectedCustomerId('')
-                        setCustomerValue(null)
-                        openAddCustomerDialog(name)
-                        return
-                      }
+                    if (typeof newValue === "string") {
+                      const name = newValue.trim();
+                      if (!name) return;
 
-                      if (newValue && newValue._id) {
-                        setNewCustomerDraft(null)
-                        setSelectedCustomerId(newValue._id)
-                        setCustomerValue(newValue)
-                        applyCustomerToForm(newValue)
-                        return
-                      }
+                      setSelectedCustomerId("");
+                      setCustomerValue(null);
+                      openAddCustomerDialog(name);
+                      return;
+                    }
 
-                      setNewCustomerDraft(null)
-                      setSelectedCustomerId('')
-                      setCustomerValue(null)
-                      clearCustomerFromForm()
-                    }}
-                    renderInput={(params) => (
-                        <TextField {...params} label="Customer" placeholder="Search or type customer name"/>
-                    )}
+                    if (newValue?.inputValue) {
+                      const name = newValue.inputValue.trim();
+                      if (!name) return;
+
+                      setSelectedCustomerId("");
+                      setCustomerValue(null);
+                      openAddCustomerDialog(name);
+                      return;
+                    }
+
+                    if (newValue?._id) {
+                      setSelectedCustomerId(newValue._id);
+                      setCustomerValue(newValue);
+                      applyCustomerToForm(newValue);
+                      return;
+                    }
+
+                    setSelectedCustomerId("");
+                    setCustomerValue(null);
+                    clearCustomerFromForm();
+                  }}
                 />
 
                 <Dialog
