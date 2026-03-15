@@ -69,7 +69,19 @@ exports.getInvoices = async (req, res) => {
 
 exports.getInvoiceById = async (req, res) => {
   try {
-    const invoice = await InvoiceStore.findById(req.params.id)
+    const invoice = await InvoiceStore.findById(req.params.id).populate([
+      {
+        path: 'company',
+        model: 'company',
+        // select: '_id name logo'
+      },
+      {
+        path: 'customer',
+        model: 'customer',
+        // select: '_id name'
+      }
+    ])
+
     if (!invoice) {
       return sendError(res, 'Invoice not found', new Error('Invoice not found'), 404)
     }

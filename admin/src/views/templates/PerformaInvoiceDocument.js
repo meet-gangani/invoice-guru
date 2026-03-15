@@ -7,6 +7,7 @@ import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
 import { useNavigate, useParams } from 'react-router-dom'
 import axiosInstance from '../../services/axiosInstance'
+import EndpointService from '../../services/endpoint.service'
 
 const styles = StyleSheet.create({
   page: {
@@ -356,6 +357,8 @@ export default function PerformaInvoiceDocument() {
   const [ isApproved, setIsApproved ] = useState(false)
   const [ hasSaved, setHasSaved ] = useState(false)
   const [ customers, setCustomers ] = useState([])
+  const [ companies, setCompanies ] = useState([])
+
   const [ selectedCustomerId, setSelectedCustomerId ] = useState('')
   const [ customerValue, setCustomerValue ] = useState(null)
   const [ customerInputValue, setCustomerInputValue ] = useState('')
@@ -713,6 +716,13 @@ export default function PerformaInvoiceDocument() {
     }
   }
 
+  const fetchCompany = async () => {
+    const response = await EndpointService.getCompanyAccessibleList()
+
+    const list = response?.data || []
+    setCompanies(list)
+  }
+
   useEffect(() => {
     let isActive = true
     const loadCustomers = async () => {
@@ -722,7 +732,9 @@ export default function PerformaInvoiceDocument() {
         setCustomers([])
       }
     }
+
     loadCustomers()
+    fetchCompany()
     return () => {
       isActive = false
     }
@@ -907,6 +919,76 @@ export default function PerformaInvoiceDocument() {
                 </Typography>
 
                 <SectionTitle>Header</SectionTitle>
+                <SectionTitle>Company Selection</SectionTitle>
+                <Autocomplete
+                    fullWidth
+                    freeSolo
+                    selectOnFocus
+                    clearOnBlur
+                    handleHomeEndKeys
+                    options={companies}
+                    value={customerValue}
+                    inputValue={customerInputValue}
+                    onInputChange={(_event, newInputValue) => {
+                      setCustomerInputValue(newInputValue)
+                    }}
+                    isOptionEqualToValue={(option, value) => option?._id === value?._id}
+                    getOptionLabel={(option) => {
+                      if (typeof option === 'string') return option
+                      if (option?.inputValue) return option.inputValue
+                      return option?.name || option?.mail || ''
+                    }}
+                    filterOptions={(options, params) => {
+                      const filtered = customerFilter(options, params)
+                      const inputValue = params.inputValue.trim()
+                      const isExisting = options.some((option) =>
+                          (option.name || '').toLowerCase() === inputValue.toLowerCase()
+                      )
+                      if (inputValue !== '' && !isExisting) {
+                        filtered.push({
+                          inputValue,
+                          name: `Add "${inputValue}"`
+                        })
+                      }
+                      return filtered
+                    }}
+                    onChange={(_event, newValue) => {
+                      if (typeof newValue === 'string') {
+                        const name = newValue.trim()
+                        if (!name) return
+                        setSelectedCustomerId('')
+                        setCustomerValue(null)
+                        openAddCustomerDialog(name)
+                        return
+                      }
+
+                      if (newValue && newValue.inputValue) {
+                        const name = newValue.inputValue.trim()
+                        if (!name) return
+                        setSelectedCustomerId('')
+                        setCustomerValue(null)
+                        openAddCustomerDialog(name)
+                        return
+                      }
+
+                      if (newValue && newValue._id) {
+                        setNewCustomerDraft(null)
+                        setSelectedCustomerId(newValue._id)
+                        setCustomerValue(newValue)
+                        applyCustomerToForm(newValue)
+                        return
+                      }
+
+                      setNewCustomerDraft(null)
+                      setSelectedCustomerId('')
+                      setCustomerValue(null)
+                      clearCustomerFromForm()
+                    }}
+                    renderInput={(params) => (
+                        <TextField {...params} label="Company" placeholder="Search or type company"/>
+                    )}
+                />
+
                 <FieldToggle label="Company Name" value={data.companyName.value} visible={data.companyName.visible} onChange={updateField('companyName')} onToggle={toggleField('companyName')}/>
                 <FieldToggle label="Invoice Title" value={data.invoiceTitle.value} visible={data.invoiceTitle.visible} onChange={updateField('invoiceTitle')} onToggle={toggleField('invoiceTitle')}/>
 

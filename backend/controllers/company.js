@@ -97,7 +97,23 @@ exports.updateCompany = async (req, res) => {
 
 exports.getCompanies = async (req, res) => {
   try {
-    const companies = await CompanyStore.find().sort({ createdAt: -1 })
+    const companies = await CompanyStore.find({}).sort({ createdAt: -1 })
+
+    return sendSuccess(res, { companies })
+  } catch (error) {
+    return sendError(res, 'Error while fetching company list', error)
+  }
+}
+
+exports.getAccessibleCompanies = async (req, res) => {
+  try {
+    let filter = {}
+
+    if (req.companyId) {
+      filter = { _id: req.companyId }
+    }
+
+    const companies = await CompanyStore.find(filter).sort({ createdAt: -1 })
 
     return sendSuccess(res, { companies })
   } catch (error) {
