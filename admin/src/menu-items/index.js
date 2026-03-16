@@ -102,7 +102,7 @@ const Website = {
       url: '/customers',
       icon: IconUsers,
       breadcrumbs: false,
-      adminOnly: true
+      // adminOnly: false
     }
   ]
 }
