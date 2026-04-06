@@ -23,8 +23,7 @@ export default class EndpointService {
     }
   }
 
-
-  // COMPANY
+  // SETUP USER COMPANY
 
   static async getCompanyList() {
     try {
@@ -77,6 +76,50 @@ export default class EndpointService {
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       )
+      return response.data
+    } catch (error) {
+      console.log(error.message)
+    }
+  }
+
+  // COMPANY
+
+  static async getCompanyMasterList() {
+    try {
+      const response = await axiosInstance.get('/v1/company-master')
+
+      return response.data
+    } catch (error) {
+      console.log(error.message)
+      return []
+    }
+  }
+
+  static async getCompanyMasterAccessibleList() {
+    try {
+      const response = await axiosInstance.get('/v1/company-master/accessible')
+
+      return response.data
+    } catch (error) {
+      console.log(error.message)
+      return []
+    }
+  }
+
+  static async createCompanyMaster(data) {
+    try {
+      const response = await axiosInstance.post('/v1/company-master/create', data)
+
+      return response.data
+    } catch (error) {
+      console.log(error.message)
+    }
+  }
+
+  static async updateCompanyMaster(companyId, data) {
+    try {
+      const response = await axiosInstance.put(`/v1/company-master/${companyId}`, data)
+
       return response.data
     } catch (error) {
       console.log(error.message)

@@ -24,7 +24,8 @@ exports.createCustomer = async (req, res) => {
       pinCode,
       shipTo,
       billTo,
-      contact
+      contact,
+      company_id: req.companyId
     })
     return sendSuccess(res)
   } catch (error) {
@@ -58,7 +59,8 @@ exports.updateCustomer = async (req, res) => {
           pinCode,
           shipTo,
           billTo,
-          contact
+          contact,
+          company_id: req.companyId
         },
         { new: true }
     )
@@ -73,9 +75,15 @@ exports.updateCustomer = async (req, res) => {
   }
 }
 
-exports.getCustomers = async (_req, res) => {
+exports.getCustomers = async (req, res) => {
   try {
-    const customers = await CustomerStore.find().sort({ createdAt: -1 })
+    let filter = {}
+
+    if (req.companyId) {
+      filter = { _id: req.companyId }
+    }
+
+    const customers = await CustomerStore.find(filter).sort({ createdAt: -1 })
 
     return sendSuccess(res, { customers })
   } catch (error) {

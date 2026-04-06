@@ -5,6 +5,7 @@ const { defaultFields, defaultSchemaOptions } = require('./model-utils')
 
 const CustomerSchema = new Schema({
   _id: { type: Schema.Types.String, required: true, default: uuidv4 },
+  company_id: { type: Schema.Types.String, required: false, ref: 'company' },
   name: { type: Schema.Types.String, required: true },
   address: { type: Schema.Types.String, required: false, default: '' },
   mail: { type: Schema.Types.String, required: true },

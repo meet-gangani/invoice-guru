@@ -257,7 +257,7 @@ export default function LetterheadDocument() {
 
   const fetchCompany = async () => {
     try {
-      const response = await EndpointService.getCompanyAccessibleList();
+      const response = await EndpointService.getCompanyMasterAccessibleList();
       const list = response?.companies || [];
       setCompanies(list);
     } catch (error) {

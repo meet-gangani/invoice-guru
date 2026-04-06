@@ -7,8 +7,9 @@ import encryptStorage from 'services/storage'
 
 const DashboardDefault = Loadable(lazy(() => import('views/dashboard/Default')))
 
+const CompanySetup = Loadable(lazy(() => import('views/companySetup/List')))
+
 const Companies = Loadable(lazy(() => import('views/company/List')))
-const Company = Loadable(lazy(() => import('views/company/company')))
 const Customers = Loadable(lazy(() => import('views/customers/List')))
 
 const Invoices = Loadable(lazy(() => import('views/invoices/List')))
@@ -51,28 +52,20 @@ const MainRoutes = {
       element: <Invoices/>
     },
     {
-      path: 'company/:id',
-      element: (
-          <RequireAdmin>
-            <Company/>
-          </RequireAdmin>
-      )
+      path: 'company-master',
+      element: <Companies/>
     },
     {
-      path: 'company',
+      path: 'company-setup',
       element: (
           <RequireAdmin>
-            <Companies/>
+            <CompanySetup/>
           </RequireAdmin>
       )
     },
     {
       path: 'customers',
-      element: (
-          <RequireAdmin>
-            <Customers/>
-          </RequireAdmin>
-      )
+      element: <Customers/>
     },
     {
       path: 'scomet/:id',

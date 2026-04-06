@@ -1,4 +1,4 @@
-import { IconFileInvoice, IconDashboard, IconTemplate, IconBuilding, IconPackages, IconChecklist, IconBuildingBank, IconUsers, IconNotes } from '@tabler/icons'
+import { IconBuilding, IconBuildingBank, IconChecklist, IconDashboard, IconFileInvoice, IconHomeCog, IconNotes, IconPackages, IconTemplate, IconUsers } from '@tabler/icons'
 
 const QuickView = {
   id: 'quickView',
@@ -21,7 +21,7 @@ const QuickView = {
       url: '/invoices',
       icon: IconFileInvoice,
       breadcrumbs: false
-    },
+    }
   ]
 }
 
@@ -87,22 +87,38 @@ const Website = {
   type: 'group',
   children: [
     {
-      id: 'company',
-      title: 'Company',
-      type: 'item',
-      url: '/company',
-      icon: IconBuilding,
-      breadcrumbs: false,
-      adminOnly: true
-    },
-    {
       id: 'customers',
-      title: 'Customers',
+      title: 'Customer Master',
       type: 'item',
       url: '/customers',
       icon: IconUsers,
+      breadcrumbs: false
+
+    },
+    {
+      id: 'company-master',
+      title: 'Company Master',
+      type: 'item',
+      url: '/company-master',
+      icon: IconBuilding,
       breadcrumbs: false,
-      // adminOnly: false
+      adminOnly: false
+    }
+  ]
+}
+
+const Setup = {
+  id: 'website',
+  type: 'group',
+  children: [
+    {
+      id: 'company-setup',
+      title: 'Company Setup',
+      type: 'item',
+      url: '/company-setup',
+      icon: IconHomeCog,
+      breadcrumbs: false,
+      adminOnly: true
     }
   ]
 }
@@ -111,7 +127,8 @@ const menuItems = {
   items: [
     QuickView,
     pages,
-    Website
+    Website,
+    Setup
   ]
 }
 

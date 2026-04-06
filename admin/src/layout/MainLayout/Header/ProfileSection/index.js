@@ -14,7 +14,7 @@ import UserService from '../../../../services/user.service'
 
 // assets
 import { IconLogout, IconPassword, IconSettings } from '@tabler/icons'
-import SiteLogo from '../../../../assets/images/logo.png'
+import SiteLogo from '../../../../assets/images/logo-square.png'
 import encryptStorage from 'services/storage'
 
 // ==============================|| PROFILE MENU ||============================== //

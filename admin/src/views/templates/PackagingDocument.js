@@ -498,7 +498,7 @@ export default function PackagingDocument() {
   const fetchCompaniesAndCustomers = async () => {
     try {
       const [ companyResponse, customerResponse ] = await Promise.all([
-        EndpointService.getCompanyAccessibleList(),
+        EndpointService.getCompanyMasterAccessibleList(),
         EndpointService.getCustomerList()
       ])
       setCompanies(companyResponse?.companies || [])
