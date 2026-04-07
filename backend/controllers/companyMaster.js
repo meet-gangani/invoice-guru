@@ -106,7 +106,7 @@ exports.getAccessibleCompaniesMaster = async (req, res) => {
     let filter = {}
 
     if (req.companyId) {
-      filter = { _id: req.companyId }
+      filter = { company_id: req.companyId }
     }
 
     const companies = await CompanyMasterStore.find(filter).sort({ createdAt: -1 })

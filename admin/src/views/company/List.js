@@ -75,7 +75,7 @@ const Companies = () => {
 
   const fetchMasterCompanies = async () => {
     try {
-      const response = await EndpointService.getCompanyMasterList();
+      const response = await EndpointService.getCompanyAccessibleList();
       setCompanies(response?.companies || []);
     } catch (error) {
       console.log(error.message);

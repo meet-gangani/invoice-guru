@@ -78,10 +78,12 @@ exports.updateCustomer = async (req, res) => {
 exports.getCustomers = async (req, res) => {
   try {
     let filter = {}
+    console.log('companyId', req.companyId)
 
     if (req.companyId) {
-      filter = { _id: req.companyId }
+      filter = { company_id: req.companyId }
     }
+    console.log('filter', filter)
 
     const customers = await CustomerStore.find(filter).sort({ createdAt: -1 })
 
