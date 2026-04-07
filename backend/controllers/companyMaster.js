@@ -76,7 +76,7 @@ exports.updateCompanyMaster = async (req, res) => {
           pinCode,
           stamp,
           sign,
-          company_id: req.companyId
+          // company_id: req.companyId
         },
         { new: true } // return updated document
     )
