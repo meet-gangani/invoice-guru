@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Button, Checkbox, Divider, FormControlLabel, Grid, IconButton, Stack, TextField, Typography } from '@mui/material';
-import { Document, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer';
+import { Document, Image, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer';
 import MainCard from 'ui-component/cards/MainCard';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -9,45 +9,43 @@ import axiosInstance from '../../services/axiosInstance';
 import EndpointService from '../../services/endpoint.service';
 import EntityAutocomplete from 'components/EntityAutocomplete';
 
-// --- PDF STYLES (MATCHING YOUR IMAGE) ---
 const pdfStyles = StyleSheet.create({
-  page: { padding: 55, fontSize: 10, fontFamily: 'Helvetica', color: '#333' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 26 },
-  logoSection: { flexDirection: 'row', alignItems: 'center' },
-  logoMark: { width: 26, height: 26, border: '2pt solid #f39c12', marginRight: 10, position: 'relative' },
-  logoInner: { width: 12, height: 12, border: '2pt solid #f39c12', position: 'absolute', top: 6, left: 6 },
-  brandName: { fontSize: 20, fontWeight: 'bold', letterSpacing: 0.4 },
-  slogan: { fontSize: 9, color: '#666' },
+  page: { padding: 48, fontSize: 10, fontFamily: 'Helvetica', color: '#1f2933' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  brandBlock: { maxWidth: '60%' },
+  brandRow: { flexDirection: 'row', alignItems: 'center' },
+  logoImage: { width: 46, height: 46, marginRight: 12, objectFit: 'contain' },
+  brandName: { fontSize: 22, fontWeight: 'bold', letterSpacing: 0.6, color: '#0b3556' },
+  slogan: { fontSize: 9, color: '#6b7280', marginTop: 2 },
+  contactBlock: { alignItems: 'flex-end', maxWidth: '40%' },
+  contactLine: { fontSize: 9, color: '#374151', marginBottom: 2 },
+  divider: { height: 1, backgroundColor: '#d7dde3', marginTop: 14, marginBottom: 18 },
 
-  metaSection: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 18 },
-  recipientInfo: { lineHeight: 1.05 },
-  toLabel: { fontWeight: 'bold', fontSize: 10, marginBottom: 2, letterSpacing: 0.2 },
-  dateText: { textAlign: 'right', fontWeight: 'bold', fontSize: 10 },
+  metaSection: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  recipientInfo: { lineHeight: 1.2, maxWidth: '65%' },
+  toLabel: { fontWeight: 'bold', fontSize: 10, marginBottom: 2, letterSpacing: 0.4, color: '#0b3556' },
+  recipientLine: { marginBottom: 2 },
+  datePill: { alignSelf: 'flex-end', border: '1pt solid #d7dde3', paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6, marginTop: 6 },
+  dateText: { textAlign: 'right', fontWeight: 'bold', fontSize: 9, color: '#0b3556' },
 
-  body: { marginTop: 4, marginBottom: 24 },
-  bodyText: { lineHeight: 1.1 },
-  recipientLine: { marginBottom: 0 },
+  body: { marginTop: 4, marginBottom: 28 },
+  bodyText: { lineHeight: 1.35, fontSize: 10, color: '#1f2933' },
 
-  signatureSection: { marginTop: 16 },
-  handwritten: { fontSize: 18, color: '#555', marginBottom: -3, fontFamily: 'Times-Italic' },
-  sigName: { fontWeight: 'bold', fontSize: 11 },
+  signatureSection: { marginTop: 12 },
+  signOff: { fontSize: 10, marginBottom: 10, color: '#4b5563' },
+  sigName: { fontWeight: 'bold', fontSize: 11, color: '#0b3556' },
+  sigTitle: { fontSize: 10, color: '#4b5563', marginTop: 2 },
 
   footer: {
     position: 'absolute',
-    bottom: 28,
-    left: 55,
-    right: 55,
-    borderTop: '1pt solid #eee',
-    paddingTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: 8,
-    color: '#777'
+    bottom: 24,
+    left: 48,
+    right: 48,
+    borderTop: '1pt solid #d7dde3',
+    paddingTop: 8
   },
-  footerItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  footerIcon: { width: 18, height: 18, backgroundColor: '#f39c12', alignItems: 'center', justifyContent: 'center' },
-  footerIconText: { fontSize: 10, color: '#fff', fontWeight: 'bold' },
-  footerText: { fontSize: 8, color: '#777' }
+  footerRow: { flexDirection: 'row', justifyContent: 'space-between', fontSize: 8.5, color: '#6b7280' },
+  footerText: { fontSize: 8.5, color: '#6b7280' }
 });
 
 const LetterheadPdf = ({ data }) => {
@@ -63,16 +61,30 @@ const LetterheadPdf = ({ data }) => {
     <Document title="Letterhead Preview">
       <Page size="A4" style={pdfStyles.page}>
         <View style={pdfStyles.header}>
-          <View style={pdfStyles.logoSection}>
-            <View style={pdfStyles.logoMark}>
-              <View style={pdfStyles.logoInner} />
-            </View>
-            <View>
-              {data.brandName.visible ? <Text style={pdfStyles.brandName}>{data.brandName.value}</Text> : null}
-              {data.slogan.visible ? <Text style={pdfStyles.slogan}>{data.slogan.value}</Text> : null}
+          <View style={pdfStyles.brandBlock}>
+            <View style={pdfStyles.brandRow}>
+              {/* {data.logo?.visible && data.logo?.value ? (
+                <Image style={pdfStyles.logoImage} src={data.logo.value} />
+              ) : null} */}
+              <View>
+                {data.brandName.visible ? <Text style={pdfStyles.brandName}>{data.brandName.value}</Text> : null}
+                {data.slogan.visible ? <Text style={pdfStyles.slogan}>{data.slogan.value}</Text> : null}
+              </View>
             </View>
           </View>
+          <View style={pdfStyles.contactBlock}>
+            {data.phone.visible ? <Text style={pdfStyles.contactLine}>TEL: {data.phone.value}</Text> : null}
+            {data.website.visible ? <Text style={pdfStyles.contactLine}>WEB: {data.website.value}</Text> : null}
+            {data.footerAddress.visible ? <Text style={pdfStyles.contactLine}>{data.footerAddress.value}</Text> : null}
+            {data.date.visible ? (
+              <View style={pdfStyles.datePill}>
+                <Text style={pdfStyles.dateText}>DATE: {data.date.value}</Text>
+              </View>
+            ) : null}
+          </View>
         </View>
+
+        <View style={pdfStyles.divider} />
 
         <View style={pdfStyles.metaSection}>
           <View style={pdfStyles.recipientInfo}>
@@ -88,7 +100,6 @@ const LetterheadPdf = ({ data }) => {
               </View>
             ) : null}
           </View>
-          {data.date.visible ? <Text style={pdfStyles.dateText}>DATE: {data.date.value}</Text> : null}
         </View>
 
         {bodyLines.length ? (
@@ -99,31 +110,18 @@ const LetterheadPdf = ({ data }) => {
 
         {showSignature ? (
           <View style={pdfStyles.signatureSection}>
-            {data.senderName.visible ? <Text style={pdfStyles.handwritten}>{data.senderName.value}</Text> : null}
+            <Text style={pdfStyles.signOff}>Sincerely,</Text>
             {data.senderName.visible ? <Text style={pdfStyles.sigName}>{data.senderName.value}</Text> : null}
-            {data.senderTitle.visible ? <Text>{data.senderTitle.value}</Text> : null}
+            {data.senderTitle.visible ? <Text style={pdfStyles.sigTitle}>{data.senderTitle.value}</Text> : null}
           </View>
         ) : null}
 
         <View style={pdfStyles.footer}>
-          {data.phone.visible ? (
-            <View style={pdfStyles.footerItem}>
-              <View style={pdfStyles.footerIcon}><Text style={pdfStyles.footerIconText}>â˜Ž</Text></View>
-              <Text style={pdfStyles.footerText}>{data.phone.value}</Text>
-            </View>
-          ) : null}
-          {data.website.visible ? (
-            <View style={pdfStyles.footerItem}>
-              <View style={pdfStyles.footerIcon}><Text style={pdfStyles.footerIconText}>ðŸŒ</Text></View>
-              <Text style={pdfStyles.footerText}>{data.website.value}</Text>
-            </View>
-          ) : null}
-          {data.footerAddress.visible ? (
-            <View style={pdfStyles.footerItem}>
-              <View style={pdfStyles.footerIcon}><Text style={pdfStyles.footerIconText}>âŒ–</Text></View>
-              <Text style={pdfStyles.footerText}>{data.footerAddress.value}</Text>
-            </View>
-          ) : null}
+          <View style={pdfStyles.footerRow}>
+            {data.phone.visible ? <Text style={pdfStyles.footerText}>TEL: {data.phone.value}</Text> : null}
+            {data.website.visible ? <Text style={pdfStyles.footerText}>WEB: {data.website.value}</Text> : null}
+            {data.footerAddress.visible ? <Text style={pdfStyles.footerText}>{data.footerAddress.value}</Text> : null}
+          </View>
         </View>
       </Page>
     </Document>
@@ -131,6 +129,7 @@ const LetterheadPdf = ({ data }) => {
 };
 
 const defaultData = {
+  logo: { value: '', visible: true },
   brandName: { value: 'COMPANY', visible: true },
   slogan: { value: 'YOUR SLOGAN HERE', visible: true },
   recipientName: { value: 'Jonathon Doe', visible: true },
@@ -167,6 +166,14 @@ export default function LetterheadDocument() {
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [companyValue, setCompanyValue] = useState(null);
   const [companyInputValue, setCompanyInputValue] = useState('');
+
+  const toAbsoluteUrl = (value) => {
+    if (!value) return '';
+    if (/^data:/i.test(value)) return value;
+    if (/^https?:\/\//i.test(value)) return value;
+    if (value.startsWith('/')) return `${window.location.origin}${value}`;
+    return value;
+  };
 
   const updateField = (field) => (event) => {
     setFormData((prev) => ({ ...prev, [field]: { ...prev[field], value: event.target.value } }));
@@ -238,6 +245,7 @@ export default function LetterheadDocument() {
     if (!company) return;
     setFormData((prev) => ({
       ...prev,
+      logo: { ...prev.logo, value: toAbsoluteUrl(company.logo || '') },
       brandName: { ...prev.brandName, value: company.name || '' },
       phone: { ...prev.phone, value: company.contactNumber || prev.phone.value },
       website: { ...prev.website, value: company.username || prev.website.value },
@@ -248,6 +256,7 @@ export default function LetterheadDocument() {
   const clearCompanyFromForm = () => {
     setFormData((prev) => ({
       ...prev,
+      logo: { ...prev.logo, value: '' },
       brandName: { ...prev.brandName, value: '' },
       phone: { ...prev.phone, value: '' },
       website: { ...prev.website, value: '' },
@@ -294,6 +303,7 @@ export default function LetterheadDocument() {
       const invoiceCompanyId =
         typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || '';
       const merged = {
+        logo: normalizeField(templateData.logo, defaultData.logo),
         brandName: normalizeField(templateData.brandName, defaultData.brandName),
         slogan: normalizeField(templateData.slogan, defaultData.slogan),
         recipientName: normalizeField(templateData.recipientName, defaultData.recipientName),
@@ -308,6 +318,7 @@ export default function LetterheadDocument() {
         website: normalizeField(templateData.website, defaultData.website),
         footerAddress: normalizeField(templateData.footerAddress, defaultData.footerAddress)
       };
+      merged.logo.value = toAbsoluteUrl(merged.logo.value);
 
       if (templateData?.settings) {
         if (templateData.settings.showSlogan === false) {

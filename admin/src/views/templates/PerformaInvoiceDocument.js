@@ -427,7 +427,11 @@ export default function PerformaInvoiceDocument() {
     setData((prev) => ({
       ...prev,
       companyName: { ...prev.companyName, value: company.name || '' },
-      addressLines: addressLines.length ? addressLines : prev.addressLines
+      addressLines: addressLines.length ? addressLines : prev.addressLines,
+      signature: {
+        ...prev.signature,
+        value: company.name || prev.signature.value
+      }
     }))
   }
 
@@ -438,9 +442,30 @@ export default function PerformaInvoiceDocument() {
       addressLines: (prev.addressLines?.length ? prev.addressLines : [ { value: '', visible: true } ]).map((line) => ({
         ...line,
         value: ''
-      }))
+      })),
+      signature: { ...prev.signature, value: '' }
     }))
   }
+
+  useEffect(() => {
+    setData((prev) => {
+      const companyName = String(prev.companyName?.value || '').trim()
+      const signatureValue = String(prev.signature?.value || '').trim()
+      const defaultSignature = String(defaultData.signature?.value || '').trim()
+
+      if (!companyName) return prev
+      if (signatureValue && signatureValue !== defaultSignature) return prev
+      if (signatureValue === companyName) return prev
+
+      return {
+        ...prev,
+        signature: {
+          ...prev.signature,
+          value: companyName
+        }
+      }
+    })
+  }, [ data.companyName?.value ])
 
   const applyCustomerToForm = (customer) => {
     if (!customer) return
