@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Box, Button, Checkbox, Divider, FormControlLabel, Grid, IconButton, Stack, TextField, Typography } from '@mui/material'
 import { IconPlus, IconTrash } from '@tabler/icons'
-import { Document, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer'
+import { Document, Image, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -52,7 +52,31 @@ const styles = StyleSheet.create({
   c5: { width: '8%', borderRight: '1pt solid black' },
   c6: { width: '8%', borderRight: '1pt solid black' },
   c7: { width: '8%', borderRight: '1pt solid black' },
-  c8: { width: '8%' }
+  c8: { width: '8%' },
+
+  signatureContainer: {
+    marginTop: 5,
+    alignItems: 'flex-start', // This ensures left alignment
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  signature: {
+    fontWeight: 'bold',
+    marginTop: 5,
+    fontSize: 10
+  },
+  stampImage: {
+    height: 70,
+    width: 'auto',
+    objectFit: 'contain',
+    marginBottom: 5
+  },
+  signImage: {
+    height: 70,
+    width: 'auto',
+    objectFit: 'contain',
+    marginBottom: 5
+  }
 })
 
 const PackingListPdf = ({ data }) => {
@@ -305,6 +329,18 @@ const PackingListPdf = ({ data }) => {
               <View style={[ styles.rightPillar, { textAlign: 'center', justifyContent: 'space-between', padding: 5 } ]}>
                 {isVisible(data.authorizedBy) ? (
                     <>
+                      {data?.company?.stamp && (
+                          <Image
+                              style={styles.stampImage}
+                              src={data.company.stamp}
+                          />
+                      )}
+                      {/*{data?.company?.sign && (*/}
+                      {/*    <Image*/}
+                      {/*        style={styles.signImage}*/}
+                      {/*        src={data.company.sign}*/}
+                      {/*    />*/}
+                      {/*)}*/}
                       <Text style={styles.label}>For {data.authorizedBy.value}</Text>
                       <Text style={[ styles.label, { marginBottom: 5 } ]}>Authorised Signatory</Text>
                     </>
@@ -842,7 +878,12 @@ export default function PackingListDocument() {
                   borderColor: 'divider'
                 }}
             >
-              <PdfPreview data={pdfData}/>
+              <PdfPreview
+                  data={{
+                    ...pdfData,
+                    company: companyValue
+                  }}
+              />
             </Box>
           </Grid>
 

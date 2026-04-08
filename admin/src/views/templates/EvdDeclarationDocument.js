@@ -4,7 +4,7 @@ import {
   Select, Stack, TextField, Typography, Switch, FormControlLabel, CircularProgress
 } from '@mui/material';
 import { IconEye, IconEyeOff, IconDeviceFloppy } from '@tabler/icons';
-import { Document, Page, PDFViewer, StyleSheet, Text, View, Font } from '@react-pdf/renderer';
+import { Document, Page, PDFViewer, StyleSheet, Text, View, Font, Image } from '@react-pdf/renderer'
 import { useNavigate, useParams } from 'react-router-dom';
 
 import MainCard from 'ui-component/cards/MainCard';
@@ -120,12 +120,30 @@ const pdfStyles = StyleSheet.create({
   },
 
   // Footer Placement
-  footerSection: { marginTop: 25 },
+  footerSection: { marginTop: 10 },
   footerLine: { marginBottom: 4 },
-  signature: { 
-    marginTop: 35, 
-    fontWeight: 'bold', 
-    fontSize: 11 
+  signatureContainer: {
+    marginTop: 5,
+    alignItems: 'flex-start', // This ensures left alignment
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  signature: {
+    fontWeight: 'bold',
+    marginTop: 5,
+    fontSize: 10
+  },
+  stampImage: {
+    height: 70,
+    width: 'auto',
+    objectFit: 'contain',
+    marginBottom: 5
+  },
+  signImage: {
+    height: 70,
+    width: 'auto',
+    objectFit: 'contain',
+    marginBottom: 5
   }
 });
 
@@ -177,10 +195,26 @@ const ExportValuePdf = ({ data }) => {
         ))}
 
         {/* Declaration Section */}
-        <View style={{ marginTop: 10 }}>
+        <View>
           <Text style={pdfStyles.declTitle}>DECLARATION</Text>
           <Text style={pdfStyles.declText}>1. I/WE HEREBY DECLARE THAT THE INFORMATION FURNISHED ABOVE IS TRUE, COMPLETE & CORRECT IN EVERY RESPECT.</Text>
           <Text style={pdfStyles.declText}>2. I/WE ALSO UNDERTAKE TO BRING TO THE NOTICE OF PROPER OFFICER ANY PARTICULARS WHICH SUBSEQUENTLY COME TO MY / OUR KNOWLEDGE, WHICH WILL HAVE BEARING ON VALUATION.</Text>
+        </View>
+
+        <View style={pdfStyles.signatureContainer}>
+          {data?.company?.stamp && (
+              <Image
+                  style={pdfStyles.stampImage}
+                  src={data.company.stamp}
+              />
+          )}
+
+          {/*{data?.company?.sign && (*/}
+          {/*    <Image*/}
+          {/*        style={pdfStyles.signImage}*/}
+          {/*        src={data.company.sign}*/}
+          {/*    />*/}
+          {/*)}*/}
         </View>
 
         {/* Bottom Section */}
@@ -374,7 +408,11 @@ export default function ExportValueDeclaration() {
       <Grid container spacing={2}>
         <Grid item xs={12} md={7}>
           <Box sx={{ height: '85vh', border: '1px solid #ddd' }}>
-            <PDFViewer width="100%" height="100%"><ExportValuePdf data={data} /></PDFViewer>
+            <PDFViewer width="100%" height="100%">
+              <ExportValuePdf
+                  data={{ ...data, company : companyValue }}
+              />
+            </PDFViewer>
           </Box>
         </Grid>
         <Grid item xs={12} md={5}>

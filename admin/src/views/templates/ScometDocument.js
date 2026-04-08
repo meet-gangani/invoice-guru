@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Box, Button, Divider, FormControl, Grid, IconButton, MenuItem, Select, Stack, TextField, Typography } from '@mui/material'
 import { IconPlus, IconTrash } from '@tabler/icons'
-import { Document, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer'
+import { Document, Page, PDFViewer, StyleSheet, Text, View, Image } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -94,7 +94,28 @@ const styles = StyleSheet.create({
     color: '#4B4B9E',
     lineHeight: 1.4
   },
-  signature: { marginTop: 40, fontWeight: 'bold' }
+  signatureContainer: {
+    alignItems: 'flex-start', // This ensures left alignment
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  signature: {
+    fontWeight: 'bold',
+    marginTop: 5,
+    fontSize: 10
+  },
+  stampImage: {
+    height: 70,
+    width: 'auto',
+    objectFit: 'contain',
+    marginBottom: 5
+  },
+  signImage: {
+    height: 70,
+    width: 'auto',
+    objectFit: 'contain',
+    marginBottom: 5
+  }
 })
 
 const ScometPdf = ({ data }) => {
@@ -190,7 +211,23 @@ const ScometPdf = ({ data }) => {
               </Text>
           ))}
 
-          <Text style={styles.signature}>{data.signatureLine || '__________'}</Text>
+          <View style={styles.signatureContainer}>
+            {data?.company?.stamp && (
+                <Image
+                    style={styles.stampImage}
+                    src={data.company.stamp}
+                />
+            )}
+
+            {/*{data?.company?.sign && (*/}
+            {/*    <Image*/}
+            {/*        style={styles.signImage}*/}
+            {/*        src={data.company.sign}*/}
+            {/*    />*/}
+            {/*)}*/}
+
+            <Text style={styles.signature}>{data.signatureLine || '__________'}</Text>
+          </View>
 
           <View style={styles.footerContainer}>
             <View style={styles.footerLine} />
@@ -433,6 +470,7 @@ export default function ScometDocument() {
             ...templateData,
             date: normalizeDateInput(templateData?.date || invoice?.date || '')
           }
+          
           merged.tableRows = normalizeTableRows(merged.tableRows)
           setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '')
           hydrateData(merged)
@@ -544,7 +582,9 @@ export default function ScometDocument() {
                   borderColor: 'divider'
                 }}
             >
-              <PdfPreview data={pdfData}/>
+              <PdfPreview
+                  data={{ ...pdfData, company : companyValue }}
+              />
             </Box>
           </Grid>
           <Grid item xs={12} md={5}>

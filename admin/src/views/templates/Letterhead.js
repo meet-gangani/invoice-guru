@@ -77,6 +77,29 @@ const pdfStyles = StyleSheet.create({
     fontSize: 9,
     color: '#4B4B9E',
     lineHeight: 1.4
+  },
+  signatureContainer: {
+    marginTop: 5,
+    alignItems: 'flex-start', // This ensures left alignment
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  signature: {
+    fontWeight: 'bold',
+    marginTop: 5,
+    fontSize: 10
+  },
+  stampImage: {
+    height: 70,
+    width: 'auto',
+    objectFit: 'contain',
+    marginBottom: 5
+  },
+  signImage: {
+    height: 70,
+    width: 'auto',
+    objectFit: 'contain',
+    marginBottom: 5
   }
 })
 
@@ -124,6 +147,22 @@ const LetterheadPdf = ({ data }) => {
                 <Text style={pdfStyles.bodyText}>{bodyLines.join('\n')}</Text>
               </View>
           ) : null}
+
+          <View style={pdfStyles.signatureContainer}>
+            {data?.company?.stamp && (
+                <Image
+                    style={pdfStyles.stampImage}
+                    src={data.company.stamp}
+                />
+            )}
+
+            {/*{data?.company?.sign && (*/}
+            {/*    <Image*/}
+            {/*        style={pdfStyles.signImage}*/}
+            {/*        src={data.company.sign}*/}
+            {/*    />*/}
+            {/*)}*/}
+          </View>
 
           {showSignature ? (
               <View style={pdfStyles.signatureSection}>
@@ -433,7 +472,9 @@ export default function LetterheadDocument() {
           <Grid item xs={12} md={7}>
             <Box sx={{ position: 'sticky', top: 24, height: '85vh', border: '1px solid #ddd' }}>
               <PDFViewer style={{ width: '100%', height: '100%' }}>
-                <LetterheadPdf data={formData}/>
+                <LetterheadPdf
+                    data={{ ...formData, company: companyValue }}
+                />
               </PDFViewer>
             </Box>
           </Grid>

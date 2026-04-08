@@ -26,7 +26,7 @@
     "apexcharts": "^3.35.3",
     "axios": "^1.6.3",
     "dotenv": "^16.4.5",
-    "encrypt-storage": "^2.12.22",
+    "encrypt-storage": "^2.14.7",
     "formik": "^2.2.9",
     "framer-motion": "^6.3.16",
     "jwt-decode": "^4.0.0",

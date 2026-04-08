@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Box, Button, Checkbox, Dialog, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Select, Stack, TextField, Typography } from '@mui/material'
 import { createFilterOptions } from '@mui/material/Autocomplete'
 import { IconPlus, IconTrash } from '@tabler/icons'
-import { Document, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer'
+import { Document, Image, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer'
 import MainCard from 'ui-component/cards/MainCard'
 import { useTheme } from '@mui/material/styles'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -60,7 +60,32 @@ const styles = StyleSheet.create({
   totalRow: { flexDirection: 'row', borderBottom: '1pt solid #111' },
   totalLabel: { width: '60%', padding: 4, fontWeight: 'bold' },
   totalValue: { width: '40%', padding: 4, textAlign: 'right' },
-  footerSignature: { textAlign: 'right', marginTop: 8, fontWeight: 'bold' }
+  footerSignature: { textAlign: 'right', marginTop: 8, fontWeight: 'bold' },
+  signatureContainer: {
+    marginTop: 5,
+    alignItems: 'flex-end', // This ensures left alignment
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  signature: {
+    fontWeight: 'bold',
+    marginTop: 5,
+    fontSize: 10
+  },
+  stampImage: {
+    height: 70,
+    width: 'auto',
+    objectFit: 'contain',
+    marginTop: 5,
+    marginRight: 20,
+    marginBottom: 5
+  },
+  signImage: {
+    height: 70,
+    width: 'auto',
+    objectFit: 'contain',
+    marginBottom: 5
+  }
 })
 
 const PerformaPdf = ({ data }) => {
@@ -270,6 +295,20 @@ const PerformaPdf = ({ data }) => {
             </View>
           </View>
 
+          <View style={styles.signatureContainer}>
+            {data?.company?.stamp && (
+                <Image
+                    style={styles.stampImage}
+                    src={data.company.stamp}
+                />
+            )}
+            {/*{data?.company?.sign && (*/}
+            {/*    <Image*/}
+            {/*        style={styles.signImage}*/}
+            {/*        src={data.company.sign}*/}
+            {/*    />*/}
+            {/*)}*/}
+          </View>
           {data.signature.visible ? <Text style={styles.footerSignature}>{data.signature.value || '__________'}</Text> : null}
         </Page>
       </Document>
@@ -995,7 +1034,12 @@ export default function PerformaInvoiceDocument() {
                   borderColor: 'divider'
                 }}
             >
-              <PdfPreview data={pdfData}/>
+              <PdfPreview
+                  data={{
+                    ...pdfData,
+                    company: companyValue
+                  }}
+              />
             </Box>
           </Grid>
           <Grid item xs={12} md={5}>
