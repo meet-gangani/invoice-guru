@@ -27,7 +27,8 @@ const styles = StyleSheet.create({
     marginBottom: 5
   },
   brandName: {
-    fontSize: 26,
+    fontSize: 18,
+    marginBottom: 'auto',
     fontWeight: 'bold',
     color: '#4B4B9E',
     letterSpacing: 1,
@@ -36,15 +37,16 @@ const styles = StyleSheet.create({
   contactSection: {
     textAlign: 'right',
     fontSize: 9,
-    color: '#4B4B9E'
+    color: '#4B4B9E',
+    lineHeight: 1.2
   },
   blueLine: {
     borderBottomWidth: 1.5,
     borderBottomColor: '#4B4B9E',
     marginTop: 8,
-    marginBottom: 36
+    marginBottom: 2
   },
-  dateText: { marginBottom: 20 },
+  dateText: { marginBottom: 20, marginTop: 10 },
   addressSection: { marginBottom: 15, width: '70%' },
   subject: {
     fontWeight: 'bold',
@@ -70,22 +72,27 @@ const styles = StyleSheet.create({
   },
   tableCellHeader: { fontWeight: 'bold', fontSize: 9 },
   tableCell: { fontSize: 9 },
-  footerLine: {
+  footerContainer: {
     position: 'absolute',
-    bottom: 60,
+    bottom: 30, // Position from page bottom
     left: 45,
     right: 45,
+    display: 'flex',
+    flexDirection: 'column', // Stack line on top of text
+    alignItems: 'center',    // Center children horizontally
+  },
+  footerLine: {
+    width: '100%',
     borderBottomWidth: 1,
-    borderBottomColor: '#4B4B9E'
+    borderBottomColor: '#4B4B9E',
+    marginBottom: 4,         // Space between line and text
   },
   footerText: {
-    position: 'absolute',
-    bottom: 30,
-    left: 0,
-    right: 0,
+    maxWidth: '90%',
     textAlign: 'center',
     fontSize: 9,
-    color: '#4B4B9E'
+    color: '#4B4B9E',
+    lineHeight: 1.4
   },
   signature: { marginTop: 40, fontWeight: 'bold' }
 })
@@ -185,8 +192,12 @@ const ScometPdf = ({ data }) => {
 
           <Text style={styles.signature}>{data.signatureLine || '__________'}</Text>
 
-          <View style={styles.footerLine}/>
-          <Text style={styles.footerText}>{data.footerLine || '__________'}</Text>
+          <View style={styles.footerContainer}>
+            <View style={styles.footerLine} />
+            <Text style={styles.footerText}>
+              {data.footerLine || '__________'}
+            </Text>
+          </View>
         </Page>
       </Document>
   )

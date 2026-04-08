@@ -31,23 +31,27 @@ const pdfStyles = StyleSheet.create({
     alignItems: 'flex-end',
     marginBottom: 4
   },
-  brandName: { 
-    fontSize: 24, 
-    fontWeight: 'bold', 
-    color: '#4B4B9E'
+  brandName: {
+    fontSize: 18,
+    marginBottom: 'auto',
+    fontWeight: 'bold',
+    color: '#4B4B9E',
+    letterSpacing: 1,
+    lineHeight: 1.2
   },
-  contactBlock: { 
-    textAlign: 'right', 
-    fontSize: 9, 
+  contactSection: {
+    textAlign: 'right',
+    fontSize: 9,
     color: '#4B4B9E',
     lineHeight: 1.2
   },
-  blueLine: { 
-    borderBottomWidth: 2, 
-    borderBottomColor: '#4B4B9E', 
-    marginBottom: 15 
+  blueLine: {
+    borderBottomWidth: 1.5,
+    borderBottomColor: '#4B4B9E',
+    marginTop: 8,
+    marginBottom: 32
   },
-  
+
   // Titles
   docTitle: { 
     fontSize: 13, 
@@ -134,7 +138,7 @@ const ExportValuePdf = ({ data }) => {
         {/* Header Section */}
         <View style={pdfStyles.headerRow}>
           <Text style={pdfStyles.brandName}>{data.brandName}</Text>
-          <View style={pdfStyles.contactBlock}>
+          <View style={pdfStyles.contactSection}>
             <Text>{data.contact1}</Text>
             <Text>{data.contact2}</Text>
           </View>
