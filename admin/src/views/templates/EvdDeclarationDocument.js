@@ -12,6 +12,7 @@ import { useTheme } from '@mui/material/styles';
 import axiosInstance from '../../services/axiosInstance'; 
 import EndpointService from '../../services/endpoint.service';
 import EntityAutocomplete from 'components/EntityAutocomplete';
+import { getStoredCompanyId, setStoredCompanyId } from 'utils/entitySelectionStorage';
 
 const pdfStyles = StyleSheet.create({
   page: { 
@@ -280,13 +281,22 @@ export default function ExportValueDeclaration() {
         if (templateData) setData(templateData);
         const invoiceCompanyId =
           typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || '';
-        setSelectedCompanyId(invoiceCompanyId);
+        const storedCompanyId = getStoredCompanyId();
+        setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '');
         setIsApproved(Boolean(invoice?.evdApproved));
         setHasSaved(false);
         setLoading(false);
-      }).catch(() => setLoading(false));
+      }).catch(() => {
+        setSelectedCompanyId(getStoredCompanyId() || '');
+        setLoading(false);
+      });
     }
   }, [invoiceId]);
+
+  useEffect(() => {
+    if (!invoiceId) return;
+    setStoredCompanyId(selectedCompanyId);
+  }, [selectedCompanyId, invoiceId]);
 
   const handleSave = async () => {
     setIsSaving(true);

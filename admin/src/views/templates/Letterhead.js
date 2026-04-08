@@ -8,6 +8,7 @@ import { IconPlus, IconTrash } from '@tabler/icons';
 import axiosInstance from '../../services/axiosInstance';
 import EndpointService from '../../services/endpoint.service';
 import EntityAutocomplete from 'components/EntityAutocomplete';
+import { getStoredCompanyId, setStoredCompanyId } from 'utils/entitySelectionStorage';
 
 const pdfStyles = StyleSheet.create({
   page: { padding: 48, fontSize: 10, fontFamily: 'Helvetica', color: '#1f2933' },
@@ -302,6 +303,7 @@ export default function LetterheadDocument() {
       const templateData = invoice?.letterHead || invoice?.data || {};
       const invoiceCompanyId =
         typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || '';
+      const storedCompanyId = getStoredCompanyId();
       const merged = {
         logo: normalizeField(templateData.logo, defaultData.logo),
         brandName: normalizeField(templateData.brandName, defaultData.brandName),
@@ -334,13 +336,21 @@ export default function LetterheadDocument() {
         }
       }
 
-      setSelectedCompanyId(invoiceCompanyId);
+      setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '');
       setFormData(merged);
       setIsApproved(Boolean(invoice?.letterHeadApproved));
       setHasSaved(false);
-    }).catch(() => {});
+    }).catch(() => {
+      if (!isActive) return;
+      setSelectedCompanyId(getStoredCompanyId() || '');
+    });
     return () => { isActive = false; };
   }, [invoiceId]);
+
+  useEffect(() => {
+    if (!invoiceId) return;
+    setStoredCompanyId(selectedCompanyId);
+  }, [selectedCompanyId, invoiceId]);
 
   const handleSave = async () => {
     try {

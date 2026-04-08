@@ -9,6 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import axiosInstance from '../../services/axiosInstance'
 import EndpointService from '../../services/endpoint.service'
 import EntityAutocomplete from 'components/EntityAutocomplete'
+import { getStoredCompanyId, getStoredCustomerId, setStoredCompanyId, setStoredCustomerId } from 'utils/entitySelectionStorage'
 
 const styles = StyleSheet.create({
   page: {
@@ -848,8 +849,10 @@ export default function PerformaInvoiceDocument() {
               typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || ''
           const invoiceCustomerId =
               typeof invoice?.customer === 'string' ? invoice.customer : invoice?.customer?._id || ''
-          setSelectedCompanyId(invoiceCompanyId)
-          setSelectedCustomerId(invoiceCustomerId)
+          const storedCompanyId = getStoredCompanyId()
+          const storedCustomerId = getStoredCustomerId()
+          setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '')
+          setSelectedCustomerId(invoiceCustomerId || storedCustomerId || '')
           setData(merged)
           setPdfData(merged)
           setIsApproved(Boolean(invoice?.performaApproved))
@@ -858,6 +861,8 @@ export default function PerformaInvoiceDocument() {
           if (!isActive) return
           setData(defaultData)
           setPdfData(defaultData)
+          setSelectedCompanyId(getStoredCompanyId() || '')
+          setSelectedCustomerId(getStoredCustomerId() || '')
           setIsApproved(false)
           setHasSaved(false)
         }
@@ -869,6 +874,16 @@ export default function PerformaInvoiceDocument() {
       isActive = false
     }
   }, [ invoiceId ])
+
+  useEffect(() => {
+    if (!invoiceId) return
+    setStoredCompanyId(selectedCompanyId)
+  }, [ selectedCompanyId, invoiceId ])
+
+  useEffect(() => {
+    if (!invoiceId) return
+    setStoredCustomerId(selectedCustomerId)
+  }, [ selectedCustomerId, invoiceId ])
 
   const handleSave = async () => {
     try {

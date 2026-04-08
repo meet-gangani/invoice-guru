@@ -8,6 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import axiosInstance from '../../services/axiosInstance'
 import EndpointService from '../../services/endpoint.service'
 import EntityAutocomplete from 'components/EntityAutocomplete'
+import { getStoredCompanyId, getStoredCustomerId, setStoredCompanyId, setStoredCustomerId } from 'utils/entitySelectionStorage'
 
 const styles = StyleSheet.create({
   page: { padding: 28, fontSize: 8, fontFamily: 'Helvetica', color: '#000' },
@@ -338,6 +339,7 @@ const PdfPreview = React.memo(({ data }) => (
 ))
 
 const defaultData = {
+  currency: 'INR',
   title: { value: 'EXPORT / COMMERCIAL INVOICE', visible: true },
   subTitle: { value: 'SUPPLY MEANT FOR EXPORT UNDER BOND OR LETTER OF UNDERTAKING WITHOUT PAYMENT OF INTEGRATED TAX (IGST) LUT NO: AD24032416001P', visible: true },
   exporterLines: [
@@ -430,16 +432,25 @@ export default function PackagingDocument() {
     setData((prev) => ({ ...prev, [field]: { ...prev[field], value: event.target.value } }))
   }
 
+  const splitToLines = (raw) => {
+    if (!raw) return []
+    const byNewLine = String(raw).split('\n').map((line) => line.trim()).filter(Boolean)
+    if (byNewLine.length > 1) return byNewLine
+    return [ String(raw).trim() ].filter(Boolean)
+  }
+
   const applyCompanyToForm = (company) => {
     if (!company) return
 
+    const fallbackAddress = [ company.addressLine1, company.addressLine2, company.addressLine3 ].filter(Boolean).join('\n')
+    const addressSource = company.address || fallbackAddress
     const companyLines = [
       company.name,
-      company.addressLine1,
-      company.addressLine2,
-      company.addressLine3,
+      ...splitToLines(addressSource),
+      company.pinCode ? `PIN: ${company.pinCode}` : '',
+      company.contactPerson || '',
       company.contactNumber ? `TEL.: ${company.contactNumber}` : '',
-      company.username,
+      company.username || '',
       company.gstin ? `GSTIN: ${company.gstin}` : ''
     ].filter(Boolean)
 
@@ -688,18 +699,33 @@ export default function PackagingDocument() {
             currency: invoice?.currency || defaultData.currency,
             date: { ...(defaultData.date || {}), value: invoice?.date || templateDateValue || '' }
           }
+          const packagingData = invoice?.packaging || invoice?.packing || {}
+          const packagingNet = packagingData?.netWeight?.value ?? packagingData?.netWeight ?? ''
+          const packagingGross = packagingData?.grossWeight?.value ?? packagingData?.grossWeight ?? ''
+          const currentNet = String(merged?.netWeight?.value || '').trim()
+          const currentGross = String(merged?.grossWeight?.value || '').trim()
+          if (!currentNet && packagingNet) {
+            merged.netWeight = { ...(merged.netWeight || defaultData.netWeight), value: packagingNet }
+          }
+          if (!currentGross && packagingGross) {
+            merged.grossWeight = { ...(merged.grossWeight || defaultData.grossWeight), value: packagingGross }
+          }
           setData(merged)
           setPdfData(merged)
-          setSelectedCompanyId(typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || '')
-          setSelectedCustomerId(typeof invoice?.customer === 'string' ? invoice.customer : invoice?.customer?._id || '')
+          const invoiceCompanyId = typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || ''
+          const invoiceCustomerId = typeof invoice?.customer === 'string' ? invoice.customer : invoice?.customer?._id || ''
+          const storedCompanyId = getStoredCompanyId()
+          const storedCustomerId = getStoredCustomerId()
+          setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '')
+          setSelectedCustomerId(invoiceCustomerId || storedCustomerId || '')
           setIsApproved(Boolean(invoice?.commercialApproved))
           setHasSaved(false)
         } catch (error) {
           if (!isActive) return
           setData(defaultData)
           setPdfData(defaultData)
-          setSelectedCompanyId('')
-          setSelectedCustomerId('')
+          setSelectedCompanyId(getStoredCompanyId() || '')
+          setSelectedCustomerId(getStoredCustomerId() || '')
           setIsApproved(false)
           setHasSaved(false)
         }
@@ -741,6 +767,16 @@ export default function PackagingDocument() {
       applyCustomerToForm(match)
     }
   }, [ selectedCustomerId, customers ])
+
+  useEffect(() => {
+    if (!invoiceId) return
+    setStoredCompanyId(selectedCompanyId)
+  }, [ selectedCompanyId, invoiceId ])
+
+  useEffect(() => {
+    if (!invoiceId) return
+    setStoredCustomerId(selectedCustomerId)
+  }, [ selectedCustomerId, invoiceId ])
 
   const handleSave = async () => {
     try {

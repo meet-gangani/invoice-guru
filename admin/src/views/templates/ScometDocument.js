@@ -8,6 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import axiosInstance from '../../services/axiosInstance'
 import EndpointService from '../../services/endpoint.service'
 import EntityAutocomplete from 'components/EntityAutocomplete'
+import { getStoredCompanyId, setStoredCompanyId } from 'utils/entitySelectionStorage'
 
 const styles = StyleSheet.create({
   page: {
@@ -415,19 +416,21 @@ export default function ScometDocument() {
           const templateData = invoice?.scomet || invoice?.data || {}
           const invoiceCompanyId =
               typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || ''
+          const storedCompanyId = getStoredCompanyId()
           const merged = {
             ...defaultData,
             ...templateData,
             date: normalizeDateInput(templateData?.date || invoice?.date || '')
           }
           merged.tableRows = normalizeTableRows(merged.tableRows)
-          setSelectedCompanyId(invoiceCompanyId)
+          setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '')
           hydrateData(merged)
           setIsApproved(Boolean(invoice?.scometApproved))
           setHasSaved(false)
         } catch (error) {
           if (!isActive) return
           hydrateData(defaultData)
+          setSelectedCompanyId(getStoredCompanyId() || '')
           setIsApproved(false)
           setHasSaved(false)
         }
@@ -439,6 +442,11 @@ export default function ScometDocument() {
       isActive = false
     }
   }, [ invoiceId ])
+
+  useEffect(() => {
+    if (!invoiceId) return
+    setStoredCompanyId(selectedCompanyId)
+  }, [ selectedCompanyId, invoiceId ])
 
   const handleSave = async () => {
     try {

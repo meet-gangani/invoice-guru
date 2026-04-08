@@ -8,6 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import axiosInstance from '../../services/axiosInstance'
 import EndpointService from '../../services/endpoint.service'
 import EntityAutocomplete from 'components/EntityAutocomplete'
+import { getStoredCompanyId, getStoredCustomerId, setStoredCompanyId, setStoredCustomerId } from 'utils/entitySelectionStorage'
 
 const styles = StyleSheet.create({
   page: { padding: 30, fontSize: 7.5, fontFamily: 'Helvetica', color: '#000' },
@@ -90,13 +91,13 @@ const PackingListPdf = ({ data }) => {
             <View style={styles.flexRow}>
               {/* LEFT PILLAR */}
               <View style={styles.leftPillar}>
-                <View style={[ styles.cell, { height: 90 } ]}>
+                <View style={[ styles.cell, { minHeight: 90 } ]}>
                   <Text style={styles.label}>Exporter</Text>
                   {data.exporterLines.filter(l => l.visible).map((l, i) => (
                       <Text key={i} style={styles.value}>{l.value}</Text>
                   ))}
                 </View>
-                <View style={[ styles.cellLast, { height: 90 } ]}>
+                <View style={[ styles.cellLast, { minHeight: 90 } ]}>
                   {isVisible(data.consignee) ? (
                       <>
                         <Text style={styles.label}>Consignee</Text>
@@ -116,7 +117,7 @@ const PackingListPdf = ({ data }) => {
 
               {/* RIGHT PILLAR (Independent horizontal lines) */}
               <View style={styles.rightPillar}>
-                <View style={[ styles.splitRow, { height: 45 } ]}>
+                <View style={[ styles.splitRow, { minHeight: 45 } ]}>
                   <View style={[ styles.innerBox, styles.borderRight ]}>
                     {showPackingListMeta ? (
                         <>
@@ -139,7 +140,7 @@ const PackingListPdf = ({ data }) => {
                     ) : null}
                   </View>
                 </View>
-                <View style={[ styles.cell, { height: 45 } ]}>
+                <View style={[ styles.cell, { minHeight: 45 } ]}>
                   {isVisible(data.buyersOrder) ? (
                       <>
                         <Text style={styles.label}>Buyer's Order No. & Date</Text>
@@ -147,7 +148,7 @@ const PackingListPdf = ({ data }) => {
                       </>
                   ) : null}
                 </View>
-                <View style={[ styles.cellLast, { height: 45 } ]}>
+                <View style={[ styles.cellLast, { minHeight: 45 } ]}>
                   {isVisible(data.notifyBuyer) ? (
                       <>
                         <Text style={styles.label}>Notify / Buyer (if other than consignee)</Text>
@@ -716,8 +717,10 @@ export default function PackingListDocument() {
               typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || ''
           const invoiceCustomerId =
               typeof invoice?.customer === 'string' ? invoice.customer : invoice?.customer?._id || ''
-          setSelectedCompanyId(invoiceCompanyId)
-          setSelectedCustomerId(invoiceCustomerId)
+          const storedCompanyId = getStoredCompanyId()
+          const storedCustomerId = getStoredCustomerId()
+          setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '')
+          setSelectedCustomerId(invoiceCustomerId || storedCustomerId || '')
           setData(merged)
           setPdfData(merged)
           setIsApproved(Boolean(invoice?.packagingApproved))
@@ -726,6 +729,8 @@ export default function PackingListDocument() {
           if (!isActive) return
           setData(defaultData)
           setPdfData(defaultData)
+          setSelectedCompanyId(getStoredCompanyId() || '')
+          setSelectedCustomerId(getStoredCustomerId() || '')
           setIsApproved(false)
           setHasSaved(false)
         }
@@ -737,6 +742,16 @@ export default function PackingListDocument() {
       isActive = false
     }
   }, [ invoiceId ])
+
+  useEffect(() => {
+    if (!invoiceId) return
+    setStoredCompanyId(selectedCompanyId)
+  }, [ selectedCompanyId, invoiceId ])
+
+  useEffect(() => {
+    if (!invoiceId) return
+    setStoredCustomerId(selectedCustomerId)
+  }, [ selectedCustomerId, invoiceId ])
 
   const handleSave = async () => {
     try {
