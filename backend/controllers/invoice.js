@@ -12,7 +12,7 @@ exports.dashboardCards = async (req, res) => {
     let filter = {}
     if (req.companyId) {
       filter = {
-        company: req.companyId
+        company_id: req.companyId
       }
     }
 
@@ -41,7 +41,7 @@ exports.getInvoices = async (req, res) => {
     let filter = {}
     if (req.companyId) {
       filter = {
-        company: req.companyId
+        company_id: req.companyId
       }
     }
 
@@ -72,6 +72,11 @@ exports.getInvoiceById = async (req, res) => {
     const invoice = await InvoiceStore.findById(req.params.id).populate([
       {
         path: 'company',
+        model: 'companyMaster',
+        // select: '_id name logo'
+      },
+      {
+        path: 'company_id',
         model: 'company',
         // select: '_id name logo'
       },
@@ -152,6 +157,7 @@ exports.saveInvoice = async (req, res) => {
       if (!invoice) {
         return sendError(res, 'Invoice not found', new Error('Invoice not found'), 404)
       }
+      invoice.company_id = req.companyId
       invoice.date = payloadDate
       invoice[resolvedTemplateKey] = payloadData
       if (rest.company) invoice.company = rest.company

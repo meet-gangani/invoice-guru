@@ -12,12 +12,5 @@
     "password": "$2b$10$dSEmf9T/4P15rgToFbSM3.QejMR/EXobyOVmmAh8LM1AF7Hdu.3pu",
     "createdOn": 1772569265252,
     "updatedOn": 1772569265252
-  },
-  {
-    "_id": "7a324394-a873-44b2-baed-98a6e2b10070",
-    "email": "gauravmistry1413@gmail.com",
-    "password": "$2b$10$ztYZthIbE/7DNyT6NalTruQB9e3fY88Nl58DEkJ8uaFdLrS3a5TIS",
-    "createdOn": 1772569265252,
-    "updatedOn": 1772569265252
   }
 ]

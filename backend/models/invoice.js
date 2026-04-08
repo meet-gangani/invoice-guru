@@ -5,8 +5,9 @@ const { defaultFields, defaultSchemaOptions } = require('./model-utils')
 
 const InvoiceSchema = new Schema({
   _id: { type: Schema.Types.String, required: true, default: uuidv4 },
+  company_id: { type: Schema.Types.String, required: false, ref: 'company' },
   currency: { type: Schema.Types.String, required: true, default: 'INR' },
-  company: { type: Schema.Types.String, required: false, ref: 'company' },
+  company: { type: Schema.Types.String, required: false, ref: 'companyMaster' },
   customer: { type: Schema.Types.String, required: false, ref: 'customer' },
   date: { type: Date, required: true },
   performa: { type: Schema.Types.Mixed },
