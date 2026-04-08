@@ -460,6 +460,35 @@ export default function PackingListDocument() {
     })
   }
 
+  const parseNumericInput = (value) => {
+    if (value === null || value === undefined) return { hasValue: false, number: 0 }
+    const raw = String(value).replace(/,/g, '').trim()
+    if (!raw) return { hasValue: false, number: 0 }
+    const number = Number(raw)
+    if (!Number.isFinite(number)) return { hasValue: false, number: 0 }
+    return { hasValue: true, number }
+  }
+
+  const formatSum = (sum, hasValue) => {
+    if (!hasValue) return ''
+    if (Number.isInteger(sum)) return String(sum)
+    return sum.toFixed(3).replace(/\.?0+$/, '')
+  }
+
+  const sumTableColumn = (rows, index) => {
+    let sum = 0
+    let hasValue = false
+    rows.forEach((row) => {
+      const cell = row?.[index]
+      const parsed = parseNumericInput(cell)
+      if (parsed.hasValue) {
+        sum += parsed.number
+        hasValue = true
+      }
+    })
+    return { sum, hasValue }
+  }
+
   const addTableRow = () => {
     setData((prev) => ({
       ...prev,
@@ -548,6 +577,24 @@ export default function PackingListDocument() {
   }
 
   const tableColumnCount = useMemo(() => Math.max(1, data.tableHeaders.length), [ data.tableHeaders.length ])
+
+  useEffect(() => {
+    const netTotals = sumTableColumn(data.tableRows || [], 5)
+    const grossTotals = sumTableColumn(data.tableRows || [], 6)
+    const nextNet = formatSum(netTotals.sum, netTotals.hasValue)
+    const nextGross = formatSum(grossTotals.sum, grossTotals.hasValue)
+
+    setData((prev) => {
+      const sameNet = prev.netWeight.value === nextNet
+      const sameGross = prev.grossWeight.value === nextGross
+      if (sameNet && sameGross) return prev
+      return {
+        ...prev,
+        netWeight: { ...prev.netWeight, value: nextNet },
+        grossWeight: { ...prev.grossWeight, value: nextGross }
+      }
+    })
+  }, [ data.tableRows ])
 
   useEffect(() => {
     const handle = setTimeout(() => {
