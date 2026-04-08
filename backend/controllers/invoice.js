@@ -50,6 +50,11 @@ exports.getInvoices = async (req, res) => {
     .populate([
       {
         path: 'company',
+        model: 'companyMaster',
+        select: '_id name logo'
+      },
+      {
+        path: 'company_id',
         model: 'company',
         select: '_id name logo'
       },
@@ -176,7 +181,7 @@ exports.saveInvoice = async (req, res) => {
       }
 
       if (req.companyId) {
-        payload.company = req.companyId
+        payload.company_id = req.companyId
       } else if (rest.company) {
         payload.company = rest.company
       }
