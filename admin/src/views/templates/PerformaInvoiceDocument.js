@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Box, Button, Checkbox, Dialog, DialogContent, DialogTitle, Divider, FormControl, FormControlLabel, Grid, IconButton, InputAdornment, InputLabel, MenuItem, Select, Stack, TextField, Typography } from '@mui/material'
 import { createFilterOptions } from '@mui/material/Autocomplete'
 import { IconPlus, IconTrash } from '@tabler/icons'
@@ -410,6 +410,12 @@ export default function PerformaInvoiceDocument() {
   const [ isAddCustomerOpen, setIsAddCustomerOpen ] = useState(false)
   const [companyValue, setCompanyValue] = useState(null)
   const [companyInputValue, setCompanyInputValue] = useState("")
+  const [ shouldApplyCompany, setShouldApplyCompany ] = useState(false)
+  const [ hasLoadedInvoice, setHasLoadedInvoice ] = useState(false)
+  const skipCompanySyncRef = useRef(false)
+  const [ shouldApplyCustomer, setShouldApplyCustomer ] = useState(false)
+  const [ shouldFillEmptyFromCustomer, setShouldFillEmptyFromCustomer ] = useState(false)
+  const skipCustomerSyncRef = useRef(false)
 
   const currencyList = [
     "AUD","BGN","BRL","CAD","CHF","CNY","CZK","DKK","EUR","GBP","HKD",
@@ -507,8 +513,12 @@ export default function PerformaInvoiceDocument() {
     })
   }, [ data.companyName?.value ])
 
-  const applyCustomerToForm = (customer) => {
+  const hasMeaningfulLines = (lines = []) =>
+    lines.some((line) => String(line?.value ?? '').trim())
+
+  const applyCustomerToForm = (customer, options = {}) => {
     if (!customer) return
+    const { onlyEmpty = false } = options
     const shipLines = buildLines([
       customer.name,
       ...splitToLines(customer.shipTo || customer.address),
@@ -522,12 +532,36 @@ export default function PerformaInvoiceDocument() {
 
     setData((prev) => ({
       ...prev,
-      customerLines: shipLines.length ? shipLines : prev.customerLines,
-      notifyLines: billLines.length ? billLines : prev.notifyLines,
-      customerPhone: { ...prev.customerPhone, value: customer.contact || '' },
-      customerEmail: { ...prev.customerEmail, value: customer.mail || '' },
-      notifyPhone: { ...prev.notifyPhone, value: customer.contact || '' },
-      notifyEmail: { ...prev.notifyEmail, value: customer.mail || '' }
+      customerLines: shipLines.length
+        ? (onlyEmpty && hasMeaningfulLines(prev.customerLines) ? prev.customerLines : shipLines)
+        : prev.customerLines,
+      notifyLines: billLines.length
+        ? (onlyEmpty && hasMeaningfulLines(prev.notifyLines) ? prev.notifyLines : billLines)
+        : prev.notifyLines,
+      customerPhone: {
+        ...prev.customerPhone,
+        value: onlyEmpty && String(prev.customerPhone?.value || '').trim()
+          ? prev.customerPhone.value
+          : (customer.contact || '')
+      },
+      customerEmail: {
+        ...prev.customerEmail,
+        value: onlyEmpty && String(prev.customerEmail?.value || '').trim()
+          ? prev.customerEmail.value
+          : (customer.mail || '')
+      },
+      notifyPhone: {
+        ...prev.notifyPhone,
+        value: onlyEmpty && String(prev.notifyPhone?.value || '').trim()
+          ? prev.notifyPhone.value
+          : (customer.contact || '')
+      },
+      notifyEmail: {
+        ...prev.notifyEmail,
+        value: onlyEmpty && String(prev.notifyEmail?.value || '').trim()
+          ? prev.notifyEmail.value
+          : (customer.mail || '')
+      }
     }))
   }
 
@@ -816,9 +850,20 @@ export default function PerformaInvoiceDocument() {
     if (match) {
       setCustomerValue(match)
       setCustomerInputValue(match.name || match.mail || '')
-      applyCustomerToForm(match)
+      if (skipCustomerSyncRef.current) {
+        skipCustomerSyncRef.current = false
+        if (shouldFillEmptyFromCustomer) {
+          applyCustomerToForm(match, { onlyEmpty: true })
+          setShouldFillEmptyFromCustomer(false)
+        }
+        return
+      }
+      if (shouldApplyCustomer || !hasLoadedInvoice) {
+        applyCustomerToForm(match)
+        setShouldApplyCustomer(false)
+      }
     }
-  }, [ selectedCustomerId, customers ])
+  }, [ selectedCustomerId, customers, shouldApplyCustomer, hasLoadedInvoice, shouldFillEmptyFromCustomer ])
 
   useEffect(() => {
     if (!selectedCompanyId || !companies.length) {
@@ -830,9 +875,16 @@ export default function PerformaInvoiceDocument() {
     if (match) {
       setCompanyValue(match)
       setCompanyInputValue(match.name || '')
-      applyCompanyToForm(match)
+      if (skipCompanySyncRef.current) {
+        skipCompanySyncRef.current = false
+        return
+      }
+      if (shouldApplyCompany || !hasLoadedInvoice) {
+        applyCompanyToForm(match)
+        setShouldApplyCompany(false)
+      }
     }
-  }, [ selectedCompanyId, companies ])
+  }, [ selectedCompanyId, companies, shouldApplyCompany, hasLoadedInvoice ])
 
   const handleCreateCustomer = async () => {
     if (!newCustomerDraft?.name || !newCustomerDraft?.mail) return
@@ -844,6 +896,7 @@ export default function PerformaInvoiceDocument() {
           (item) => item.name === newCustomerDraft.name && item.mail === newCustomerDraft.mail
       ) || nextCustomers.find((item) => item.name === newCustomerDraft.name)
       if (match) {
+        setShouldApplyCustomer(true)
         setSelectedCustomerId(match._id)
         setCustomerValue(match)
         setCustomerInputValue(match.name || '')
@@ -890,20 +943,34 @@ export default function PerformaInvoiceDocument() {
               typeof invoice?.customer === 'string' ? invoice.customer : invoice?.customer?._id || ''
           const storedCompanyId = getStoredCompanyId()
           const storedCustomerId = getStoredCustomerId()
+          const needsCustomerFill = !hasMeaningfulLines(merged.customerLines) ||
+            !hasMeaningfulLines(merged.notifyLines) ||
+            !String(merged.customerPhone?.value || '').trim() ||
+            !String(merged.customerEmail?.value || '').trim() ||
+            !String(merged.notifyPhone?.value || '').trim() ||
+            !String(merged.notifyEmail?.value || '').trim()
+          skipCompanySyncRef.current = true
+          skipCustomerSyncRef.current = true
+          setShouldFillEmptyFromCustomer(needsCustomerFill)
           setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '')
           setSelectedCustomerId(invoiceCustomerId || storedCustomerId || '')
           setData(merged)
           setPdfData(merged)
           setIsApproved(Boolean(invoice?.performaApproved))
           setHasSaved(false)
+          setHasLoadedInvoice(true)
         } catch (error) {
           if (!isActive) return
           setData(defaultData)
           setPdfData(defaultData)
+          skipCompanySyncRef.current = true
+          skipCustomerSyncRef.current = true
+          setShouldFillEmptyFromCustomer(true)
           setSelectedCompanyId(getStoredCompanyId() || '')
           setSelectedCustomerId(getStoredCustomerId() || '')
           setIsApproved(false)
           setHasSaved(false)
+          setHasLoadedInvoice(true)
         }
       }
     }
@@ -1060,6 +1127,7 @@ export default function PerformaInvoiceDocument() {
                   onChange={(newValue) => {
 
                     if (newValue?._id) {
+                      setShouldApplyCompany(true)
                       setSelectedCompanyId(newValue._id)
                       setCompanyValue(newValue)
                       applyCompanyToForm(newValue)
@@ -1067,6 +1135,7 @@ export default function PerformaInvoiceDocument() {
                     }
 
                     if (!newValue) {
+                      setShouldApplyCompany(false)
                       setSelectedCompanyId('')
                       setCompanyValue(null)
                       clearCompanyFromForm()
@@ -1149,12 +1218,14 @@ export default function PerformaInvoiceDocument() {
                     }
 
                     if (newValue?._id) {
+                      setShouldApplyCustomer(true)
                       setSelectedCustomerId(newValue._id);
                       setCustomerValue(newValue);
                       applyCustomerToForm(newValue);
                       return;
                     }
 
+                    setShouldApplyCustomer(false)
                     setSelectedCustomerId("");
                     setCustomerValue(null);
                     clearCustomerFromForm();

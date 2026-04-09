@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Box, Button, Divider, FormControl, Grid, IconButton, MenuItem, Select, Stack, TextField, Typography } from '@mui/material'
 import { IconPlus, IconTrash } from '@tabler/icons'
 import { Document, Page, PDFViewer, StyleSheet, Text, View, Image } from '@react-pdf/renderer'
@@ -293,6 +293,9 @@ export default function ScometDocument() {
   const [ selectedCompanyId, setSelectedCompanyId ] = useState('')
   const [ companyValue, setCompanyValue ] = useState(null)
   const [ companyInputValue, setCompanyInputValue ] = useState('')
+  const [ shouldApplyCompany, setShouldApplyCompany ] = useState(false)
+  const [ hasLoadedInvoice, setHasLoadedInvoice ] = useState(false)
+  const skipCompanySyncRef = useRef(false)
 
   const hydrateData = (nextData) => {
     setData(nextData)
@@ -374,7 +377,7 @@ export default function ScometDocument() {
       ...prev,
       brandName: company.name || '',
       contactLines: contactLines.length ? contactLines : prev.contactLines,
-      addressLines: addressLines.length ? addressLines : prev.addressLines,
+      // addressLines: addressLines.length ? addressLines : prev.addressLines,
       signatureLine: company.name ? `FOR ${company.name}` : prev.signatureLine,
       footerLine: company.address || prev.footerLine
     }))
@@ -422,9 +425,16 @@ export default function ScometDocument() {
     if (match) {
       setCompanyValue(match)
       setCompanyInputValue(match.name || '')
-      applyCompanyToForm(match)
+      if (skipCompanySyncRef.current) {
+        skipCompanySyncRef.current = false
+        return
+      }
+      if (shouldApplyCompany || !hasLoadedInvoice) {
+        applyCompanyToForm(match)
+        setShouldApplyCompany(false)
+      }
     }
-  }, [ selectedCompanyId, companies ])
+  }, [ selectedCompanyId, companies, shouldApplyCompany, hasLoadedInvoice ])
 
   const normalizeTableRows = (rows = []) => {
     if (!Array.isArray(rows)) return [ createEmptyRow() ]
@@ -472,16 +482,20 @@ export default function ScometDocument() {
           }
           
           merged.tableRows = normalizeTableRows(merged.tableRows)
+          skipCompanySyncRef.current = true
           setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '')
           hydrateData(merged)
           setIsApproved(Boolean(invoice?.scometApproved))
           setHasSaved(false)
+          setHasLoadedInvoice(true)
         } catch (error) {
           if (!isActive) return
           hydrateData(defaultData)
+          skipCompanySyncRef.current = true
           setSelectedCompanyId(getStoredCompanyId() || '')
           setIsApproved(false)
           setHasSaved(false)
+          setHasLoadedInvoice(true)
         }
       }
     }
@@ -604,6 +618,7 @@ export default function ScometDocument() {
                   onInputChange={setCompanyInputValue}
                   onChange={(newValue) => {
                     if (newValue?._id) {
+                      setShouldApplyCompany(true)
                       setSelectedCompanyId(newValue._id)
                       setCompanyValue(newValue)
                       applyCompanyToForm(newValue)
@@ -611,6 +626,7 @@ export default function ScometDocument() {
                     }
 
                     if (!newValue) {
+                      setShouldApplyCompany(false)
                       setSelectedCompanyId('')
                       setCompanyValue(null)
                       clearCompanyFromForm()

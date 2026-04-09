@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Box, Button, Divider, FormControl, Grid, MenuItem,
   Select, Stack, TextField, Typography, Switch, FormControlLabel, CircularProgress
@@ -262,6 +262,9 @@ export default function ExportValueDeclaration() {
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
   const [companyValue, setCompanyValue] = useState(null);
   const [companyInputValue, setCompanyInputValue] = useState('');
+  const [ shouldApplyCompany, setShouldApplyCompany ] = useState(false);
+  const [ hasLoadedInvoice, setHasLoadedInvoice ] = useState(false);
+  const skipCompanySyncRef = useRef(false);
 
   const applyCompanyToForm = (company) => {
     if (!company) return;
@@ -306,9 +309,16 @@ export default function ExportValueDeclaration() {
     if (match) {
       setCompanyValue(match);
       setCompanyInputValue(match.name || '');
-      applyCompanyToForm(match);
+      if (skipCompanySyncRef.current) {
+        skipCompanySyncRef.current = false;
+        return;
+      }
+      if (shouldApplyCompany || !hasLoadedInvoice) {
+        applyCompanyToForm(match);
+        setShouldApplyCompany(false);
+      }
     }
-  }, [selectedCompanyId, companies]);
+  }, [selectedCompanyId, companies, shouldApplyCompany, hasLoadedInvoice]);
 
   useEffect(() => {
     setHasSaved(false);
@@ -320,13 +330,17 @@ export default function ExportValueDeclaration() {
         const invoiceCompanyId =
           typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || '';
         const storedCompanyId = getStoredCompanyId();
+        skipCompanySyncRef.current = true;
         setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '');
         setIsApproved(Boolean(invoice?.evdApproved));
         setHasSaved(false);
         setLoading(false);
+        setHasLoadedInvoice(true);
       }).catch(() => {
+        skipCompanySyncRef.current = true;
         setSelectedCompanyId(getStoredCompanyId() || '');
         setLoading(false);
+        setHasLoadedInvoice(true);
       });
     }
   }, [invoiceId]);
@@ -429,12 +443,14 @@ export default function ExportValueDeclaration() {
                   onInputChange={setCompanyInputValue}
                   onChange={(newValue) => {
                     if (newValue?._id) {
+                      setShouldApplyCompany(true);
                       setSelectedCompanyId(newValue._id);
                       setCompanyValue(newValue);
                       applyCompanyToForm(newValue);
                       return;
                     }
                     if (!newValue) {
+                      setShouldApplyCompany(false);
                       setSelectedCompanyId('');
                       setCompanyValue(null);
                       clearCompanyFromForm();

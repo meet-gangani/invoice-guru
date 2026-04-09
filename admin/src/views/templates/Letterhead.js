@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Box, Button, Checkbox, Divider, FormControlLabel, Grid, IconButton, Stack, TextField, Typography } from '@mui/material';
 import { Document, Image, Page, PDFViewer, StyleSheet, Text, View } from '@react-pdf/renderer';
 import MainCard from 'ui-component/cards/MainCard';
@@ -220,6 +220,10 @@ export default function LetterheadDocument() {
   const [ selectedCompanyId, setSelectedCompanyId ] = useState('')
   const [ companyValue, setCompanyValue ] = useState(null)
   const [ companyInputValue, setCompanyInputValue ] = useState('')
+  const [ shouldApplyCompany, setShouldApplyCompany ] = useState(false)
+  const [ shouldFillEmptyFromCompany, setShouldFillEmptyFromCompany ] = useState(false)
+  const [ hasLoadedInvoice, setHasLoadedInvoice ] = useState(false)
+  const skipCompanySyncRef = useRef(false)
 
   const toAbsoluteUrl = (value) => {
     if (!value) return ''
@@ -292,15 +296,47 @@ export default function LetterheadDocument() {
     return defaultData.bodyLines
   }
 
-  const applyCompanyToForm = (company) => {
+  const applyCompanyToForm = (company, options = {}) => {
     if (!company) return
+    const { onlyEmpty = false } = options
+    const isEmptyOrDefault = (current, fallback) => {
+      const currentValue = String(current || '').trim()
+      const fallbackValue = String(fallback || '').trim()
+      if (!currentValue) return true
+      return fallbackValue && currentValue === fallbackValue
+    }
     setFormData((prev) => ({
       ...prev,
-      logo: { ...prev.logo, value: toAbsoluteUrl(company.logo || '') },
-      brandName: { ...prev.brandName, value: company.name || '' },
-      phone: { ...prev.phone, value: company.contactNumber || prev.phone.value },
-      website: { ...prev.website, value: company.username || prev.website.value },
-      footerAddress: { ...prev.footerAddress, value: company.address || prev.footerAddress.value }
+      logo: {
+        ...prev.logo,
+        value: onlyEmpty && !isEmptyOrDefault(prev.logo?.value, defaultData.logo?.value)
+          ? prev.logo.value
+          : toAbsoluteUrl(company.logo || '')
+      },
+      brandName: {
+        ...prev.brandName,
+        value: onlyEmpty && !isEmptyOrDefault(prev.brandName?.value, defaultData.brandName?.value)
+          ? prev.brandName.value
+          : (company.name || '')
+      },
+      phone: {
+        ...prev.phone,
+        value: onlyEmpty && !isEmptyOrDefault(prev.phone?.value, defaultData.phone?.value)
+          ? prev.phone.value
+          : (company.contactNumber || prev.phone.value)
+      },
+      website: {
+        ...prev.website,
+        value: onlyEmpty && !isEmptyOrDefault(prev.website?.value, defaultData.website?.value)
+          ? prev.website.value
+          : (company.username || prev.website.value)
+      },
+      footerAddress: {
+        ...prev.footerAddress,
+        value: onlyEmpty && !isEmptyOrDefault(prev.footerAddress?.value, defaultData.footerAddress?.value)
+          ? prev.footerAddress.value
+          : (company.address || prev.footerAddress.value)
+      }
     }))
   }
 
@@ -339,9 +375,20 @@ export default function LetterheadDocument() {
     if (match) {
       setCompanyValue(match)
       setCompanyInputValue(match.name || '')
-      applyCompanyToForm(match)
+      if (skipCompanySyncRef.current) {
+        skipCompanySyncRef.current = false
+        if (shouldFillEmptyFromCompany) {
+          applyCompanyToForm(match, { onlyEmpty: true })
+          setShouldFillEmptyFromCompany(false)
+        }
+        return
+      }
+      if (shouldApplyCompany || !hasLoadedInvoice) {
+        applyCompanyToForm(match)
+        setShouldApplyCompany(false)
+      }
     }
-  }, [ selectedCompanyId, companies ])
+  }, [ selectedCompanyId, companies, shouldApplyCompany, hasLoadedInvoice ])
 
   useEffect(() => {
     setHasSaved(false)
@@ -383,13 +430,31 @@ export default function LetterheadDocument() {
         }
       }
 
+      const needsCompanyFill = [
+        { value: merged.logo?.value, fallback: defaultData.logo?.value },
+        { value: merged.brandName?.value, fallback: defaultData.brandName?.value },
+        { value: merged.phone?.value, fallback: defaultData.phone?.value },
+        { value: merged.website?.value, fallback: defaultData.website?.value },
+        { value: merged.footerAddress?.value, fallback: defaultData.footerAddress?.value }
+      ].some(({ value, fallback }) => {
+        const currentValue = String(value || '').trim()
+        const fallbackValue = String(fallback || '').trim()
+        if (!currentValue) return true
+        return fallbackValue && currentValue === fallbackValue
+      })
+
+      setShouldFillEmptyFromCompany(needsCompanyFill)
+      skipCompanySyncRef.current = true
       setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '');
       setFormData(merged);
       setIsApproved(Boolean(invoice?.letterHeadApproved));
       setHasSaved(false);
+      setHasLoadedInvoice(true);
     }).catch(() => {
       if (!isActive) return;
+      skipCompanySyncRef.current = true
       setSelectedCompanyId(getStoredCompanyId() || '');
+      setHasLoadedInvoice(true);
     });
     return () => { isActive = false; };
   }, [invoiceId]);
@@ -493,12 +558,14 @@ export default function LetterheadDocument() {
                     onInputChange={setCompanyInputValue}
                     onChange={(newValue) => {
                       if (newValue?._id) {
+                        setShouldApplyCompany(true)
                         setSelectedCompanyId(newValue._id)
                         setCompanyValue(newValue)
                         applyCompanyToForm(newValue)
                         return
                       }
                       if (!newValue) {
+                        setShouldApplyCompany(false)
                         setSelectedCompanyId('')
                         setCompanyValue(null)
                         clearCompanyFromForm()

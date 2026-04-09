@@ -459,6 +459,12 @@ export default function PackagingDocument() {
   const [ customerValue, setCustomerValue ] = useState(null)
   const [ companyInputValue, setCompanyInputValue ] = useState('')
   const [ customerInputValue, setCustomerInputValue ] = useState('')
+  const [ shouldApplyCustomer, setShouldApplyCustomer ] = useState(false)
+  const [ shouldFillEmptyFromCustomer, setShouldFillEmptyFromCustomer ] = useState(false)
+  const [ shouldApplyCompany, setShouldApplyCompany ] = useState(false)
+  const [ hasLoadedInvoice, setHasLoadedInvoice ] = useState(false)
+  const skipCustomerSyncRef = useRef(false)
+  const skipCompanySyncRef = useRef(false)
   const [ eurToInrRate, setEurToInrRate ] = useState(null)
   const rateRequestRef = useRef(null)
   const [ tableAmountInr, setTableAmountInr ] = useState(() => (defaultData.tableRows || []).map(() => ''))
@@ -501,8 +507,11 @@ export default function PackagingDocument() {
     }))
   }
 
-  const applyCustomerToForm = (customer) => {
+  const isNonEmptyValue = (value) => String(value || '').trim().length > 0
+
+  const applyCustomerToForm = (customer, options = {}) => {
     if (!customer) return
+    const { onlyEmpty = false } = options
 
     const consigneeParts = [
       customer.name,
@@ -516,27 +525,39 @@ export default function PackagingDocument() {
       ...prev,
       consignee: {
         ...prev.consignee,
-        value: consigneeParts.join(', ')
+        value: onlyEmpty && isNonEmptyValue(prev.consignee?.value)
+          ? prev.consignee.value
+          : consigneeParts.join(', ')
       },
       contact: {
         ...prev.contact,
-        value: customer.contactPerson || customer.name || prev.contact.value
+        value: onlyEmpty && isNonEmptyValue(prev.contact?.value)
+          ? prev.contact.value
+          : (customer.contactPerson || customer.name || prev.contact.value)
       },
       tel: {
         ...prev.tel,
-        value: customer.contactNumber || prev.tel.value
+        value: onlyEmpty && isNonEmptyValue(prev.tel?.value)
+          ? prev.tel.value
+          : (customer.contactNumber || prev.tel.value)
       },
       countryOfDestination: {
         ...prev.countryOfDestination,
-        value: customer.country || prev.countryOfDestination.value
+        value: onlyEmpty && isNonEmptyValue(prev.countryOfDestination?.value)
+          ? prev.countryOfDestination.value
+          : (customer.country || prev.countryOfDestination.value)
       },
       finalDestination: {
         ...prev.finalDestination,
-        value: customer.country || prev.finalDestination.value
+        value: onlyEmpty && isNonEmptyValue(prev.finalDestination?.value)
+          ? prev.finalDestination.value
+          : (customer.country || prev.finalDestination.value)
       },
       notifyBuyer: {
         ...prev.notifyBuyer,
-        value: customer.name || prev.notifyBuyer.value
+        value: onlyEmpty && isNonEmptyValue(prev.notifyBuyer?.value)
+          ? prev.notifyBuyer.value
+          : (customer.name || prev.notifyBuyer.value)
       }
     }))
   }
@@ -751,18 +772,32 @@ export default function PackagingDocument() {
           const invoiceCustomerId = typeof invoice?.customer === 'string' ? invoice.customer : invoice?.customer?._id || ''
           const storedCompanyId = getStoredCompanyId()
           const storedCustomerId = getStoredCustomerId()
+          const needsCustomerFill = !isNonEmptyValue(merged.consignee?.value) ||
+            !isNonEmptyValue(merged.contact?.value) ||
+            !isNonEmptyValue(merged.tel?.value) ||
+            !isNonEmptyValue(merged.countryOfDestination?.value) ||
+            !isNonEmptyValue(merged.finalDestination?.value) ||
+            !isNonEmptyValue(merged.notifyBuyer?.value)
+          skipCompanySyncRef.current = true
+          skipCustomerSyncRef.current = true
+          setShouldFillEmptyFromCustomer(needsCustomerFill)
           setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '')
           setSelectedCustomerId(invoiceCustomerId || storedCustomerId || '')
           setIsApproved(Boolean(invoice?.commercialApproved))
           setHasSaved(false)
+          setHasLoadedInvoice(true)
         } catch (error) {
           if (!isActive) return
           setData(defaultData)
           setPdfData(defaultData)
+          skipCompanySyncRef.current = true
+          skipCustomerSyncRef.current = true
+          setShouldFillEmptyFromCustomer(true)
           setSelectedCompanyId(getStoredCompanyId() || '')
           setSelectedCustomerId(getStoredCustomerId() || '')
           setIsApproved(false)
           setHasSaved(false)
+          setHasLoadedInvoice(true)
         }
       }
     }
@@ -784,9 +819,16 @@ export default function PackagingDocument() {
     if (match) {
       setCompanyValue(match)
       setCompanyInputValue(match.name || '')
-      applyCompanyToForm(match)
+      if (skipCompanySyncRef.current) {
+        skipCompanySyncRef.current = false
+        return
+      }
+      if (shouldApplyCompany || !hasLoadedInvoice) {
+        applyCompanyToForm(match)
+        setShouldApplyCompany(false)
+      }
     }
-  }, [ selectedCompanyId, companies ])
+  }, [ selectedCompanyId, companies, shouldApplyCompany, hasLoadedInvoice ])
 
   useEffect(() => {
     if (!selectedCustomerId || !customers.length) {
@@ -799,9 +841,20 @@ export default function PackagingDocument() {
     if (match) {
       setCustomerValue(match)
       setCustomerInputValue(match.name || '')
-      applyCustomerToForm(match)
+      if (skipCustomerSyncRef.current) {
+        skipCustomerSyncRef.current = false
+        if (shouldFillEmptyFromCustomer) {
+          applyCustomerToForm(match, { onlyEmpty: true })
+          setShouldFillEmptyFromCustomer(false)
+        }
+        return
+      }
+      if (shouldApplyCustomer || !hasLoadedInvoice) {
+        applyCustomerToForm(match)
+        setShouldApplyCustomer(false)
+      }
     }
-  }, [ selectedCustomerId, customers ])
+  }, [ selectedCustomerId, customers, shouldApplyCustomer, hasLoadedInvoice, shouldFillEmptyFromCustomer ])
 
   useEffect(() => {
     if (!invoiceId) return
@@ -927,12 +980,14 @@ export default function PackagingDocument() {
                   onInputChange={setCompanyInputValue}
                   onChange={(newValue) => {
                     if (newValue?._id) {
+                      setShouldApplyCompany(true)
                       setSelectedCompanyId(newValue._id)
                       setCompanyValue(newValue)
                       applyCompanyToForm(newValue)
                       return
                     }
 
+                    setShouldApplyCompany(false)
                     setSelectedCompanyId('')
                     setCompanyValue(null)
                     setCompanyInputValue('')
@@ -947,12 +1002,14 @@ export default function PackagingDocument() {
                   onInputChange={setCustomerInputValue}
                   onChange={(newValue) => {
                     if (newValue?._id) {
+                      setShouldApplyCustomer(true)
                       setSelectedCustomerId(newValue._id)
                       setCustomerValue(newValue)
                       applyCustomerToForm(newValue)
                       return
                     }
 
+                    setShouldApplyCustomer(false)
                     setSelectedCustomerId('')
                     setCustomerValue(null)
                     setCustomerInputValue('')
