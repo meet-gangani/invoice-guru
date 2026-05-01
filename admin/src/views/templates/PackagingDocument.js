@@ -426,6 +426,67 @@ const defaultData = {
   grossWeight: { value: '', visible: true }
 }
 
+const isEmptyCellValue = (value) => String(value ?? '').trim() === ''
+const parseNumber = (value) => {
+  const parsed = Number.parseFloat(String(value || '').replace(/[^0-9.]/g, ''))
+  return Number.isFinite(parsed) ? parsed : null
+}
+const calculateRowAmount = (qtyValue, rateValue) => {
+  const qty = parseNumber(qtyValue)
+  const rate = parseNumber(rateValue)
+  if (qty === null || rate === null) return ''
+  return (qty * rate).toFixed(2)
+}
+
+const autofillCommercialRowsFromPerforma = (commercialData = {}, performaData = {}) => {
+  const tableHeaders = Array.isArray(commercialData.tableHeaders)
+    ? commercialData.tableHeaders
+    : defaultData.tableHeaders
+  const normalizeHeader = (value = '') => value.trim().toUpperCase()
+  const descriptionIndex = tableHeaders.findIndex((h) => normalizeHeader(h) === 'DESCRIPTION OF GOODS')
+  const qtyIndex = tableHeaders.findIndex((h) => normalizeHeader(h) === 'QTY')
+  const rateIndex = tableHeaders.findIndex((h) => normalizeHeader(h) === 'RATE')
+  const performaRows = Array.isArray(performaData?.itemRows) ? performaData.itemRows : []
+
+  if (!performaRows.length || descriptionIndex < 0 || qtyIndex < 0 || rateIndex < 0) {
+    return commercialData
+  }
+
+  const commercialRows = Array.isArray(commercialData.tableRows) ? commercialData.tableRows : []
+  const minColumnCount = Math.max(tableHeaders.length, rateIndex + 1, qtyIndex + 1, descriptionIndex + 1, 1)
+  const rowCount = Math.max(commercialRows.length, performaRows.length)
+  const nextRows = []
+
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+    const commercialRow = Array.isArray(commercialRows[rowIndex]) ? [ ...commercialRows[rowIndex] ] : new Array(minColumnCount).fill('')
+    if (commercialRow.length < minColumnCount) {
+      commercialRow.length = minColumnCount
+      for (let idx = 0; idx < minColumnCount; idx += 1) {
+        if (typeof commercialRow[idx] === 'undefined') commercialRow[idx] = ''
+      }
+    }
+
+    const performaRow = performaRows[rowIndex] || {}
+    if (isEmptyCellValue(commercialRow[descriptionIndex]) && !isEmptyCellValue(performaRow.description)) {
+      commercialRow[descriptionIndex] = performaRow.description
+    }
+    if (isEmptyCellValue(commercialRow[qtyIndex]) && !isEmptyCellValue(performaRow.qty)) {
+      commercialRow[qtyIndex] = performaRow.qty
+    }
+    if (isEmptyCellValue(commercialRow[rateIndex]) && !isEmptyCellValue(performaRow.amount)) {
+      commercialRow[rateIndex] = performaRow.amount
+    }
+
+    nextRows.push(commercialRow)
+  }
+
+  return {
+    ...commercialData,
+    tableHeaders,
+    tableRows: nextRows.length ? nextRows : [ new Array(minColumnCount).fill('') ]
+  }
+}
+
 const SectionTitle = ({ children }) => (
     <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
       {children}
@@ -637,6 +698,8 @@ export default function PackagingDocument() {
     const index = data.tableHeaders.findIndex((h) => normalizeHeader(h) === 'AMOUNT')
     return index >= 0 ? index : Math.max(0, data.tableHeaders.length - 1)
   }, [ data.tableHeaders ])
+  const qtyIndex = useMemo(() => data.tableHeaders.findIndex((h) => normalizeHeader(h) === 'QTY'), [ data.tableHeaders ])
+  const rateIndex = useMemo(() => data.tableHeaders.findIndex((h) => normalizeHeader(h) === 'RATE'), [ data.tableHeaders ])
 
   const updateExporterLine = (index) => (event) => {
     setData((prev) => {
@@ -670,11 +733,17 @@ export default function PackagingDocument() {
   }
 
   const updateTableCell = (rowIndex, colIndex) => (event) => {
-    const value = event.target.value
+    const isAmountCell = colIndex === amountIndex
+    if (isAmountCell) return
+    const isNumericInput = colIndex === qtyIndex || colIndex === rateIndex
+    const value = isNumericInput ? sanitizeAmountInput(event.target.value) : event.target.value
     setData((prev) => {
       const nextRows = [ ...(prev.tableRows || []) ]
       const nextRow = [ ...(nextRows[rowIndex] || []) ]
       nextRow[colIndex] = value
+      if (qtyIndex >= 0 && rateIndex >= 0 && amountIndex >= 0) {
+        nextRow[amountIndex] = calculateRowAmount(nextRow[qtyIndex], nextRow[rateIndex])
+      }
       nextRows[rowIndex] = nextRow
       return { ...prev, tableRows: nextRows }
     })
@@ -737,6 +806,43 @@ export default function PackagingDocument() {
   }, [ data.tableRows.length ])
 
   useEffect(() => {
+    if (qtyIndex < 0 || rateIndex < 0 || amountIndex < 0) return
+    setData((prev) => {
+      const rows = prev.tableRows || []
+      let changed = false
+      const nextRows = rows.map((row) => {
+        const nextRow = [ ...(row || []) ]
+        const nextAmount = calculateRowAmount(nextRow[qtyIndex], nextRow[rateIndex])
+        if ((nextRow[amountIndex] || '') !== nextAmount) {
+          nextRow[amountIndex] = nextAmount
+          changed = true
+        }
+        return nextRow
+      })
+      return changed ? { ...prev, tableRows: nextRows } : prev
+    })
+  }, [ qtyIndex, rateIndex, amountIndex, data.tableRows ])
+
+  useEffect(() => {
+    let cancelled = false
+    const updateInrRows = async () => {
+      if (data.currency === 'INR') {
+        if (cancelled) return
+        setTableAmountInr((data.tableRows || []).map((row) => String(row?.[amountIndex] || '')))
+        return
+      }
+      const rate = await fetchEurToInrRate(data.currency)
+      if (cancelled || !rate) return
+      const next = (data.tableRows || []).map((row) => convertEurToInr(row?.[amountIndex] || '', rate))
+      if (!cancelled) setTableAmountInr(next)
+    }
+    updateInrRows()
+    return () => {
+      cancelled = true
+    }
+  }, [ data.tableRows, data.currency, amountIndex ])
+
+  useEffect(() => {
     setHasSaved(false)
     let isActive = true
     const loadInvoice = async () => {
@@ -749,9 +855,11 @@ export default function PackagingDocument() {
           const templateDateValue = templateData?.date && typeof templateData.date === 'object'
             ? templateData.date.value
             : templateData?.date
+          const performaData = invoice?.performa || {}
+          const mergedTemplateData = autofillCommercialRowsFromPerforma(templateData, performaData)
           const merged = {
             ...defaultData,
-            ...templateData,
+            ...mergedTemplateData,
             currency: invoice?.currency || defaultData.currency,
             date: { ...(defaultData.date || {}), value: invoice?.date || templateDateValue || '' }
           }
@@ -1098,26 +1206,8 @@ export default function PackagingDocument() {
                                     <TextField
                                         label={`${header} (Row ${rowIndex + 1})`}
                                         value={row[colIndex] || ''}
-                                        onChange={async (event) => {
-                                          const value = sanitizeAmountInput(event.target.value)
-                                          setData((prev) => {
-                                            const nextRows = [ ...(prev.tableRows || []) ]
-                                            const nextRow = [ ...(nextRows[rowIndex] || []) ]
-                                            nextRow[colIndex] = value
-                                            nextRows[rowIndex] = nextRow
-                                            return { ...prev, tableRows: nextRows }
-                                          })
-                                          const rate = await fetchEurToInrRate(data.currency)
-                                          if (!rate) return
-                                          const inrValue = convertEurToInr(value, rate)
-                                          setTableAmountInr((prev) => {
-                                            const next = [ ...(prev || []) ]
-                                            next[rowIndex] = inrValue
-                                            return next
-                                          })
-                                        }}
+                                        InputProps={{ startAdornment: <InputAdornment position="start">{data.currency}</InputAdornment>, readOnly: true }}
                                         fullWidth
-                                        InputProps={{ startAdornment: <InputAdornment position="start">{data.currency}</InputAdornment> }}
                                         inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
                                     />
                                   </Grid>
@@ -1125,26 +1215,8 @@ export default function PackagingDocument() {
                                     <TextField
                                         label={`AMOUNT INR (Row ${rowIndex + 1})`}
                                         value={tableAmountInr[rowIndex] || ''}
-                                        onChange={async (event) => {
-                                          const value = sanitizeAmountInput(event.target.value)
-                                          setTableAmountInr((prev) => {
-                                            const next = [ ...(prev || []) ]
-                                            next[rowIndex] = value
-                                            return next
-                                          })
-                                          const rate = await fetchEurToInrRate(data.currency)
-                                          if (!rate) return
-                                          const eurValue = convertInrToEur(value, rate)
-                                          setData((prev) => {
-                                            const nextRows = [ ...(prev.tableRows || []) ]
-                                            const nextRow = [ ...(nextRows[rowIndex] || []) ]
-                                            nextRow[colIndex] = eurValue
-                                            nextRows[rowIndex] = nextRow
-                                            return { ...prev, tableRows: nextRows }
-                                          })
-                                        }}
                                         fullWidth
-                                        InputProps={{ startAdornment: <InputAdornment position="start">INR</InputAdornment> }}
+                                        InputProps={{ startAdornment: <InputAdornment position="start">INR</InputAdornment>, readOnly: true }}
                                         inputProps={{ inputMode: 'decimal', pattern: '[0-9.]*' }}
                                     />
                                   </Grid>
