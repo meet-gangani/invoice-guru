@@ -329,7 +329,7 @@ export default function LetterheadDocument() {
         ...prev.website,
         value: onlyEmpty && !isEmptyOrDefault(prev.website?.value, defaultData.website?.value)
           ? prev.website.value
-          : (company.username || prev.website.value)
+          : (company.website || company.mail || company.email || prev.website.value)
       },
       footerAddress: {
         ...prev.footerAddress,

@@ -270,9 +270,9 @@ export default function ExportValueDeclaration() {
     if (!company) return;
     setData((prev) => ({
       ...prev,
-      brandName: company.name || prev.brandName,
-      contact1: company.contactNumber || prev.contact1,
-      contact2: company.username || prev.contact2
+      brandName: company.name || '',
+      contact1: company.contactNumber ? `Mo. ${company.contactNumber}` : '',
+      contact2: company.mail || company.email ? `E-mail: ${company.mail || company.email}` : ''
     }));
   };
 
@@ -313,10 +313,8 @@ export default function ExportValueDeclaration() {
         skipCompanySyncRef.current = false;
         return;
       }
-      if (shouldApplyCompany || !hasLoadedInvoice) {
-        applyCompanyToForm(match);
-        setShouldApplyCompany(false);
-      }
+      applyCompanyToForm(match);
+      setShouldApplyCompany(false);
     }
   }, [selectedCompanyId, companies, shouldApplyCompany, hasLoadedInvoice]);
 
@@ -330,7 +328,10 @@ export default function ExportValueDeclaration() {
         const invoiceCompanyId =
           typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || '';
         const storedCompanyId = getStoredCompanyId();
-        skipCompanySyncRef.current = true;
+        
+        const hasEvdData = !!invoice?.evd || !!invoice?.data?.brandName;
+        skipCompanySyncRef.current = hasEvdData;
+        
         setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '');
         setIsApproved(Boolean(invoice?.evdApproved));
         setHasSaved(false);

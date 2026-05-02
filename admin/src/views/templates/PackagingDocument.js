@@ -130,10 +130,15 @@ const ExportCommercialPdf = ({ data }) => {
 
             <View style={[ styles.row, { borderBottom: '1pt solid black' } ]}>
               <View style={[ styles.cell, { width: '55%' } ]}>
-                {isVisible(data.consignee) ? (
+                {isVisible(data.consignee) || (data.consigneeLines && data.consigneeLines.length > 0) ? (
                     <>
                       <Text style={styles.label}>Consignee:</Text>
-                      <Text style={styles.value}>{data.consignee.value}</Text>
+                      {data.consigneeLines && data.consigneeLines.filter((l) => l.visible).map((line, idx) => (
+                          <Text key={`consignee-${idx}`} style={styles.value}>{line.value}</Text>
+                      ))}
+                      {(!data.consigneeLines || data.consigneeLines.length === 0) && isVisible(data.consignee) && (
+                          <Text style={styles.value}>{data.consignee.value}</Text>
+                      )}
                     </>
                 ) : null}
                 {isVisible(data.contact) ? (
@@ -156,10 +161,15 @@ const ExportCommercialPdf = ({ data }) => {
                       <Text style={styles.value}>{data.buyersOrder.value}</Text>
                     </>
                 ) : null}
-                {isVisible(data.notifyBuyer) ? (
+                {isVisible(data.notifyBuyer) || (data.notifyLines && data.notifyLines.length > 0) ? (
                     <>
                       <Text style={[ styles.label, { marginTop: 6 } ]}>Notify/Buyer:</Text>
-                      <Text style={styles.value}>{data.notifyBuyer.value}</Text>
+                      {data.notifyLines && data.notifyLines.filter((l) => l.visible).map((line, idx) => (
+                          <Text key={`notify-${idx}`} style={styles.value}>{line.value}</Text>
+                      ))}
+                      {(!data.notifyLines || data.notifyLines.length === 0) && isVisible(data.notifyBuyer) && (
+                          <Text style={styles.value}>{data.notifyBuyer.value}</Text>
+                      )}
                     </>
                 ) : null}
               </View>
@@ -393,7 +403,9 @@ const defaultData = {
   adCode: { value: 'ADCODE:6361280-5600009', visible: true },
   buyersOrder: { value: '', visible: true },
   notifyBuyer: { value: '', visible: true },
+  notifyLines: [ { value: '', visible: true } ],
   consignee: { value: '', visible: true },
+  consigneeLines: [ { value: '', visible: true } ],
   contact: { value: '', visible: true },
   tel: { value: '', visible: true },
   countryOfOrigin: { value: '', visible: true },
@@ -523,6 +535,7 @@ export default function PackagingDocument() {
   const [ shouldApplyCustomer, setShouldApplyCustomer ] = useState(false)
   const [ shouldFillEmptyFromCustomer, setShouldFillEmptyFromCustomer ] = useState(false)
   const [ shouldApplyCompany, setShouldApplyCompany ] = useState(false)
+  const [ shouldFillEmptyFromCompany, setShouldFillEmptyFromCompany ] = useState(false)
   const [ hasLoadedInvoice, setHasLoadedInvoice ] = useState(false)
   const skipCustomerSyncRef = useRef(false)
   const skipCompanySyncRef = useRef(false)
@@ -552,7 +565,7 @@ export default function PackagingDocument() {
       company.pinCode ? `PIN: ${company.pinCode}` : '',
       company.contactPerson || '',
       company.contactNumber ? `TEL.: ${company.contactNumber}` : '',
-      company.username || '',
+      company.mail || company.email ? `E-mail: ${company.mail || company.email}` : '',
       company.gstin ? `GSTIN: ${company.gstin}` : ''
     ].filter(Boolean)
 
@@ -576,14 +589,31 @@ export default function PackagingDocument() {
 
     const consigneeParts = [
       customer.name,
-      customer.addressLine1,
-      customer.addressLine2,
-      customer.addressLine3,
+      ...splitToLines(customer.shipTo || customer.address),
+      customer.pinCode ? `PIN: ${customer.pinCode}` : '',
       customer.country
     ].filter(Boolean)
+    const consigneeLinesNew = consigneeParts.map(val => ({ value: val, visible: true }))
+
+    const notifyParts = [
+      customer.name,
+      ...splitToLines(customer.billTo || customer.address),
+      customer.pinCode ? `PIN: ${customer.pinCode}` : '',
+      customer.country
+    ].filter(Boolean)
+    const notifyLinesNew = notifyParts.map(val => ({ value: val, visible: true }))
+
+    const hasMeaningfulLines = (lines = []) =>
+      lines.some((line) => String(line?.value ?? '').trim())
 
     setData((prev) => ({
       ...prev,
+      consigneeLines: consigneeLinesNew.length
+        ? (onlyEmpty && hasMeaningfulLines(prev.consigneeLines) ? prev.consigneeLines : consigneeLinesNew)
+        : prev.consigneeLines,
+      notifyLines: notifyLinesNew.length
+        ? (onlyEmpty && hasMeaningfulLines(prev.notifyLines) ? prev.notifyLines : notifyLinesNew)
+        : prev.notifyLines,
       consignee: {
         ...prev.consignee,
         value: onlyEmpty && isNonEmptyValue(prev.consignee?.value)
@@ -732,6 +762,68 @@ export default function PackagingDocument() {
     })
   }
 
+  const updateConsigneeLine = (index) => (event) => {
+    setData((prev) => {
+      const next = [ ...(prev.consigneeLines || []) ]
+      next[index] = { ...next[index], value: event.target.value }
+      return { ...prev, consigneeLines: next }
+    })
+  }
+
+  const toggleConsigneeLine = (index) => (event) => {
+    setData((prev) => {
+      const next = [ ...(prev.consigneeLines || []) ]
+      next[index] = { ...next[index], visible: event.target.checked }
+      return { ...prev, consigneeLines: next }
+    })
+  }
+
+  const addConsigneeLine = () => {
+    setData((prev) => ({
+      ...prev,
+      consigneeLines: [ ...(prev.consigneeLines || []), { value: '', visible: true } ]
+    }))
+  }
+
+  const removeConsigneeLine = (index) => {
+    setData((prev) => {
+      const next = [ ...(prev.consigneeLines || []) ]
+      next.splice(index, 1)
+      return { ...prev, consigneeLines: next }
+    })
+  }
+
+  const updateNotifyLine = (index) => (event) => {
+    setData((prev) => {
+      const next = [ ...(prev.notifyLines || []) ]
+      next[index] = { ...next[index], value: event.target.value }
+      return { ...prev, notifyLines: next }
+    })
+  }
+
+  const toggleNotifyLine = (index) => (event) => {
+    setData((prev) => {
+      const next = [ ...(prev.notifyLines || []) ]
+      next[index] = { ...next[index], visible: event.target.checked }
+      return { ...prev, notifyLines: next }
+    })
+  }
+
+  const addNotifyLine = () => {
+    setData((prev) => ({
+      ...prev,
+      notifyLines: [ ...(prev.notifyLines || []), { value: '', visible: true } ]
+    }))
+  }
+
+  const removeNotifyLine = (index) => {
+    setData((prev) => {
+      const next = [ ...(prev.notifyLines || []) ]
+      next.splice(index, 1)
+      return { ...prev, notifyLines: next }
+    })
+  }
+
   const updateTableCell = (rowIndex, colIndex) => (event) => {
     const isAmountCell = colIndex === amountIndex
     if (isAmountCell) return
@@ -863,6 +955,22 @@ export default function PackagingDocument() {
             currency: invoice?.currency || defaultData.currency,
             date: { ...(defaultData.date || {}), value: invoice?.date || templateDateValue || '' }
           }
+          const hasMeaningfulLines = (lines) => Array.isArray(lines) && lines.some((l) => String(l?.value || '').trim())
+          
+          if (!hasMeaningfulLines(templateData.consigneeLines)) {
+            if (hasMeaningfulLines(performaData.customerLines)) {
+              merged.consigneeLines = performaData.customerLines.map(l => ({ ...l }))
+            } else if (String(merged.consignee?.value || '').trim()) {
+              merged.consigneeLines = String(merged.consignee.value).split('\n').map(v => ({ value: v.trim(), visible: true }))
+            }
+          }
+          if (!hasMeaningfulLines(templateData.notifyLines)) {
+            if (hasMeaningfulLines(performaData.notifyLines)) {
+              merged.notifyLines = performaData.notifyLines.map(l => ({ ...l }))
+            } else if (String(merged.notifyBuyer?.value || '').trim()) {
+              merged.notifyLines = String(merged.notifyBuyer.value).split('\n').map(v => ({ value: v.trim(), visible: true }))
+            }
+          }
           const packagingData = invoice?.packaging || invoice?.packing || {}
           const packagingNet = packagingData?.netWeight?.value ?? packagingData?.netWeight ?? ''
           const packagingGross = packagingData?.grossWeight?.value ?? packagingData?.grossWeight ?? ''
@@ -886,8 +994,13 @@ export default function PackagingDocument() {
             !isNonEmptyValue(merged.countryOfDestination?.value) ||
             !isNonEmptyValue(merged.finalDestination?.value) ||
             !isNonEmptyValue(merged.notifyBuyer?.value)
+            
+          const isExporterDefault = merged.exporterLines && defaultData.exporterLines && merged.exporterLines[0]?.value === defaultData.exporterLines[0]?.value
+          const needsCompanyFill = !merged.exporterLines || merged.exporterLines.length === 0 || isExporterDefault
+          
           skipCompanySyncRef.current = true
           skipCustomerSyncRef.current = true
+          setShouldFillEmptyFromCompany(needsCompanyFill)
           setShouldFillEmptyFromCustomer(needsCustomerFill)
           setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '')
           setSelectedCustomerId(invoiceCustomerId || storedCustomerId || '')
@@ -929,12 +1042,14 @@ export default function PackagingDocument() {
       setCompanyInputValue(match.name || '')
       if (skipCompanySyncRef.current) {
         skipCompanySyncRef.current = false
+        if (shouldFillEmptyFromCompany) {
+          applyCompanyToForm(match)
+          setShouldFillEmptyFromCompany(false)
+        }
         return
       }
-      if (shouldApplyCompany || !hasLoadedInvoice) {
-        applyCompanyToForm(match)
-        setShouldApplyCompany(false)
-      }
+      applyCompanyToForm(match)
+      setShouldApplyCompany(false)
     }
   }, [ selectedCompanyId, companies, shouldApplyCompany, hasLoadedInvoice ])
 
@@ -1155,13 +1270,36 @@ export default function PackagingDocument() {
                 <FieldToggle label="IEC" value={data.iec.value} visible={data.iec.visible} onChange={updateField('iec')} onToggle={toggleField('iec')}/>
                 <FieldToggle label="AD Code" value={data.adCode.value} visible={data.adCode.visible} onChange={updateField('adCode')} onToggle={toggleField('adCode')}/>
                 <FieldToggle label="Buyer&apos;s Order" value={data.buyersOrder.value} visible={data.buyersOrder.visible} onChange={updateField('buyersOrder')} onToggle={toggleField('buyersOrder')}/>
-                <FieldToggle label="Notify/Buyer" value={data.notifyBuyer.value} visible={data.notifyBuyer.visible} onChange={updateField('notifyBuyer')} onToggle={toggleField('notifyBuyer')}
-                             multiline/>
+                
+                <SectionTitle>Notify/Buyer</SectionTitle>
+                {data.notifyLines && data.notifyLines.map((line, index) => (
+                    <Stack key={`notify-${index}`} direction="row" spacing={1} alignItems="center">
+                      <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleNotifyLine(index)}/>} label=""/>
+                      <TextField label={`Notify/Buyer Line ${index + 1}`} value={line.value} onChange={updateNotifyLine(index)} fullWidth/>
+                      <IconButton aria-label="remove" onClick={() => removeNotifyLine(index)} size="large">
+                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                      </IconButton>
+                    </Stack>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark, mb: 2 }} variant="outlined" startIcon={<IconPlus/>} onClick={addNotifyLine}>
+                  Add Notify/Buyer Line
+                </Button>
 
                 <Divider/>
 
                 <SectionTitle>Consignee</SectionTitle>
-                <FieldToggle label="Consignee" value={data.consignee.value} visible={data.consignee.visible} onChange={updateField('consignee')} onToggle={toggleField('consignee')} multiline/>
+                {data.consigneeLines && data.consigneeLines.map((line, index) => (
+                    <Stack key={`consignee-${index}`} direction="row" spacing={1} alignItems="center">
+                      <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleConsigneeLine(index)}/>} label=""/>
+                      <TextField label={`Consignee Line ${index + 1}`} value={line.value} onChange={updateConsigneeLine(index)} fullWidth/>
+                      <IconButton aria-label="remove" onClick={() => removeConsigneeLine(index)} size="large">
+                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
+                      </IconButton>
+                    </Stack>
+                ))}
+                <Button sx={{ color: theme.palette.secondary.dark, mb: 2 }} variant="outlined" startIcon={<IconPlus/>} onClick={addConsigneeLine}>
+                  Add Consignee Line
+                </Button>
                 <FieldToggle label="Contact" value={data.contact.value} visible={data.contact.visible} onChange={updateField('contact')} onToggle={toggleField('contact')}/>
                 <FieldToggle label="Tel" value={data.tel.value} visible={data.tel.visible} onChange={updateField('tel')} onToggle={toggleField('tel')}/>
 

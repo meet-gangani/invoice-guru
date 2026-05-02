@@ -89,7 +89,7 @@ const PackingListPdf = ({ data }) => {
     const raw = String(value).split('T')[0]
     const ddmmyyyy = raw.match(/^(\d{2})-(\d{2})-(\d{4})$/)
     if (ddmmyyyy) return raw
-    const [ yyyy, mm, dd ] = raw.split('-')
+    const [yyyy, mm, dd] = raw.split('-')
     if (!yyyy || !mm || !dd) return value
     return `${dd}-${mm}-${yyyy}`
   }
@@ -102,262 +102,272 @@ const PackingListPdf = ({ data }) => {
     return parts ? parts.join('\n') : text
   }
   return (
-      <Document title={'Packaging List'}>
-        <Page size="A4" style={styles.page}>
-          <View style={styles.table}>
+    <Document title={'Packaging List'}>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.table}>
 
-            {/* TITLE HEADER */}
-            <View style={styles.header}>
-              <Text>{visibleValue(data.title)}</Text>
-            </View>
+          {/* TITLE HEADER */}
+          <View style={styles.header}>
+            <Text>{visibleValue(data.title)}</Text>
+          </View>
 
-            {/* TOP BLOCK: Exporter/Consignee vs Ref Boxes */}
-            <View style={styles.flexRow}>
-              {/* LEFT PILLAR */}
-              <View style={styles.leftPillar}>
-                <View style={[ styles.cell, { minHeight: 90 } ]}>
-                  <Text style={styles.label}>Exporter</Text>
-                  {data.exporterLines.filter(l => l.visible).map((l, i) => (
-                      <Text key={i} style={styles.value}>{l.value}</Text>
-                  ))}
-                </View>
-                <View style={[ styles.cellLast, { minHeight: 90 } ]}>
-                  {isVisible(data.consignee) ? (
-                      <>
-                        <Text style={styles.label}>Consignee</Text>
-                        <Text style={styles.value}>{data.consignee.value}</Text>
-                      </>
-                  ) : null}
-                  <View style={{ marginTop: 15 }}>
-                    {isVisible(data.contact) ? (
-                        <Text style={styles.label}>Contact: {data.contact.value}</Text>
-                    ) : null}
-                    {isVisible(data.tel) ? (
-                        <Text style={styles.label}>Tel: {data.tel.value}</Text>
-                    ) : null}
-                  </View>
-                </View>
+          {/* TOP BLOCK: Exporter/Consignee vs Ref Boxes */}
+          <View style={styles.flexRow}>
+            {/* LEFT PILLAR */}
+            <View style={styles.leftPillar}>
+              <View style={[styles.cell, { minHeight: 90 }]}>
+                <Text style={styles.label}>Exporter</Text>
+                {data.exporterLines.filter(l => l.visible).map((l, i) => (
+                  <Text key={i} style={styles.value}>{l.value}</Text>
+                ))}
               </View>
-
-              {/* RIGHT PILLAR (Independent horizontal lines) */}
-              <View style={styles.rightPillar}>
-                <View style={[ styles.splitRow, { minHeight: 45 } ]}>
-                  <View style={[ styles.innerBox, styles.borderRight ]}>
-                    {showPackingListMeta ? (
-                        <>
-                          <Text style={styles.label}>Packing List No. & Date</Text>
-                          <Text style={styles.value}>
-                            {visibleValue(data.packingListNo)} {isVisible(data.date) ? formatDate(data.date.value) : ''}
-                          </Text>
-                        </>
-                    ) : null}
-                  </View>
-                  <View style={styles.innerBox}>
-                    {showExportRefGroup ? (
-                        <>
-                          <Text style={styles.label}>Export Ref / IEC / GSTIN</Text>
-                          <Text style={styles.value}>{wrapCell(visibleValue(data.exportRef), 14)}</Text>
-                          <Text style={styles.value}>
-                            {wrapCell(`${visibleValue(data.iec)} ${visibleValue(data.gstin)}`.trim(), 14)}
-                          </Text>
-                        </>
-                    ) : null}
-                  </View>
-                </View>
-                <View style={[ styles.cell, { minHeight: 45 } ]}>
-                  {isVisible(data.buyersOrder) ? (
-                      <>
-                        <Text style={styles.label}>Buyer's Order No. & Date</Text>
-                        <Text style={styles.value}>{visibleValue(data.buyersOrder)}</Text>
-                      </>
+              <View style={[styles.cellLast, { minHeight: 90 }]}>
+                {isVisible(data.consignee) || (data.consigneeLines && data.consigneeLines.length > 0) ? (
+                  <>
+                    <Text style={styles.label}>Consignee</Text>
+                    {data.consigneeLines && data.consigneeLines.filter(l => l.visible).map((line, idx) => (
+                      <Text key={`consignee-${idx}`} style={styles.value}>{line.value}</Text>
+                    ))}
+                    {(!data.consigneeLines || data.consigneeLines.length === 0) && isVisible(data.consignee) && (
+                      <Text style={styles.value}>{data.consignee.value}</Text>
+                    )}
+                  </>
+                ) : null}
+                <View style={{ marginTop: 15 }}>
+                  {isVisible(data.contact) ? (
+                    <Text style={styles.label}>Contact: {data.contact.value}</Text>
                   ) : null}
-                </View>
-                <View style={[ styles.cellLast, { minHeight: 45 } ]}>
-                  {isVisible(data.notifyBuyer) ? (
-                      <>
-                        <Text style={styles.label}>Notify / Buyer (if other than consignee)</Text>
-                        <Text style={styles.value}>{visibleValue(data.notifyBuyer)}</Text>
-                      </>
+                  {isVisible(data.tel) ? (
+                    <Text style={styles.label}>Tel: {data.tel.value}</Text>
                   ) : null}
                 </View>
               </View>
             </View>
 
-            {/* SHIPPING & TERMS BLOCK */}
-            <View style={[ styles.flexRow, { borderTop: '1pt solid black', borderBottom: '1pt solid black' } ]}>
-              {/* Left 50%: Three-Row Shipping Grid */}
-              <View style={styles.leftPillar}>
-                <View style={styles.splitRow}>
-                  <View style={[ styles.innerBox, styles.borderRight ]}>
-                    {isVisible(data.preCarriageBy) ? (
-                        <>
-                          <Text style={styles.label}>Pre-Carriage by</Text>
-                          <Text>{data.preCarriageBy.value}</Text>
-                        </>
-                    ) : null}
-                  </View>
-                  <View style={styles.innerBox}>
-                    {isVisible(data.placeOfReceipt) ? (
-                        <>
-                          <Text style={styles.label}>Place of Receipt</Text>
-                          <Text>{data.placeOfReceipt.value}</Text>
-                        </>
-                    ) : null}
-                  </View>
-                </View>
-                <View style={styles.splitRow}>
-                  <View style={[ styles.innerBox, styles.borderRight ]}>
-                    {isVisible(data.vesselFlightNo) ? (
-                        <>
-                          <Text style={styles.label}>Vessel/Flight No.</Text>
-                          <Text>{data.vesselFlightNo.value}</Text>
-                        </>
-                    ) : null}
-                  </View>
-                  <View style={styles.innerBox}>
-                    {isVisible(data.portOfLoading) ? (
-                        <>
-                          <Text style={styles.label}>Port of Loading</Text>
-                          <Text>{data.portOfLoading.value}</Text>
-                        </>
-                    ) : null}
-                  </View>
-                </View>
-                <View style={styles.flexRow}>
-                  <View style={[ styles.innerBox, styles.borderRight ]}>
-                    {isVisible(data.portOfDischarge) ? (
-                        <>
-                          <Text style={styles.label}>Port of Discharge</Text>
-                          <Text>{data.portOfDischarge.value}</Text>
-                        </>
-                    ) : null}
-                  </View>
-                  <View style={styles.innerBox}>
-                    {isVisible(data.finalDestination) ? (
-                        <>
-                          <Text style={styles.label}>Final Destination</Text>
-                          <Text>{data.finalDestination.value}</Text>
-                        </>
-                    ) : null}
-                  </View>
-                </View>
-              </View>
-
-              {/* Right 50%: Countries + Terms Box */}
-              <View style={styles.rightPillar}>
-                <View style={styles.splitRow}>
-                  <View style={[ styles.innerBox, styles.borderRight ]}>
-                    {isVisible(data.countryOfOrigin) ? (
-                        <>
-                          <Text style={styles.label}>Country of Origin</Text>
-                          <Text>{data.countryOfOrigin.value}</Text>
-                        </>
-                    ) : null}
-                  </View>
-                  <View style={styles.innerBox}>
-                    {isVisible(data.countryOfDestination) ? (
-                        <>
-                          <Text style={styles.label}>Country of Destination</Text>
-                          <Text>{data.countryOfDestination.value}</Text>
-                        </>
-                    ) : null}
-                  </View>
-                </View>
-                <View style={{ padding: 4 }}>
-                  {isVisible(data.terms) ? (
-                      <>
-                        <Text style={styles.label}>Terms of Delivery and Payment</Text>
-                        <Text style={styles.value}>{data.terms.value}</Text>
-                      </>
-                  ) : null}
-                </View>
-              </View>
-            </View>
-
-            {/* ITEM TABLE HEADER */}
-            <View style={[ styles.itemRow, { backgroundColor: '#F0F0F0', borderBottom: '1pt solid black' } ]}>
-              <View style={[ styles.itemCell, styles.c1 ]}><Text style={styles.itemHeaderText}>Marks & No.</Text></View>
-              <View style={[ styles.itemCell, styles.c2 ]}><Text style={styles.itemHeaderText}>No. & Pkgs</Text></View>
-              <View style={[ styles.itemCell, styles.c3 ]}><Text style={styles.itemHeaderText}>SR</Text></View>
-              <View style={[ styles.itemCell, styles.c4 ]}><Text style={styles.itemHeaderText}>Description of Goods</Text></View>
-              <View style={[ styles.itemCell, styles.c5 ]}><Text style={styles.itemHeaderText}>QTY</Text></View>
-              <View style={[ styles.itemCell, styles.c6 ]}><Text style={styles.itemHeaderText}>Net Wt</Text></View>
-              <View style={[ styles.itemCell, styles.c7 ]}><Text style={styles.itemHeaderText}>Gross</Text></View>
-              <View style={[ styles.itemCell, styles.c8 ]}><Text style={styles.itemHeaderText}>Dim</Text></View>
-            </View>
-
-            {/* DYNAMIC ROWS */}
-            {data.tableRows.map((row, i) => (
-                <View key={i} style={[ styles.itemRow, { borderBottom: '0.5pt solid #AAA' } ]}>
-                  <View style={[ styles.itemCell, styles.c1 ]}><Text style={styles.itemText}>{wrapCell(row[0], 6)}</Text></View>
-                  <View style={[ styles.itemCell, styles.c2 ]}><Text style={styles.itemText}>{wrapCell(row[1], 8)}</Text></View>
-                  <View style={[ styles.itemCell, styles.c3 ]}><Text style={styles.itemText}>{wrapCell(row[2] || i + 1, 4)}</Text></View>
-                  <View style={[ styles.itemCell, styles.c4 ]}><Text style={styles.itemText}>{wrapCell(row[3], 18)}</Text></View>
-                  <View style={[ styles.itemCell, styles.c5 ]}><Text style={styles.itemText}>{wrapCell(row[4], 6)}</Text></View>
-                  <View style={[ styles.itemCell, styles.c6 ]}><Text style={styles.itemText}>{wrapCell(row[5], 6)}</Text></View>
-                  <View style={[ styles.itemCell, styles.c7 ]}><Text style={styles.itemText}>{wrapCell(row[6], 6)}</Text></View>
-                  <View style={[ styles.itemCell, styles.c8 ]}><Text style={styles.itemText}>{wrapCell(row[7], 6)}</Text></View>
-                </View>
-            ))}
-
-            {/* SIGNATURE FOOTER */}
-            <View style={[ styles.flexRow, { borderTop: '1pt solid black', minHeight: 80 } ]}>
-              <View style={[ styles.leftPillar, { padding: 0 } ]}>
-                <View style={styles.cell}>
-                  {isVisible(data.totalPackages) ? (
-                      <Text style={styles.label}>Total Pkgs: {data.totalPackages.value}</Text>
-                  ) : null}
-                </View>
-                <View style={[ styles.flexRow, { borderBottom: '1pt solid black' } ]}>
-                  <View style={[ styles.innerBox, styles.borderRight ]}>
-                    {isVisible(data.netWeight) ? (
-                        <Text style={styles.label}>Net Wt: {data.netWeight.value}</Text>
-                    ) : null}
-                  </View>
-                  <View style={styles.innerBox}>
-                    {isVisible(data.grossWeight) ? (
-                        <Text style={styles.label}>Gross Wt: {data.grossWeight.value}</Text>
-                    ) : null}
-                  </View>
-                </View>
-                <View style={{ padding: 4 }}>
-                  {isVisible(data.totalWeight) ? (
-                      <Text style={styles.label}>Total Weight: {data.totalWeight.value}</Text>
-                  ) : null}
-                </View>
-              </View>
-              <View style={[ styles.rightPillar, { textAlign: 'center', justifyContent: 'space-between', padding: 5 } ]}>
-                {isVisible(data.authorizedBy) ? (
+            {/* RIGHT PILLAR (Independent horizontal lines) */}
+            <View style={styles.rightPillar}>
+              <View style={[styles.splitRow, { minHeight: 45 }]}>
+                <View style={[styles.innerBox, styles.borderRight]}>
+                  {showPackingListMeta ? (
                     <>
-                      {data?.company?.stamp && (
-                          <Image
-                              style={styles.stampImage}
-                              src={data.company.stamp}
-                          />
-                      )}
-                      {/*{data?.company?.sign && (*/}
-                      {/*    <Image*/}
-                      {/*        style={styles.signImage}*/}
-                      {/*        src={data.company.sign}*/}
-                      {/*    />*/}
-                      {/*)}*/}
-                      <Text style={styles.label}>For {data.authorizedBy.value}</Text>
-                      <Text style={[ styles.label, { marginBottom: 5 } ]}>Authorised Signatory</Text>
+                      <Text style={styles.label}>Packing List No. & Date</Text>
+                      <Text style={styles.value}>
+                        {visibleValue(data.packingListNo)} {isVisible(data.date) ? formatDate(data.date.value) : ''}
+                      </Text>
                     </>
+                  ) : null}
+                </View>
+                <View style={styles.innerBox}>
+                  {showExportRefGroup ? (
+                    <>
+                      <Text style={styles.label}>Export Ref / IEC / GSTIN</Text>
+                      <Text style={styles.value}>{wrapCell(visibleValue(data.exportRef), 14)}</Text>
+                      <Text style={styles.value}>
+                        {wrapCell(`${visibleValue(data.iec)} ${visibleValue(data.gstin)}`.trim(), 14)}
+                      </Text>
+                    </>
+                  ) : null}
+                </View>
+              </View>
+              <View style={[styles.cell, { minHeight: 45 }]}>
+                {isVisible(data.buyersOrder) ? (
+                  <>
+                    <Text style={styles.label}>Buyer's Order No. & Date</Text>
+                    <Text style={styles.value}>{visibleValue(data.buyersOrder)}</Text>
+                  </>
+                ) : null}
+              </View>
+              <View style={[styles.cellLast, { minHeight: 45 }]}>
+                {isVisible(data.notifyBuyer) || (data.notifyLines && data.notifyLines.length > 0) ? (
+                  <>
+                    <Text style={styles.label}>Notify / Buyer (if other than consignee)</Text>
+                    {data.notifyLines && data.notifyLines.filter((l) => l.visible).map((line, idx) => (
+                      <Text key={`notify-${idx}`} style={styles.value}>{line.value}</Text>
+                    ))}
+                    {(!data.notifyLines || data.notifyLines.length === 0) && isVisible(data.notifyBuyer) && (
+                      <Text style={styles.value}>{visibleValue(data.notifyBuyer)}</Text>
+                    )}
+                  </>
                 ) : null}
               </View>
             </View>
-
           </View>
-        </Page>
-      </Document>
+
+          {/* SHIPPING & TERMS BLOCK */}
+          <View style={[styles.flexRow, { borderTop: '1pt solid black', borderBottom: '1pt solid black' }]}>
+            {/* Left 50%: Three-Row Shipping Grid */}
+            <View style={styles.leftPillar}>
+              <View style={styles.splitRow}>
+                <View style={[styles.innerBox, styles.borderRight]}>
+                  {isVisible(data.preCarriageBy) ? (
+                    <>
+                      <Text style={styles.label}>Pre-Carriage by</Text>
+                      <Text>{data.preCarriageBy.value}</Text>
+                    </>
+                  ) : null}
+                </View>
+                <View style={styles.innerBox}>
+                  {isVisible(data.placeOfReceipt) ? (
+                    <>
+                      <Text style={styles.label}>Place of Receipt</Text>
+                      <Text>{data.placeOfReceipt.value}</Text>
+                    </>
+                  ) : null}
+                </View>
+              </View>
+              <View style={styles.splitRow}>
+                <View style={[styles.innerBox, styles.borderRight]}>
+                  {isVisible(data.vesselFlightNo) ? (
+                    <>
+                      <Text style={styles.label}>Vessel/Flight No.</Text>
+                      <Text>{data.vesselFlightNo.value}</Text>
+                    </>
+                  ) : null}
+                </View>
+                <View style={styles.innerBox}>
+                  {isVisible(data.portOfLoading) ? (
+                    <>
+                      <Text style={styles.label}>Port of Loading</Text>
+                      <Text>{data.portOfLoading.value}</Text>
+                    </>
+                  ) : null}
+                </View>
+              </View>
+              <View style={styles.flexRow}>
+                <View style={[styles.innerBox, styles.borderRight]}>
+                  {isVisible(data.portOfDischarge) ? (
+                    <>
+                      <Text style={styles.label}>Port of Discharge</Text>
+                      <Text>{data.portOfDischarge.value}</Text>
+                    </>
+                  ) : null}
+                </View>
+                <View style={styles.innerBox}>
+                  {isVisible(data.finalDestination) ? (
+                    <>
+                      <Text style={styles.label}>Final Destination</Text>
+                      <Text>{data.finalDestination.value}</Text>
+                    </>
+                  ) : null}
+                </View>
+              </View>
+            </View>
+
+            {/* Right 50%: Countries + Terms Box */}
+            <View style={styles.rightPillar}>
+              <View style={styles.splitRow}>
+                <View style={[styles.innerBox, styles.borderRight]}>
+                  {isVisible(data.countryOfOrigin) ? (
+                    <>
+                      <Text style={styles.label}>Country of Origin</Text>
+                      <Text>{data.countryOfOrigin.value}</Text>
+                    </>
+                  ) : null}
+                </View>
+                <View style={styles.innerBox}>
+                  {isVisible(data.countryOfDestination) ? (
+                    <>
+                      <Text style={styles.label}>Country of Destination</Text>
+                      <Text>{data.countryOfDestination.value}</Text>
+                    </>
+                  ) : null}
+                </View>
+              </View>
+              <View style={{ padding: 4 }}>
+                {isVisible(data.terms) ? (
+                  <>
+                    <Text style={styles.label}>Terms of Delivery and Payment</Text>
+                    <Text style={styles.value}>{data.terms.value}</Text>
+                  </>
+                ) : null}
+              </View>
+            </View>
+          </View>
+
+          {/* ITEM TABLE HEADER */}
+          <View style={[styles.itemRow, { backgroundColor: '#F0F0F0', borderBottom: '1pt solid black' }]}>
+            <View style={[styles.itemCell, styles.c1]}><Text style={styles.itemHeaderText}>Marks & No.</Text></View>
+            <View style={[styles.itemCell, styles.c2]}><Text style={styles.itemHeaderText}>No. & Pkgs</Text></View>
+            <View style={[styles.itemCell, styles.c3]}><Text style={styles.itemHeaderText}>SR</Text></View>
+            <View style={[styles.itemCell, styles.c4]}><Text style={styles.itemHeaderText}>Description of Goods</Text></View>
+            <View style={[styles.itemCell, styles.c5]}><Text style={styles.itemHeaderText}>QTY</Text></View>
+            <View style={[styles.itemCell, styles.c6]}><Text style={styles.itemHeaderText}>Net Wt</Text></View>
+            <View style={[styles.itemCell, styles.c7]}><Text style={styles.itemHeaderText}>Gross</Text></View>
+            <View style={[styles.itemCell, styles.c8]}><Text style={styles.itemHeaderText}>Dim</Text></View>
+          </View>
+
+          {/* DYNAMIC ROWS */}
+          {data.tableRows.map((row, i) => (
+            <View key={i} style={[styles.itemRow, { borderBottom: '0.5pt solid #AAA' }]}>
+              <View style={[styles.itemCell, styles.c1]}><Text style={styles.itemText}>{wrapCell(row[0], 6)}</Text></View>
+              <View style={[styles.itemCell, styles.c2]}><Text style={styles.itemText}>{wrapCell(row[1], 8)}</Text></View>
+              <View style={[styles.itemCell, styles.c3]}><Text style={styles.itemText}>{wrapCell(row[2] || i + 1, 4)}</Text></View>
+              <View style={[styles.itemCell, styles.c4]}><Text style={styles.itemText}>{wrapCell(row[3], 18)}</Text></View>
+              <View style={[styles.itemCell, styles.c5]}><Text style={styles.itemText}>{wrapCell(row[4], 6)}</Text></View>
+              <View style={[styles.itemCell, styles.c6]}><Text style={styles.itemText}>{wrapCell(row[5], 6)}</Text></View>
+              <View style={[styles.itemCell, styles.c7]}><Text style={styles.itemText}>{wrapCell(row[6], 6)}</Text></View>
+              <View style={[styles.itemCell, styles.c8]}><Text style={styles.itemText}>{wrapCell(row[7], 6)}</Text></View>
+            </View>
+          ))}
+
+          {/* SIGNATURE FOOTER */}
+          <View style={[styles.flexRow, { borderTop: '1pt solid black', minHeight: 80 }]}>
+            <View style={[styles.leftPillar, { padding: 0 }]}>
+              <View style={styles.cell}>
+                {isVisible(data.totalPackages) ? (
+                  <Text style={styles.label}>Total Pkgs: {data.totalPackages.value}</Text>
+                ) : null}
+              </View>
+              <View style={[styles.flexRow, { borderBottom: '1pt solid black' }]}>
+                <View style={[styles.innerBox, styles.borderRight]}>
+                  {isVisible(data.netWeight) ? (
+                    <Text style={styles.label}>Net Wt: {data.netWeight.value}</Text>
+                  ) : null}
+                </View>
+                <View style={styles.innerBox}>
+                  {isVisible(data.grossWeight) ? (
+                    <Text style={styles.label}>Gross Wt: {data.grossWeight.value}</Text>
+                  ) : null}
+                </View>
+              </View>
+              <View style={{ padding: 4 }}>
+                {isVisible(data.totalWeight) ? (
+                  <Text style={styles.label}>Total Weight: {data.totalWeight.value}</Text>
+                ) : null}
+              </View>
+            </View>
+            <View style={[styles.rightPillar, { textAlign: 'center', justifyContent: 'space-between', padding: 5 }]}>
+              {isVisible(data.authorizedBy) ? (
+                <>
+                  {data?.company?.stamp && (
+                    <Image
+                      style={styles.stampImage}
+                      src={data.company.stamp}
+                    />
+                  )}
+                  {/*{data?.company?.sign && (*/}
+                  {/*    <Image*/}
+                  {/*        style={styles.signImage}*/}
+                  {/*        src={data.company.sign}*/}
+                  {/*    />*/}
+                  {/*)}*/}
+                  <Text style={styles.label}>For {data.authorizedBy.value}</Text>
+                  <Text style={[styles.label, { marginBottom: 5 }]}>Authorised Signatory</Text>
+                </>
+              ) : null}
+            </View>
+          </View>
+
+        </View>
+      </Page>
+    </Document>
   )
 }
 
 const PdfPreview = React.memo(({ data }) => (
-    <PDFViewer style={{ width: '100%', height: '100%' }}>
-      <PackingListPdf data={data}/>
-    </PDFViewer>
+  <PDFViewer style={{ width: '100%', height: '100%' }}>
+    <PackingListPdf data={data} />
+  </PDFViewer>
 ))
 
 const defaultData = {
@@ -377,7 +387,9 @@ const defaultData = {
   iec: { value: 'AAFFU9324C', visible: true },
   gstin: { value: '24AAFFU9324C1ZC', visible: true },
   consignee: { value: '', visible: true },
+  consigneeLines: [{ value: '', visible: true }],
   notifyBuyer: { value: '', visible: true },
+  notifyLines: [{ value: '', visible: true }],
   contact: { value: '', visible: true },
   tel: { value: '', visible: true },
   countryOfOrigin: { value: '', visible: true },
@@ -399,7 +411,7 @@ const defaultData = {
     'Gross Weight',
     'DIMENSION'
   ],
-  tableRows: [ [ '', '', '', '', '', '', '', '' ] ],
+  tableRows: [['', '', '', '', '', '', '', '']],
   totalPackages: { value: '', visible: true },
   netWeight: { value: '', visible: true },
   grossWeight: { value: '', visible: true },
@@ -408,16 +420,16 @@ const defaultData = {
 }
 
 const SectionTitle = ({ children }) => (
-    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-      {children}
-    </Typography>
+  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+    {children}
+  </Typography>
 )
 
 const FieldToggle = ({ label, value, visible, onChange, onToggle, multiline }) => (
-    <Stack direction="row" spacing={1} alignItems="center">
-      <FormControlLabel control={<Checkbox checked={visible} onChange={onToggle}/>} label=""/>
-      <TextField label={label} value={value} onChange={onChange} fullWidth multiline={multiline}/>
-    </Stack>
+  <Stack direction="row" spacing={1} alignItems="center">
+    <FormControlLabel control={<Checkbox checked={visible} onChange={onToggle} />} label="" />
+    <TextField label={label} value={value} onChange={onChange} fullWidth multiline={multiline} />
+  </Stack>
 )
 
 export default function PackingListDocument() {
@@ -425,30 +437,31 @@ export default function PackingListDocument() {
   const navigate = useNavigate()
   const params = useParams()
   const invoiceId = params?.id
-  const [ data, setData ] = useState(defaultData)
-  const [ pdfData, setPdfData ] = useState(defaultData)
-  const [ isSaving, setIsSaving ] = useState(false)
-  const [ isApproving, setIsApproving ] = useState(false)
-  const [ isApproved, setIsApproved ] = useState(false)
-  const [ hasSaved, setHasSaved ] = useState(false)
-  const [ customers, setCustomers ] = useState([])
-  const [ companies, setCompanies ] = useState([])
-  const [ selectedCustomerId, setSelectedCustomerId ] = useState('')
-  const [ selectedCompanyId, setSelectedCompanyId ] = useState('')
-  const [ customerValue, setCustomerValue ] = useState(null)
-  const [ customerInputValue, setCustomerInputValue ] = useState('')
-  const [ companyValue, setCompanyValue ] = useState(null)
-  const [ companyInputValue, setCompanyInputValue ] = useState('')
-  const [ shouldApplyCustomer, setShouldApplyCustomer ] = useState(false)
-  const [ shouldFillEmptyFromCustomer, setShouldFillEmptyFromCustomer ] = useState(false)
-  const [ shouldApplyCompany, setShouldApplyCompany ] = useState(false)
-  const [ hasLoadedInvoice, setHasLoadedInvoice ] = useState(false)
+  const [data, setData] = useState(defaultData)
+  const [pdfData, setPdfData] = useState(defaultData)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isApproving, setIsApproving] = useState(false)
+  const [isApproved, setIsApproved] = useState(false)
+  const [hasSaved, setHasSaved] = useState(false)
+  const [customers, setCustomers] = useState([])
+  const [companies, setCompanies] = useState([])
+  const [selectedCustomerId, setSelectedCustomerId] = useState('')
+  const [selectedCompanyId, setSelectedCompanyId] = useState('')
+  const [customerValue, setCustomerValue] = useState(null)
+  const [customerInputValue, setCustomerInputValue] = useState('')
+  const [companyValue, setCompanyValue] = useState(null)
+  const [companyInputValue, setCompanyInputValue] = useState('')
+  const [shouldApplyCustomer, setShouldApplyCustomer] = useState(false)
+  const [shouldFillEmptyFromCustomer, setShouldFillEmptyFromCustomer] = useState(false)
+  const [shouldApplyCompany, setShouldApplyCompany] = useState(false)
+  const [shouldFillEmptyFromCompany, setShouldFillEmptyFromCompany] = useState(false)
+  const [hasLoadedInvoice, setHasLoadedInvoice] = useState(false)
   const skipCustomerSyncRef = useRef(false)
   const skipCompanySyncRef = useRef(false)
 
   const formatDateForSave = (value) => {
     if (!value) return ''
-    const [ yyyy, mm, dd ] = String(value).split('-')
+    const [yyyy, mm, dd] = String(value).split('-')
     if (!yyyy || !mm || !dd) return value
     return `${dd}-${mm}-${yyyy}`
   }
@@ -463,7 +476,7 @@ export default function PackingListDocument() {
 
   const updateExporterLine = (index) => (event) => {
     setData((prev) => {
-      const next = [ ...(prev.exporterLines || []) ]
+      const next = [...(prev.exporterLines || [])]
       next[index] = { ...next[index], value: event.target.value }
       return { ...prev, exporterLines: next }
     })
@@ -471,7 +484,7 @@ export default function PackingListDocument() {
 
   const toggleExporterLine = (index) => (event) => {
     setData((prev) => {
-      const next = [ ...(prev.exporterLines || []) ]
+      const next = [...(prev.exporterLines || [])]
       next[index] = { ...next[index], visible: event.target.checked }
       return { ...prev, exporterLines: next }
     })
@@ -480,23 +493,85 @@ export default function PackingListDocument() {
   const addExporterLine = () => {
     setData((prev) => ({
       ...prev,
-      exporterLines: [ ...(prev.exporterLines || []), { value: '', visible: true } ]
+      exporterLines: [...(prev.exporterLines || []), { value: '', visible: true }]
     }))
   }
 
   const removeExporterLine = (index) => {
     setData((prev) => {
-      const next = [ ...(prev.exporterLines || []) ]
+      const next = [...(prev.exporterLines || [])]
       next.splice(index, 1)
       return { ...prev, exporterLines: next }
+    })
+  }
+
+  const updateConsigneeLine = (index) => (event) => {
+    setData((prev) => {
+      const next = [...(prev.consigneeLines || [])]
+      next[index] = { ...next[index], value: event.target.value }
+      return { ...prev, consigneeLines: next }
+    })
+  }
+
+  const toggleConsigneeLine = (index) => (event) => {
+    setData((prev) => {
+      const next = [...(prev.consigneeLines || [])]
+      next[index] = { ...next[index], visible: event.target.checked }
+      return { ...prev, consigneeLines: next }
+    })
+  }
+
+  const addConsigneeLine = () => {
+    setData((prev) => ({
+      ...prev,
+      consigneeLines: [...(prev.consigneeLines || []), { value: '', visible: true }]
+    }))
+  }
+
+  const removeConsigneeLine = (index) => {
+    setData((prev) => {
+      const next = [...(prev.consigneeLines || [])]
+      next.splice(index, 1)
+      return { ...prev, consigneeLines: next }
+    })
+  }
+
+  const updateNotifyLine = (index) => (event) => {
+    setData((prev) => {
+      const next = [...(prev.notifyLines || [])]
+      next[index] = { ...next[index], value: event.target.value }
+      return { ...prev, notifyLines: next }
+    })
+  }
+
+  const toggleNotifyLine = (index) => (event) => {
+    setData((prev) => {
+      const next = [...(prev.notifyLines || [])]
+      next[index] = { ...next[index], visible: event.target.checked }
+      return { ...prev, notifyLines: next }
+    })
+  }
+
+  const addNotifyLine = () => {
+    setData((prev) => ({
+      ...prev,
+      notifyLines: [...(prev.notifyLines || []), { value: '', visible: true }]
+    }))
+  }
+
+  const removeNotifyLine = (index) => {
+    setData((prev) => {
+      const next = [...(prev.notifyLines || [])]
+      next.splice(index, 1)
+      return { ...prev, notifyLines: next }
     })
   }
 
   const updateTableCell = (rowIndex, colIndex) => (event) => {
     const value = event.target.value
     setData((prev) => {
-      const nextRows = [ ...(prev.tableRows || []) ]
-      const nextRow = [ ...(nextRows[rowIndex] || []) ]
+      const nextRows = [...(prev.tableRows || [])]
+      const nextRow = [...(nextRows[rowIndex] || [])]
       nextRow[colIndex] = value
       nextRows[rowIndex] = nextRow
       return { ...prev, tableRows: nextRows }
@@ -535,13 +610,13 @@ export default function PackingListDocument() {
   const addTableRow = () => {
     setData((prev) => ({
       ...prev,
-      tableRows: [ ...(prev.tableRows || []), new Array(prev.tableHeaders.length).fill('') ]
+      tableRows: [...(prev.tableRows || []), new Array(prev.tableHeaders.length).fill('')]
     }))
   }
 
   const removeTableRow = (index) => {
     setData((prev) => {
-      const next = [ ...(prev.tableRows || []) ]
+      const next = [...(prev.tableRows || [])]
       next.splice(index, 1)
       return { ...prev, tableRows: next }
     })
@@ -553,7 +628,7 @@ export default function PackingListDocument() {
     if (!raw) return []
     const byNewLine = raw.split('\n').map((line) => line.trim()).filter(Boolean)
     if (byNewLine.length > 1) return byNewLine
-    return [ raw ]
+    return [raw]
   }
 
   const buildLines = (values) => values.filter(Boolean)
@@ -565,8 +640,8 @@ export default function PackingListDocument() {
       ...splitToLines(company.address),
       company.pinCode ? `PIN: ${company.pinCode}` : '',
       company.contactPerson || '',
-      company.contactNumber || '',
-      company.username || ''
+      company.contactNumber ? `TEL.: ${company.contactNumber}` : '',
+      company.mail || company.email ? `E-mail: ${company.mail || company.email}` : ''
     ]).map((value) => ({ value, visible: true }))
 
     setData((prev) => ({
@@ -579,7 +654,7 @@ export default function PackingListDocument() {
   const clearCompanyFromForm = () => {
     setData((prev) => ({
       ...prev,
-      exporterLines: (prev.exporterLines?.length ? prev.exporterLines : [ { value: '', visible: true } ]).map((line) => ({
+      exporterLines: (prev.exporterLines?.length ? prev.exporterLines : [{ value: '', visible: true }]).map((line) => ({
         ...line,
         value: ''
       })),
@@ -603,8 +678,18 @@ export default function PackingListDocument() {
       customer.pinCode ? `PIN: ${customer.pinCode}` : ''
     ])
 
+    const consigneeLinesNew = consigneeLines.map(val => ({ value: val, visible: true }))
+    const notifyLinesNew = notifyLines.map(val => ({ value: val, visible: true }))
+    const hasMeaningfulLines = (lines = []) => lines.some((line) => String(line?.value ?? '').trim())
+
     setData((prev) => ({
       ...prev,
+      consigneeLines: consigneeLinesNew.length
+        ? (onlyEmpty && hasMeaningfulLines(prev.consigneeLines) ? prev.consigneeLines : consigneeLinesNew)
+        : prev.consigneeLines,
+      notifyLines: notifyLinesNew.length
+        ? (onlyEmpty && hasMeaningfulLines(prev.notifyLines) ? prev.notifyLines : notifyLinesNew)
+        : prev.notifyLines,
       consignee: {
         ...prev.consignee,
         value: onlyEmpty && isNonEmptyValue(prev.consignee?.value)
@@ -642,7 +727,7 @@ export default function PackingListDocument() {
     }))
   }
 
-  const tableColumnCount = useMemo(() => Math.max(1, data.tableHeaders.length), [ data.tableHeaders.length ])
+  const tableColumnCount = useMemo(() => Math.max(1, data.tableHeaders.length), [data.tableHeaders.length])
 
   useEffect(() => {
     const netTotals = sumTableColumn(data.tableRows || [], 5)
@@ -660,14 +745,14 @@ export default function PackingListDocument() {
         grossWeight: { ...prev.grossWeight, value: nextGross }
       }
     })
-  }, [ data.tableRows ])
+  }, [data.tableRows])
 
   useEffect(() => {
     const handle = setTimeout(() => {
       setPdfData(data)
     }, 500)
     return () => clearTimeout(handle)
-  }, [ data ])
+  }, [data])
 
   const fetchCustomers = async () => {
     try {
@@ -726,7 +811,7 @@ export default function PackingListDocument() {
         setShouldApplyCustomer(false)
       }
     }
-  }, [ selectedCustomerId, customers, shouldApplyCustomer, hasLoadedInvoice, shouldFillEmptyFromCustomer ])
+  }, [selectedCustomerId, customers, shouldApplyCustomer, hasLoadedInvoice, shouldFillEmptyFromCustomer])
 
   useEffect(() => {
     if (!selectedCompanyId || !companies.length) {
@@ -740,14 +825,16 @@ export default function PackingListDocument() {
       setCompanyInputValue(match.name || '')
       if (skipCompanySyncRef.current) {
         skipCompanySyncRef.current = false
+        if (shouldFillEmptyFromCompany) {
+          applyCompanyToForm(match)
+          setShouldFillEmptyFromCompany(false)
+        }
         return
       }
-      if (shouldApplyCompany || !hasLoadedInvoice) {
-        applyCompanyToForm(match)
-        setShouldApplyCompany(false)
-      }
+      applyCompanyToForm(match)
+      setShouldApplyCompany(false)
     }
-  }, [ selectedCompanyId, companies, shouldApplyCompany, hasLoadedInvoice ])
+  }, [selectedCompanyId, companies, shouldApplyCompany, hasLoadedInvoice])
 
   useEffect(() => {
     setHasSaved(false)
@@ -795,20 +882,45 @@ export default function PackingListDocument() {
             ...defaultData,
             ...templateData
           }
+          const performaData = invoice?.performa || {}
+          const hasMeaningfulLines = (lines) => Array.isArray(lines) && lines.some((l) => String(l?.value || '').trim())
+
+          if (!hasMeaningfulLines(templateData.consigneeLines)) {
+            if (hasMeaningfulLines(performaData.customerLines)) {
+              merged.consigneeLines = performaData.customerLines.map(l => ({ ...l }))
+            } else if (String(merged.consignee?.value || '').trim()) {
+              merged.consigneeLines = String(merged.consignee.value).split('\n').map(v => ({ value: v.trim(), visible: true }))
+            }
+          }
+          if (!hasMeaningfulLines(templateData.notifyLines)) {
+            if (hasMeaningfulLines(performaData.notifyLines)) {
+              merged.notifyLines = performaData.notifyLines.map(l => ({ ...l }))
+            } else if (String(merged.notifyBuyer?.value || '').trim()) {
+              merged.notifyLines = String(merged.notifyBuyer.value).split('\n').map(v => ({ value: v.trim(), visible: true }))
+            }
+          }
           merged.date = coerceDateField(templateData?.date ?? invoice?.date, defaultData.date.visible)
           const invoiceCompanyId =
-              typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || ''
+            typeof invoice?.company === 'string' ? invoice.company : invoice?.company?._id || ''
           const invoiceCustomerId =
-              typeof invoice?.customer === 'string' ? invoice.customer : invoice?.customer?._id || ''
+            typeof invoice?.customer === 'string' ? invoice.customer : invoice?.customer?._id || ''
           const storedCompanyId = getStoredCompanyId()
           const storedCustomerId = getStoredCustomerId()
           const needsCustomerFill = !isNonEmptyValue(merged.consignee?.value) ||
-            !isNonEmptyValue(merged.notifyBuyer?.value) ||
             !isNonEmptyValue(merged.contact?.value) ||
-            !isNonEmptyValue(merged.tel?.value)
+            !isNonEmptyValue(merged.tel?.value) ||
+            !isNonEmptyValue(merged.countryOfDestination?.value) ||
+            !isNonEmptyValue(merged.finalDestination?.value) ||
+            !isNonEmptyValue(merged.notifyBuyer?.value)
+
+          const isExporterDefault = merged.exporterLines && defaultData.exporterLines && merged.exporterLines[0]?.value === defaultData.exporterLines[0]?.value
+          const needsCompanyFill = !merged.exporterLines || merged.exporterLines.length === 0 || isExporterDefault
+
+          const hasPackingData = !!invoice?.packing || !!invoice?.packaging || !!invoice?.data?.exporterLines
           skipCompanySyncRef.current = true
           skipCustomerSyncRef.current = true
           setShouldFillEmptyFromCustomer(needsCustomerFill)
+          setShouldFillEmptyFromCompany(needsCompanyFill)
           setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '')
           setSelectedCustomerId(invoiceCustomerId || storedCustomerId || '')
           setData(merged)
@@ -836,17 +948,17 @@ export default function PackingListDocument() {
     return () => {
       isActive = false
     }
-  }, [ invoiceId ])
+  }, [invoiceId])
 
   useEffect(() => {
     if (!invoiceId) return
     setStoredCompanyId(selectedCompanyId)
-  }, [ selectedCompanyId, invoiceId ])
+  }, [selectedCompanyId, invoiceId])
 
   useEffect(() => {
     if (!invoiceId) return
     setStoredCustomerId(selectedCustomerId)
-  }, [ selectedCustomerId, invoiceId ])
+  }, [selectedCustomerId, invoiceId])
 
   const handleSave = async () => {
     try {
@@ -896,235 +1008,260 @@ export default function PackingListDocument() {
   }
 
   return (
-      <MainCard
-          title="Packaging"
-          secondary={(
-              <Stack direction="row" spacing={1}>
-                <Button sx={{ backgroundColor : theme.palette.secondary.main }} variant="contained" onClick={handleSave} disabled={isSaving}>
-                  {isSaving ? 'Saving...' : 'Save'}
-                </Button>
-                {!isApproved ? (
-                  <Button
-                    variant="outlined"
-                    onClick={() => handleApprovalChange(true)}
-                    disabled={!invoiceId || !hasSaved || isApproving || isSaving}
-                  >
-                    {isApproving ? 'Confirming...' : 'Confirm'}
-                  </Button>
-                ) : (
-                  <Button
-                    color="warning"
-                    variant="outlined"
-                    onClick={() => handleApprovalChange(false)}
-                    disabled={isApproving || isSaving}
-                  >
-                    {isApproving ? 'Updating...' : 'Mark as Draft'}
-                  </Button>
-                )}
-              </Stack>
-          )}
-      >
-        <Grid container spacing={2} alignItems="flex-start">
-          <Grid item xs={12} md={7}>
-            <Box
-                sx={{
-                  position: { md: 'sticky' },
-                  top: { md: 24 },
-                  height: { xs: '88vh', md: 'calc(100vh - 140px)' },
-                  minHeight: { xs: 520, md: 700 },
-                  overflow: 'hidden',
-                  border: '1px solid',
-                  borderColor: 'divider'
-                }}
+    <MainCard
+      title="Packaging"
+      secondary={(
+        <Stack direction="row" spacing={1}>
+          <Button sx={{ backgroundColor: theme.palette.secondary.main }} variant="contained" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save'}
+          </Button>
+          {!isApproved ? (
+            <Button
+              variant="outlined"
+              onClick={() => handleApprovalChange(true)}
+              disabled={!invoiceId || !hasSaved || isApproving || isSaving}
             >
-              <PdfPreview
-                  data={{
-                    ...pdfData,
-                    company: companyValue
-                  }}
-              />
-            </Box>
-          </Grid>
-
-          <Grid item xs={12} md={5}>
-            <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>
-              <Stack spacing={2}>
-                <Typography variant="body2" color="textSecondary">
-                  Toggle any field to show/hide it in the PDF, and edit values inline.
-                </Typography>
-
-                <SectionTitle>Title</SectionTitle>
-                <FieldToggle
-                    label="Document Title"
-                    value={data.title.value}
-                    visible={data.title.visible}
-                    onChange={updateField('title')}
-                    onToggle={toggleField('title')}
-                />
-
-                <Divider/>
-
-                <SectionTitle>Company Selection</SectionTitle>
-                <EntityAutocomplete
-                  label="Company"
-                  options={companies}
-                  value={companyValue}
-                  inputValue={companyInputValue}
-                  allowAdd={false}
-                  onInputChange={setCompanyInputValue}
-                  onChange={(newValue) => {
-                    if (newValue?._id) {
-                      setShouldApplyCompany(true)
-                      setSelectedCompanyId(newValue._id)
-                      setCompanyValue(newValue)
-                      applyCompanyToForm(newValue)
-                      return
-                    }
-
-                    if (!newValue) {
-                      setShouldApplyCompany(false)
-                      setSelectedCompanyId('')
-                      setCompanyValue(null)
-                      clearCompanyFromForm()
-                    }
-                  }}
-                />
-
-                <Divider/>
-
-                <SectionTitle>Customer Selection</SectionTitle>
-                <EntityAutocomplete
-                  label="Customer"
-                  options={customers}
-                  value={customerValue}
-                  inputValue={customerInputValue}
-                  allowAdd={false}
-                  onInputChange={setCustomerInputValue}
-                  onChange={(newValue) => {
-                    if (newValue?._id) {
-                      setShouldApplyCustomer(true)
-                      setSelectedCustomerId(newValue._id)
-                      setCustomerValue(newValue)
-                      applyCustomerToForm(newValue)
-                      return
-                    }
-
-                    if (!newValue) {
-                      setShouldApplyCustomer(false)
-                      setSelectedCustomerId('')
-                      setCustomerValue(null)
-                      clearCustomerFromForm()
-                    }
-                  }}
-                />
-
-                <Divider/>
-
-                <SectionTitle>Exporter</SectionTitle>
-                {data.exporterLines.map((line, index) => (
-                    <Stack key={`exporter-${index}`} direction="row" spacing={1} alignItems="center">
-                      <FormControlLabel
-                          control={<Checkbox checked={line.visible} onChange={toggleExporterLine(index)}/>}
-                          label=""
-                      />
-                      <TextField label={`Exporter Line ${index + 1}`} value={line.value} onChange={updateExporterLine(index)} fullWidth/>
-                      <IconButton aria-label="remove" onClick={() => removeExporterLine(index)} size="large">
-                        <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
-                      </IconButton>
-                    </Stack>
-                ))}
-                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={addExporterLine}>
-                  Add Exporter Line
-                </Button>
-
-                <Divider/>
-
-                <SectionTitle>Packing Details</SectionTitle>
-                <FieldToggle label="Packing List No" value={data.packingListNo.value} visible={data.packingListNo.visible} onChange={updateField('packingListNo')}
-                             onToggle={toggleField('packingListNo')}/>
-                <FieldToggle label="Date" value={data.date.value} visible={data.date.visible} onChange={updateField('date')} onToggle={toggleField('date')}/>
-                <FieldToggle label="Buyer's Order No & Date" value={data.buyersOrder.value} visible={data.buyersOrder.visible} onChange={updateField('buyersOrder')}
-                             onToggle={toggleField('buyersOrder')}/>
-                <FieldToggle label="Export Ref" value={data.exportRef.value} visible={data.exportRef.visible} onChange={updateField('exportRef')} onToggle={toggleField('exportRef')}/>
-                <FieldToggle label="IEC" value={data.iec.value} visible={data.iec.visible} onChange={updateField('iec')} onToggle={toggleField('iec')}/>
-                <FieldToggle label="GSTIN" value={data.gstin.value} visible={data.gstin.visible} onChange={updateField('gstin')} onToggle={toggleField('gstin')}/>
-
-                <Divider/>
-
-                <SectionTitle>Parties</SectionTitle>
-                <FieldToggle label="Consignee" value={data.consignee.value} visible={data.consignee.visible} onChange={updateField('consignee')} onToggle={toggleField('consignee')} multiline/>
-                <FieldToggle label="Notify/Buyer" value={data.notifyBuyer.value} visible={data.notifyBuyer.visible} onChange={updateField('notifyBuyer')} onToggle={toggleField('notifyBuyer')}
-                             multiline/>
-
-                <Divider/>
-
-                <SectionTitle>Contact & Origin</SectionTitle>
-                <FieldToggle label="Contact" value={data.contact.value} visible={data.contact.visible} onChange={updateField('contact')} onToggle={toggleField('contact')}/>
-                <FieldToggle label="Tel" value={data.tel.value} visible={data.tel.visible} onChange={updateField('tel')} onToggle={toggleField('tel')}/>
-                <FieldToggle label="Country of Origin" value={data.countryOfOrigin.value} visible={data.countryOfOrigin.visible} onChange={updateField('countryOfOrigin')}
-                             onToggle={toggleField('countryOfOrigin')}/>
-                <FieldToggle label="Country of Destination" value={data.countryOfDestination.value} visible={data.countryOfDestination.visible} onChange={updateField('countryOfDestination')}
-                             onToggle={toggleField('countryOfDestination')}/>
-
-                <Divider/>
-
-                <SectionTitle>Shipment</SectionTitle>
-                <FieldToggle label="Pre-Carriage By" value={data.preCarriageBy.value} visible={data.preCarriageBy.visible} onChange={updateField('preCarriageBy')}
-                             onToggle={toggleField('preCarriageBy')}/>
-                <FieldToggle label="Place of Receipt" value={data.placeOfReceipt.value} visible={data.placeOfReceipt.visible} onChange={updateField('placeOfReceipt')}
-                             onToggle={toggleField('placeOfReceipt')}/>
-                <FieldToggle label="Terms of Delivery & Payment" value={data.terms.value} visible={data.terms.visible} onChange={updateField('terms')} onToggle={toggleField('terms')}/>
-                <FieldToggle label="Vessel/Flight No" value={data.vesselFlightNo.value} visible={data.vesselFlightNo.visible} onChange={updateField('vesselFlightNo')}
-                             onToggle={toggleField('vesselFlightNo')}/>
-                <FieldToggle label="Port of Loading" value={data.portOfLoading.value} visible={data.portOfLoading.visible} onChange={updateField('portOfLoading')}
-                             onToggle={toggleField('portOfLoading')}/>
-                <FieldToggle label="Port of Discharge" value={data.portOfDischarge.value} visible={data.portOfDischarge.visible} onChange={updateField('portOfDischarge')}
-                             onToggle={toggleField('portOfDischarge')}/>
-                <FieldToggle label="Final Destination" value={data.finalDestination.value} visible={data.finalDestination.visible} onChange={updateField('finalDestination')}
-                             onToggle={toggleField('finalDestination')}/>
-
-                <Divider/>
-
-                <SectionTitle>Items Table</SectionTitle>
-                {data.tableRows.map((row, rowIndex) => (
-                    <Box key={`row-${rowIndex}`}>
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                        <Typography variant="subtitle2">Row {rowIndex + 1}</Typography>
-                        <IconButton aria-label="remove" onClick={() => removeTableRow(rowIndex)} size="large">
-                          <IconTrash size="1.1rem" color={theme.palette.error.dark}/>
-                        </IconButton>
-                      </Stack>
-                      <Grid container spacing={2}>
-                        {new Array(tableColumnCount).fill(null).map((_, colIndex) => (
-                            <Grid key={`cell-${rowIndex}-${colIndex}`} item xs={12} sm={6}>
-                              <TextField
-                                  label={`${data.tableHeaders[colIndex]} (Row ${rowIndex + 1})`}
-                                  value={row[colIndex] || ''}
-                                  onChange={updateTableCell(rowIndex, colIndex)}
-                                  fullWidth
-                              />
-                            </Grid>
-                        ))}
-                      </Grid>
-                    </Box>
-                ))}
-                <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus/>} onClick={addTableRow}>
-                  Add Table Row
-                </Button>
-
-                <Divider/>
-
-                <SectionTitle>Totals & Signature</SectionTitle>
-                <FieldToggle label="Total Packages" value={data.totalPackages.value} visible={data.totalPackages.visible} onChange={updateField('totalPackages')}
-                             onToggle={toggleField('totalPackages')}/>
-                <FieldToggle label="Net Weight" value={data.netWeight.value} visible={data.netWeight.visible} onChange={updateField('netWeight')} onToggle={toggleField('netWeight')}/>
-                <FieldToggle label="Gross Weight" value={data.grossWeight.value} visible={data.grossWeight.visible} onChange={updateField('grossWeight')} onToggle={toggleField('grossWeight')}/>
-                <FieldToggle label="Total Weight" value={data.totalWeight.value} visible={data.totalWeight.visible} onChange={updateField('totalWeight')} onToggle={toggleField('totalWeight')}/>
-                <FieldToggle label="Authorized By" value={data.authorizedBy.value} visible={data.authorizedBy.visible} onChange={updateField('authorizedBy')} onToggle={toggleField('authorizedBy')}/>
-              </Stack>
-            </Box>
-          </Grid>
+              {isApproving ? 'Confirming...' : 'Confirm'}
+            </Button>
+          ) : (
+            <Button
+              color="warning"
+              variant="outlined"
+              onClick={() => handleApprovalChange(false)}
+              disabled={isApproving || isSaving}
+            >
+              {isApproving ? 'Updating...' : 'Mark as Draft'}
+            </Button>
+          )}
+        </Stack>
+      )}
+    >
+      <Grid container spacing={2} alignItems="flex-start">
+        <Grid item xs={12} md={7}>
+          <Box
+            sx={{
+              position: { md: 'sticky' },
+              top: { md: 24 },
+              height: { xs: '88vh', md: 'calc(100vh - 140px)' },
+              minHeight: { xs: 520, md: 700 },
+              overflow: 'hidden',
+              border: '1px solid',
+              borderColor: 'divider'
+            }}
+          >
+            <PdfPreview
+              data={{
+                ...pdfData,
+                company: companyValue
+              }}
+            />
+          </Box>
         </Grid>
-      </MainCard>
+
+        <Grid item xs={12} md={5}>
+          <Box sx={{ maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', pr: { md: 1 } }}>
+            <Stack spacing={2}>
+              <Typography variant="body2" color="textSecondary">
+                Toggle any field to show/hide it in the PDF, and edit values inline.
+              </Typography>
+
+              <SectionTitle>Title</SectionTitle>
+              <FieldToggle
+                label="Document Title"
+                value={data.title.value}
+                visible={data.title.visible}
+                onChange={updateField('title')}
+                onToggle={toggleField('title')}
+              />
+
+              <Divider />
+
+              <SectionTitle>Company Selection</SectionTitle>
+              <EntityAutocomplete
+                label="Company"
+                options={companies}
+                value={companyValue}
+                inputValue={companyInputValue}
+                allowAdd={false}
+                onInputChange={setCompanyInputValue}
+                onChange={(newValue) => {
+                  if (newValue?._id) {
+                    setShouldApplyCompany(true)
+                    setSelectedCompanyId(newValue._id)
+                    setCompanyValue(newValue)
+                    applyCompanyToForm(newValue)
+                    return
+                  }
+
+                  if (!newValue) {
+                    setShouldApplyCompany(false)
+                    setSelectedCompanyId('')
+                    setCompanyValue(null)
+                    clearCompanyFromForm()
+                  }
+                }}
+              />
+
+              <Divider />
+
+              <SectionTitle>Customer Selection</SectionTitle>
+              <EntityAutocomplete
+                label="Customer"
+                options={customers}
+                value={customerValue}
+                inputValue={customerInputValue}
+                allowAdd={false}
+                onInputChange={setCustomerInputValue}
+                onChange={(newValue) => {
+                  if (newValue?._id) {
+                    setShouldApplyCustomer(true)
+                    setSelectedCustomerId(newValue._id)
+                    setCustomerValue(newValue)
+                    applyCustomerToForm(newValue)
+                    return
+                  }
+
+                  if (!newValue) {
+                    setShouldApplyCustomer(false)
+                    setSelectedCustomerId('')
+                    setCustomerValue(null)
+                    clearCustomerFromForm()
+                  }
+                }}
+              />
+
+              <Divider />
+
+              <SectionTitle>Exporter</SectionTitle>
+              {data.exporterLines.map((line, index) => (
+                <Stack key={`exporter-${index}`} direction="row" spacing={1} alignItems="center">
+                  <FormControlLabel
+                    control={<Checkbox checked={line.visible} onChange={toggleExporterLine(index)} />}
+                    label=""
+                  />
+                  <TextField label={`Exporter Line ${index + 1}`} value={line.value} onChange={updateExporterLine(index)} fullWidth />
+                  <IconButton aria-label="remove" onClick={() => removeExporterLine(index)} size="large">
+                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
+                  </IconButton>
+                </Stack>
+              ))}
+              <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={addExporterLine}>
+                Add Exporter Line
+              </Button>
+
+              <Divider />
+
+              <SectionTitle>Packing Details</SectionTitle>
+              <FieldToggle label="Packing List No" value={data.packingListNo.value} visible={data.packingListNo.visible} onChange={updateField('packingListNo')}
+                onToggle={toggleField('packingListNo')} />
+              <FieldToggle label="Date" value={data.date.value} visible={data.date.visible} onChange={updateField('date')} onToggle={toggleField('date')} />
+              <FieldToggle label="Buyer's Order No & Date" value={data.buyersOrder.value} visible={data.buyersOrder.visible} onChange={updateField('buyersOrder')}
+                onToggle={toggleField('buyersOrder')} />
+              <FieldToggle label="Export Ref" value={data.exportRef.value} visible={data.exportRef.visible} onChange={updateField('exportRef')} onToggle={toggleField('exportRef')} />
+              <FieldToggle label="IEC" value={data.iec.value} visible={data.iec.visible} onChange={updateField('iec')} onToggle={toggleField('iec')} />
+              <FieldToggle label="GSTIN" value={data.gstin.value} visible={data.gstin.visible} onChange={updateField('gstin')} onToggle={toggleField('gstin')} />
+
+              <Divider />
+
+              <SectionTitle>Parties</SectionTitle>
+
+              <SectionTitle>Consignee</SectionTitle>
+              {data.consigneeLines && data.consigneeLines.map((line, index) => (
+                <Stack key={`consignee-${index}`} direction="row" spacing={1} alignItems="center">
+                  <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleConsigneeLine(index)} />} label="" />
+                  <TextField label={`Consignee Line ${index + 1}`} value={line.value} onChange={updateConsigneeLine(index)} fullWidth />
+                  <IconButton aria-label="remove" onClick={() => removeConsigneeLine(index)} size="large">
+                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
+                  </IconButton>
+                </Stack>
+              ))}
+              <Button sx={{ color: theme.palette.secondary.dark, mb: 2 }} variant="outlined" startIcon={<IconPlus />} onClick={addConsigneeLine}>
+                Add Consignee Line
+              </Button>
+
+              <SectionTitle>Notify/Buyer</SectionTitle>
+              {data.notifyLines && data.notifyLines.map((line, index) => (
+                <Stack key={`notify-${index}`} direction="row" spacing={1} alignItems="center">
+                  <FormControlLabel control={<Checkbox checked={line.visible} onChange={toggleNotifyLine(index)} />} label="" />
+                  <TextField label={`Notify/Buyer Line ${index + 1}`} value={line.value} onChange={updateNotifyLine(index)} fullWidth />
+                  <IconButton aria-label="remove" onClick={() => removeNotifyLine(index)} size="large">
+                    <IconTrash size="1.1rem" color={theme.palette.error.dark} />
+                  </IconButton>
+                </Stack>
+              ))}
+              <Button sx={{ color: theme.palette.secondary.dark, mb: 2 }} variant="outlined" startIcon={<IconPlus />} onClick={addNotifyLine}>
+                Add Notify/Buyer Line
+              </Button>
+
+              <Divider />
+
+              <SectionTitle>Contact & Origin</SectionTitle>
+              <FieldToggle label="Contact" value={data.contact.value} visible={data.contact.visible} onChange={updateField('contact')} onToggle={toggleField('contact')} />
+              <FieldToggle label="Tel" value={data.tel.value} visible={data.tel.visible} onChange={updateField('tel')} onToggle={toggleField('tel')} />
+              <FieldToggle label="Country of Origin" value={data.countryOfOrigin.value} visible={data.countryOfOrigin.visible} onChange={updateField('countryOfOrigin')}
+                onToggle={toggleField('countryOfOrigin')} />
+              <FieldToggle label="Country of Destination" value={data.countryOfDestination.value} visible={data.countryOfDestination.visible} onChange={updateField('countryOfDestination')}
+                onToggle={toggleField('countryOfDestination')} />
+
+              <Divider />
+
+              <SectionTitle>Shipment</SectionTitle>
+              <FieldToggle label="Pre-Carriage By" value={data.preCarriageBy.value} visible={data.preCarriageBy.visible} onChange={updateField('preCarriageBy')}
+                onToggle={toggleField('preCarriageBy')} />
+              <FieldToggle label="Place of Receipt" value={data.placeOfReceipt.value} visible={data.placeOfReceipt.visible} onChange={updateField('placeOfReceipt')}
+                onToggle={toggleField('placeOfReceipt')} />
+              <FieldToggle label="Terms of Delivery & Payment" value={data.terms.value} visible={data.terms.visible} onChange={updateField('terms')} onToggle={toggleField('terms')} />
+              <FieldToggle label="Vessel/Flight No" value={data.vesselFlightNo.value} visible={data.vesselFlightNo.visible} onChange={updateField('vesselFlightNo')}
+                onToggle={toggleField('vesselFlightNo')} />
+              <FieldToggle label="Port of Loading" value={data.portOfLoading.value} visible={data.portOfLoading.visible} onChange={updateField('portOfLoading')}
+                onToggle={toggleField('portOfLoading')} />
+              <FieldToggle label="Port of Discharge" value={data.portOfDischarge.value} visible={data.portOfDischarge.visible} onChange={updateField('portOfDischarge')}
+                onToggle={toggleField('portOfDischarge')} />
+              <FieldToggle label="Final Destination" value={data.finalDestination.value} visible={data.finalDestination.visible} onChange={updateField('finalDestination')}
+                onToggle={toggleField('finalDestination')} />
+
+              <Divider />
+
+              <SectionTitle>Items Table</SectionTitle>
+              {data.tableRows.map((row, rowIndex) => (
+                <Box key={`row-${rowIndex}`}>
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                    <Typography variant="subtitle2">Row {rowIndex + 1}</Typography>
+                    <IconButton aria-label="remove" onClick={() => removeTableRow(rowIndex)} size="large">
+                      <IconTrash size="1.1rem" color={theme.palette.error.dark} />
+                    </IconButton>
+                  </Stack>
+                  <Grid container spacing={2}>
+                    {new Array(tableColumnCount).fill(null).map((_, colIndex) => (
+                      <Grid key={`cell-${rowIndex}-${colIndex}`} item xs={12} sm={6}>
+                        <TextField
+                          label={`${data.tableHeaders[colIndex]} (Row ${rowIndex + 1})`}
+                          value={row[colIndex] || ''}
+                          onChange={updateTableCell(rowIndex, colIndex)}
+                          fullWidth
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              ))}
+              <Button sx={{ color: theme.palette.secondary.dark }} variant="outlined" startIcon={<IconPlus />} onClick={addTableRow}>
+                Add Table Row
+              </Button>
+
+              <Divider />
+
+              <SectionTitle>Totals & Signature</SectionTitle>
+              <FieldToggle label="Total Packages" value={data.totalPackages.value} visible={data.totalPackages.visible} onChange={updateField('totalPackages')}
+                onToggle={toggleField('totalPackages')} />
+              <FieldToggle label="Net Weight" value={data.netWeight.value} visible={data.netWeight.visible} onChange={updateField('netWeight')} onToggle={toggleField('netWeight')} />
+              <FieldToggle label="Gross Weight" value={data.grossWeight.value} visible={data.grossWeight.visible} onChange={updateField('grossWeight')} onToggle={toggleField('grossWeight')} />
+              <FieldToggle label="Total Weight" value={data.totalWeight.value} visible={data.totalWeight.visible} onChange={updateField('totalWeight')} onToggle={toggleField('totalWeight')} />
+              <FieldToggle label="Authorized By" value={data.authorizedBy.value} visible={data.authorizedBy.visible} onChange={updateField('authorizedBy')} onToggle={toggleField('authorizedBy')} />
+            </Stack>
+          </Box>
+        </Grid>
+      </Grid>
+    </MainCard>
   )
 }

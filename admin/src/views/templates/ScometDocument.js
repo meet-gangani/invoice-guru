@@ -366,18 +366,15 @@ export default function ScometDocument() {
   const applyCompanyToForm = (company) => {
     if (!company) return
     const contactLines = buildLines([
-      company.contactNumber || '',
-      company.username || ''
+      company.contactNumber ? `Mo. ${company.contactNumber}` : '',
+      company.mail || company.email ? `E-mail: ${company.mail || company.email}` : ''
     ])
-    const addressLines = buildLines([
-      ...splitToLines(company.address),
-      company.pinCode ? `PIN: ${company.pinCode}` : ''
-    ])
+    // Note: We deliberately do NOT update addressLines here because Scomet Declaration
+    // address is the Customs Commissioner's address, not the Company's address.
     setData((prev) => ({
       ...prev,
       brandName: company.name || '',
-      contactLines: contactLines.length ? contactLines : prev.contactLines,
-      // addressLines: addressLines.length ? addressLines : prev.addressLines,
+      contactLines: contactLines.length ? contactLines : [''],
       signatureLine: company.name ? `FOR ${company.name}` : prev.signatureLine,
       footerLine: company.address || prev.footerLine
     }))
@@ -429,10 +426,8 @@ export default function ScometDocument() {
         skipCompanySyncRef.current = false
         return
       }
-      if (shouldApplyCompany || !hasLoadedInvoice) {
-        applyCompanyToForm(match)
-        setShouldApplyCompany(false)
-      }
+      applyCompanyToForm(match)
+      setShouldApplyCompany(false)
     }
   }, [ selectedCompanyId, companies, shouldApplyCompany, hasLoadedInvoice ])
 
@@ -482,7 +477,10 @@ export default function ScometDocument() {
           }
           
           merged.tableRows = normalizeTableRows(merged.tableRows)
-          skipCompanySyncRef.current = true
+          
+          const hasScometData = !!invoice?.scomet || !!invoice?.data?.brandName
+          skipCompanySyncRef.current = hasScometData
+          
           setSelectedCompanyId(invoiceCompanyId || storedCompanyId || '')
           hydrateData(merged)
           setIsApproved(Boolean(invoice?.scometApproved))
